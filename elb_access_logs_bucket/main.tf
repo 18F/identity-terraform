@@ -36,6 +36,8 @@ resource "aws_s3_bucket" "logs" {
   bucket = "${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
   acl    = "log-delivery-write"
   force_destroy = "${var.force_destroy}"
+
+  # Allow the ELB account in the current region to put objects.
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -70,6 +72,47 @@ EOF
       apply_server_side_encryption_by_default {
         sse_algorithm = "aws:kms"
       }
+    }
+  }
+
+
+  # Lifecycle rules: configure a sliding window for moving logs from standard
+  # storage to standard Infrequent Access, then to glacier, then deleting them.
+  # The rules will only be enabled if the lifecycle day threshold is set to a
+  # positive number.
+
+  lifecycle_rule {
+    id = "log_aging_ia"
+    enabled = "${var.lifecycle_days_standard_ia > 0 ? true : false}"
+
+    prefix  = "/"
+
+    transition {
+      days = "${var.lifecycle_days_standard_ia}"
+      storage_class = "STANDARD_IA"
+    }
+  }
+
+  lifecycle_rule {
+    id = "log_aging_glacier"
+    enabled = "${var.lifecycle_days_glacier > 0 ? true : false}"
+
+    prefix  = "/"
+
+    transition {
+      days = "${var.lifecycle_days_glacier}"
+      storage_class = "GLACIER"
+    }
+  }
+
+  lifecycle_rule {
+    id = "log_aging_expire"
+    enabled = "${var.lifecycle_days_expire > 0 ? true : false}"
+
+    prefix  = "/"
+
+    expiration {
+      days = "${var.lifecycle_days_expire}"
     }
   }
 }
