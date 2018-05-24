@@ -36,6 +36,6 @@ variable "lifecycle_days_glacier" {
 }
 
 variable "lifecycle_days_expire" {
-    description = "Number of days after object creation to delete logs. Set to 0 or -1 to disable."
+    description = "Number of days after object creation to delete logs. Set to 0 to disable."
     default = 0
 }
