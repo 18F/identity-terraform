@@ -9,15 +9,15 @@ variable "dashboard_name" {
 }
 
 variable "alb_arn_suffix" {
-	description = "ARN suffix of the ALB"
+    description = "ARN suffix of the ALB"
 }
 
 variable "target_group_label" {
-	description = "Human label to explain what the target group servers are"
+    description = "Human label to explain what the target group servers are"
 }
 
 variable "target_group_arn_suffix" {
-	description = "ARN suffix of the target group, used for displaying response time"
+    description = "ARN suffix of the target group, used for displaying response time"
 }
 
 output "dashboard_arn" {
