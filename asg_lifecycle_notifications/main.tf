@@ -6,6 +6,11 @@ variable "asg_name" {
 	description = "Name of the auto scaling group that we're adding lifecycle hooks to."
 }
 
+variable "enabled" {
+  description = "Whether to enable the lifecycle hooks. This is a hack around terraform not supporting count for modules."
+  default = 1
+}
+
 variable "lifecycle_name_prefix" {
   description = "Prefix for the lifecycle hook names"
   default = "provision"
@@ -29,8 +34,13 @@ variable "private_heartbeat_timeout" {
   default = 900 # 15 minutes
 }
 
+locals {
+  main_hook_count = "${var.enabled * var.main_hook_enabled}"
+  private_hook_count = "${var.enabled * var.private_hook_enabled}"
+}
+
 resource "aws_autoscaling_lifecycle_hook" "provision-private" {
-  count                  = "${var.private_hook_enabled}"
+  count                  = "${local.private_hook_count}"
   name                   = "${var.lifecycle_name_prefix}-private"
   autoscaling_group_name = "${var.asg_name}"
   default_result         = "ABANDON"
@@ -39,7 +49,7 @@ resource "aws_autoscaling_lifecycle_hook" "provision-private" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "provision-main" {
-  count                  = "${var.main_hook_enabled}"
+  count                  = "${local.main_hook_count}"
   name                   = "${var.lifecycle_name_prefix}-main"
   autoscaling_group_name = "${var.asg_name}"
   default_result         = "ABANDON"
