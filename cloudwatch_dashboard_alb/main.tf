@@ -21,7 +21,7 @@ variable "target_group_arn_suffix" {
 }
 
 output "dashboard_arn" {
-    value = "${aws_cloudwatch_dashboard.alb.dashboard_arn}"
+    value = "${element(concat(aws_cloudwatch_dashboard.alb.*.dashboard_arn, list("")), 0)}"
 }
 
 resource "aws_cloudwatch_dashboard" "alb" {

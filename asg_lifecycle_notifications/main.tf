@@ -58,8 +58,9 @@ resource "aws_autoscaling_lifecycle_hook" "provision-main" {
 }
 
 output "lifecycle_hook_names" {
-  value = [
-    "${aws_autoscaling_lifecycle_hook.provision-private.name}",
-    "${aws_autoscaling_lifecycle_hook.provision-main.name}"
-  ]
+  value = ["${concat(
+    aws_autoscaling_lifecycle_hook.provision-private.*.name,
+    aws_autoscaling_lifecycle_hook.provision-main.*.name,
+    list("")
+  )}"]
 }
