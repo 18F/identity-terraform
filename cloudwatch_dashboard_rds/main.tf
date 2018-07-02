@@ -175,6 +175,13 @@ resource "aws_cloudwatch_dashboard" "main" {
                     }
                 },
                 "annotations": {
+                    "horizontal": [
+                        {
+                            "color": "#d62728",
+                            "label": "High latency",
+                            "value": 0.1
+                        }
+                    ],
                     "vertical": ${var.vertical_annotations}
                 }
             }
@@ -225,6 +232,18 @@ resource "aws_cloudwatch_dashboard" "main" {
                     }
                 },
                 "annotations": {
+                    "horizontal": [
+                        {
+                            "color": "#2ca02c",
+                            "label": "Low utilization",
+                            "value": 0.5
+                        },
+                        {
+                            "color": "#d62728",
+                            "label": "High utilization",
+                            "value": 2
+                        }
+                    ],
                     "vertical": ${var.vertical_annotations}
                 }
             }
@@ -256,7 +275,7 @@ resource "aws_cloudwatch_dashboard" "main" {
                     "vertical": ${var.vertical_annotations}
                 }
             }
-        },
+        }
     ]
 }
 EOF
