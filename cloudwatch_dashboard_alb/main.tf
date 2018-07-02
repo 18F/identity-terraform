@@ -20,6 +20,11 @@ variable "target_group_arn_suffix" {
     description = "ARN suffix of the target group, used for displaying response time"
 }
 
+variable "vertical_annotations" {
+    description = "Raw JSON array of vertical annotations to add to all widgets"
+    default = "[]"
+}
+
 output "dashboard_arn" {
     value = "${element(concat(aws_cloudwatch_dashboard.alb.*.dashboard_arn, list("")), 0)}"
 }
@@ -52,6 +57,9 @@ resource "aws_cloudwatch_dashboard" "alb" {
                     "left": {
                         "min": 0
                     }
+                },
+                "annotations": {
+                  "vertical": ${var.vertical_annotations}
                 }
             }
         },
@@ -74,6 +82,9 @@ resource "aws_cloudwatch_dashboard" "alb" {
                     "left": {
                         "min": 0
                     }
+                },
+                "annotations": {
+                  "vertical": ${var.vertical_annotations}
                 }
             }
         },
@@ -96,6 +107,9 @@ resource "aws_cloudwatch_dashboard" "alb" {
                     "left": {
                         "min": 0
                     }
+                },
+                "annotations": {
+                  "vertical": ${var.vertical_annotations}
                 }
             }
         },
@@ -118,6 +132,9 @@ resource "aws_cloudwatch_dashboard" "alb" {
                     "left": {
                         "min": 0
                     }
+                },
+                "annotations": {
+                  "vertical": ${var.vertical_annotations}
                 }
             }
         }
