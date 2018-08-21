@@ -41,6 +41,6 @@ variable "aws_cloudwatch_region" {
 
 variable "cloudwatch_filter_pattern" {
     description = "Filter pattern for CloudWatch subscription"
-    default = "{$"
+    default = "{$.id = *}"
 }
 
