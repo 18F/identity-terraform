@@ -1,9 +1,6 @@
-resource "random_string" "suffix" {
-  length = 8
-  special = false
-}
+
 resource "aws_kinesis_stream" "datastream" {
-    name = "${var.name_prefix}_${random_string.suffix.result}"
+    name = "${var.env_name}-${var.stream_name}"
     shard_count = "${var.kinesis_shard_count}"
     retention_period = "${var.kinesis_retention_hours}"
     encryption_type = "KMS",
@@ -39,13 +36,13 @@ data "aws_iam_policy_document" "cloudwatch_access" {
    }
 }
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
- name = "${var.name_prefix}_${random_string.suffix.result}"
+ name = "${var.env_name}-${var.stream_name}"
  path = "/"
  assume_role_policy = "${data.aws_iam_policy_document.redshift_admin_assume.json}"
 }
 
 resource "aws_iam_policy" "cloudwatch_access" {
-    name        = "${var.name_prefix}_${random_string.suffix.ressult}"
+    name        = "${var.env_name}-${var.stream_name}"
     path        = "/"
     description = "Cloudwatch access"
     policy = "${data.aws_iam_policy_document.cloudwatch_access.json}"
@@ -57,7 +54,7 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_access" {
 }
 
 resource "aws_cloudwatch_log_destination" "datastream" {
-    name = "${var.name_prefix}_${random_string.suffix.ressult}"
+    name = "${var.env_name}-${var.stream_name}"
     role_arn = "${aws_iam_role.cloudwatch_to_kinesis.arn}"
     target_arn = "${aws_kinesis_stream.datastream.arn}"
 }
@@ -83,12 +80,3 @@ resource "aws_cloudwatch_log_destination_policy" "subscription" {
     access_policy = "${data.aws_iam_policy_document.subscription.json}"
 }
 
-#TODO: this needs a different provider or in another module
-#may not work until the stream and the permissions are in place
-#resource is in the source account
-resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
-    name = "${var.name_prefix}_${random_string.suffix.result}"
-    log_group_name = "${var.cloudwatch_log_group_name}"
-    filter_pattern = "${var.clouddwatch_filter_pattern}"
-    destination_arn = "${aws_kinesis_stream.datastream.arn}"
-}

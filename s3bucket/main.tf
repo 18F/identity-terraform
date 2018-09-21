@@ -1,25 +1,14 @@
 resource "aws_s3_bucket" "bucket" {
-    bucket = "${var.bucket_name}"
+    bucket = "login-gov-${var.bucket_name}-${var.env_name}-${data.aws_caller_identity.current.account_id}-${var.region}"
     acl    = "private"
 
     versioning {
         enabled = "${var.versioning_enabled}"
     }
 
-    logging {
-        target_bucket = "${aws_s3_bucket.log_bucket.id}"
-        target_prefix = "log/"
-    }
-
     lifecycle_rule {
-        id      = "log"
+        id      = "lifecycle"
         enabled = true
-
-        prefix  = "log/"
-        tags {
-            "rule"      = "log"
-            "autoclean" = "true"
-        }
 
         transition {
             days = 720
@@ -46,6 +35,6 @@ resource "aws_s3_bucket" "bucket" {
 
     tags {
         Name        = "Environment"
-        Environment = "${var.Environment}"
+        Environment = "${var.env_name}"
     }
 }
