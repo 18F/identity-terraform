@@ -171,3 +171,4 @@ resource "aws_iam_role" "cloudwatch_to_kinesis" {
  name = "${var.env_name}-${var.stream_name}"
  path = "/"
  assume_role_policy = "${data.aws_iam_policy_document.redshift_admin_assume.json}"
+}
