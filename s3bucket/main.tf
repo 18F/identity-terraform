@@ -6,6 +6,10 @@ resource "aws_s3_bucket" "bucket" {
         enabled = "${var.versioning_enabled}"
     }
 
+    logging {
+        target_bucket = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+    }
+
     lifecycle_rule {
         id      = "lifecycle"
         enabled = true
@@ -24,6 +28,8 @@ resource "aws_s3_bucket" "bucket" {
             days = 2520
         }
     }
+
+    login-gov.s3-logs.accountid-us-west-2
 
     server_side_encryption_configuration {
         rule {
