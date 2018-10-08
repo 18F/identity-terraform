@@ -1,3 +1,7 @@
+variable "env_name" {
+    description = "Environment Name"
+}
+
 variable "kinesis_name" {
     description = "Kinesis data stream name.  env_name will be prepended to this name."
 }

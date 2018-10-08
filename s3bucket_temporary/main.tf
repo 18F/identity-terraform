@@ -2,10 +2,6 @@ resource "aws_s3_bucket" "bucket" {
     bucket = "login-gov-${var.bucket_name}-${var.env_name}-${data.aws_caller_identity.current.account_id}-${var.region}"
     acl    = "private"
 
-    versioning {
-        enabled = "true"
-    }
-
     logging {
         target_bucket = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
     }
@@ -14,18 +10,8 @@ resource "aws_s3_bucket" "bucket" {
         id      = "lifecycle"
         enabled = true
 
-        transition {
-            days = 720
-            storage_class = "STANDARD_IA"
-        }
-
-        transition {
-            days = 1080
-            storage_class = "GLACIER"
-        }
-
         expiration {
-            days = 2520
+            days = 180
         }
     }
 

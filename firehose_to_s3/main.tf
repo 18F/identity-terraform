@@ -1,5 +1,8 @@
+#TODO add lambda to unzip cloudwatch
+#Fix IAM role
+#Add variable for s3 buckets
 resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
-  name        = "todo"
+  name        = "${var.env_name}-${var.name}"
   destination = "s3"
 
   s3_configuration {
