@@ -51,7 +51,7 @@ resource "aws_iam_policy" "lambda" {
 }
 
 resource "aws_iam_role" "lambda" {
-    name = "${var.env_name}-${var.lambda_name}-execution"
+    name = "${var.env_name}-lambda-${var.lambda_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 

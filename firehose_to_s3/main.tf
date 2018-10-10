@@ -5,6 +5,11 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
   extended_s3_configuration {
     role_arn   = "${aws_iam_role.firehose_to_s3.arn}"
     bucket_arn = "arn:aws:s3:::${var.firehose_bucket_name}"
+    prefix = "${var.firehose_bucket_prefix}/"
+    buffer_size = "${var.buffer_size}"
+    buffer_interval = "${var.buffer_interval}"
+    compression_format = "GZIP"
+    kms_key_arn = "${var.kms_key_arn}"
     processing_configuration = [
       {
         enabled = "true"
@@ -31,7 +36,7 @@ data "aws_iam_policy_document" "assume_role" {
 
         principals {
             type        = "Service"
-            identifiers = ["logs.${var.aws_cloudwatch_region}.amazonaws.com"]
+            identifiers = ["firehose.amazonaws.com"]
         }
     }
 }
@@ -62,9 +67,9 @@ data "aws_iam_policy_document" "s3" {
        "s3:PutObject"
      ]
      resources = [
-       "arn:aws:s3:::${var.firehose_bucket_name}",
-       "arn:aws:s3:::${var.firehose_bucket_name}/*",
-       "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%",
+        "arn:aws:s3:::${var.firehose_bucket_name}",
+        "arn:aws:s3:::${var.firehose_bucket_name}/*",
+        "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%",
         "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*"
      ]
    }

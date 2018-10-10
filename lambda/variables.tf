@@ -21,13 +21,13 @@ variable "lambda_runtime" {
 }
 variable "lambda_memory" {
     description = "Amount of RAM for Lambda function"
+    default = "128"
 }
 variable "lambda_timeout" {
     description = "Lambda timeout setting"
+    default = "30"
 }
 variable "lambda_role_arn" {
     description = "Lamba execution role arn"
 }
-variable "source_code_hash" {
-    description = "Hash value for Lambda code package"
-}
+

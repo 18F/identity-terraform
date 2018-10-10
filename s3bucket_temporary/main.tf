@@ -19,12 +19,12 @@ resource "aws_s3_bucket" "bucket" {
         rule {
             apply_server_side_encryption_by_default {
                 sse_algorithm = "aws:kms"
+                kms_master_key_id = "${var.kms_key_id}"
             }
         }
     }
 
     tags {
-        Name        = "Environment"
-        Environment = "${var.env_name}"
+        environment = "${var.env_name}"
     }
 }

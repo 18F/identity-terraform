@@ -7,5 +7,5 @@ variable "key_description" {
 }
 
 variable "key_alias" {
-    description = "KMS key alias."
+    description = "KMS key alias. The environment name will be a prefix in the form of environment/"
 }

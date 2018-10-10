@@ -10,6 +10,10 @@ resource "aws_kinesis_stream" "datastream" {
         "ReadProvisionedThroughputExceeded",
         "WriteProvisionedThroughputExceeded"
     ]
+    
+    tags {
+        environment = "${var.env_name}"
+    }
 }
 
 data "aws_iam_policy_document" "assume_role" {
