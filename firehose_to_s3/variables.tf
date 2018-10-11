@@ -14,6 +14,10 @@ variable "datastream_name" {
     description = "Datastream source name"
 }
 
+variable "datastream_source_arn" {
+    description = "Kinesis datastream source arn"
+}
+
 variable "firehose_bucket_name" {
     description = "S3 Bucket name for firehose output"
 }

@@ -2,6 +2,11 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
     name = "${var.env_name}-${var.stream_name}"
     destination = "redshift"
 
+    kinesis_source_configuration {
+    kinesis_stream_arn = "${var.datastream_source_arn}"
+    role_arn = "${aws_iam_role.firehose_to_s3.arn}"
+  }
+
     s3_configuration {
         role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
         bucket_arn = "${var.intermediate_bucket_arn}"
@@ -24,6 +29,22 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
             bucket_arn = "${var.s3_backup_bucket_arn}"
             prefix = "${var.s3_backup_bucket_prefix}"
         }
+        processing_configuration = [
+          {
+            enabled = "true"
+            processors = [
+              {
+                type = "Lambda"
+                parameters = [
+                  {
+                    parameter_name = "LambdaArn"
+                    parameter_value = "${var.lambda_arn}:$LATEST"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
     }
 }
 

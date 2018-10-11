@@ -10,6 +10,10 @@ variable "stream_name" {
     description = "Firehose delivery stream name"
 }
 
+variable "datastream_source_arn" {
+    description = "Kinesis datastream source arn"
+}
+
 variable "redshift_jdbc" {
     description = "Redshift jdbc connection"
 }
@@ -32,6 +36,10 @@ variable "copy_options" {
 
 variable "columns" {
     description = "Comma separated list of columns for copy"
+}
+
+variable "lambda_arn" {
+    description = "Transformation Lambda arn"
 }
 
 variable "intermediate_bucket_arn" {
