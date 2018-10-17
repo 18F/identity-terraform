@@ -1,6 +1,11 @@
 variable "env_name" {
     description = "Envrionment name"
 }
+
+variable "region" {
+    description = "AWS region"
+}
+
 variable "source_bucket_name" {
     description = "S3 Bucket Name where Lambda code package is stored"
 }
