@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_lambda_function" "lambda" {
   s3_bucket        = "${var.source_bucket_name}"
   s3_key           = "${var.source_key}"
