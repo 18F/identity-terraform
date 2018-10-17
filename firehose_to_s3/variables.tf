@@ -10,10 +10,6 @@ variable "name" {
     description = "Firehose name"
 }
 
-variable "datastream_name" {
-    description = "Datastream source name"
-}
-
 variable "datastream_source_arn" {
     description = "Kinesis datastream source arn"
 }
@@ -28,10 +24,6 @@ variable "kms_key_id" {
 
 variable "kms_key_arn" {
     description = "KMS Encrypttion Key arn"
-}
-
-variable "lambda_transform" {
-    description = "Lambda name for data transformation"
 }
 
 variable "firehose_bucket_prefix" {

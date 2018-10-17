@@ -89,7 +89,7 @@ data "aws_iam_policy_document" "lambda" {
        "lambda:GetFunctionConfiguration"
      ]
      resources = [
-       "arn:aws:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:${var.lambda_transform}:$LATEST"
+       "${var.lambd_arn}:$LATEST"
      ]
    }
 }
