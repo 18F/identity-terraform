@@ -205,41 +205,41 @@ resource "aws_iam_role" "firehose_to_redshift" {
 resource "aws_iam_role_policy" "glue" {
   name = "glue"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.glue}"
+  policy = "${data.aws_iam_policy_document.glue.json}"
 }
 
 resource "aws_iam_role_policy" "s3" {
   name = "s3"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.s3}"
+  policy = "${data.aws_iam_policy_document.s3.json}"
 }
 
 resource "aws_iam_role_policy" "lambda" {
   name = "lambda"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.lambda}"
+  policy = "${data.aws_iam_policy_document.lambda.json}"
 }
 
 resource "aws_iam_role_policy" "s3kms" {
   name = "s3kms"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.s3kms}"
+  policy = "${data.aws_iam_policy_document.s3kms.json}"
 }
 
 resource "aws_iam_role_policy" "datastreamkms" {
   name = "datastreamkms"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.datastreamkms}"
+  policy = "${data.aws_iam_policy_document.datastreamkms.json}"
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
   name = "cloudwatch"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.cloudwatch}"
+  policy = "${data.aws_iam_policy_document.cloudwatch.json}"
 }
 
 resource "aws_iam_role_policy" "kinesis" {
   name = "kinesis"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.kinesis}"
+  policy = "${data.aws_iam_policy_document.kinesis.json}"
 }
