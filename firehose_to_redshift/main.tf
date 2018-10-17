@@ -190,7 +190,7 @@ data "aws_iam_policy_document" "kms2" {
        variable = "kms:EncryptionContext:aws:kinesis:arn"
 
        values = [
-         "arn:aws:kinesis:${var.region}:${data.aws_caller_identity.current.account_id}:stream/${aws_kinesis_firehose_delivery_stream.rs_stream}"
+         "arn:aws:kinesis:${var.region}:${data.aws_caller_identity.current.account_id}:stream/${aws_kinesis_firehose_delivery_stream.rs_stream.name}"
        ]
      }
    }
