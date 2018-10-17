@@ -27,7 +27,5 @@ variable "lambda_timeout" {
     description = "Lambda timeout setting"
     default = "30"
 }
-variable "lambda_role_arn" {
-    description = "Lamba execution role arn"
-}
+
 
