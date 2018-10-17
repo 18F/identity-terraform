@@ -209,6 +209,7 @@ resource "aws_iam_role_policy" "s3kms" {
   name = "s3kms"
   role = "${aws_iam_role.firehose_to_s3.id}"
   policy = "${data.aws_iam_policy_document.s3kms}"
+}
 
 resource "aws_iam_role_policy" "datastreamkms" {
   name = "datastreamkms"
@@ -226,20 +227,4 @@ resource "aws_iam_role_policy" "kinesis" {
   name = "kinesis"
   role = "${aws_iam_role.firehose_to_s3.id}"
   policy = "${data.aws_iam_policy_document.kinesis}"
-}
-
-resource "aws_lambda_function" "transform" {
-  s3_bucket = "${var.lambda_package_bucket}"
-  s3_key = "${var.lambda_package_key}"
-  function_name    = "${var.lambda_name}"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
-  handler          = "handler"
-  source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  runtime          = "nodejs8.10"
-
-  environment {
-    variables = {
-      environment = "${var.env_name}"
-    }
-  }
 }
