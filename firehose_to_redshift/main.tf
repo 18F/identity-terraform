@@ -4,7 +4,7 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
 
     kinesis_source_configuration {
     kinesis_stream_arn = "${var.datastream_source_arn}"
-    role_arn = "${aws_iam_role.firehose_to_s3.arn}"
+    role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
   }
 
     s3_configuration {
@@ -19,7 +19,7 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
     redshift_configuration {
         role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
         cluster_jdbcurl = "${var.redshift_jdbc}"
-        username = "${var.redshit_user}"
+        username = "${var.redshift_username}"
         password = "${var.redshift_password}"
         data_table_name = "${var.redshift_table}"
         copy_options = "${var.copy_options}" 
@@ -87,8 +87,8 @@ data "aws_iam_policy_document" "s3" {
        "s3:PutObject"
      ]
      resources = [
-        "arn:aws:s3:::${var.firehose_bucket_name}",
-        "arn:aws:s3:::${var.firehose_bucket_name}/*",
+        "${var.s3_backup_bucket_arn}",
+        "${var.s3_backup_bucket_arn}/*",
         "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%",
         "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*"
      ]
@@ -118,7 +118,7 @@ data "aws_iam_policy_document" "kms1" {
        "kms:Decrypt"
      ]
      resources = [
-       "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_id}"
+       "${var.kms_key_arn}"
      ]
      condition {
        test = "StringEquals"
@@ -133,7 +133,7 @@ data "aws_iam_policy_document" "kms1" {
        variable = "kms:EncryptionContext:aws:s3:arn"
 
        values = [
-         "arn:aws:s3:::${var.firehose_bucket_name}/${var.firehose_prefix}*"
+         "${var.s3_backup_bucket_arn}/${var.s3_backup_bucket_prefix}*"
        ]
      }
    }
@@ -162,7 +162,7 @@ data "aws_iam_policy_document" "kinesis" {
        "kinesis:GetRecords"
      ]
      resources = [
-       "{aws_kinesis_firehose_delivery_stream.rs_stream.arn}"
+       "${aws_kinesis_firehose_delivery_stream.rs_stream.arn}"
      ]
    }
 }
@@ -175,7 +175,7 @@ data "aws_iam_policy_document" "kms2" {
        "kms:Decrypt"
      ]
      resources = [
-       "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_id}"
+       "${var.kms_key_arn}"
      ]
      condition {
        test = "StringEquals"

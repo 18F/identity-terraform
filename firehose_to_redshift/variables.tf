@@ -18,7 +18,7 @@ variable "redshift_jdbc" {
     description = "Redshift jdbc connection"
 }
 
-variable "redshift_user" {
+variable "redshift_username" {
     description = "Redshift database user"
 }
 
@@ -67,3 +67,4 @@ variable "s3_backup_bucket_arn" {
 variable "s3_backup_bucket_prefix" {
     description = "Prefix for S3 backup bucket"
 }
+
