@@ -5,8 +5,7 @@ resource "aws_kms_key" "key" {
     enable_key_rotation = true
 
     tags {
-        Name        = "Environment"
-        Environment = "${var.env_name}"
+        environment = "${var.env_name}"
     }
 }
 
