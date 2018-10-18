@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "bucket" {
     bucket = "login-gov-${var.bucket_name}-${var.env_name}-${data.aws_caller_identity.current.account_id}-${var.region}"
     acl    = "private"

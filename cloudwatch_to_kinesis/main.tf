@@ -42,19 +42,13 @@ data "aws_iam_policy_document" "cloudwatch_access" {
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
  name = "${var.env_name}-${var.stream_name}"
  path = "/"
- assume_role_policy = "${data.aws_iam_policy_document.redshift_admin_assume.json}"
+ assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
-resource "aws_iam_policy" "cloudwatch_access" {
-    name        = "${var.env_name}-${var.stream_name}"
-    path        = "/"
-    description = "Cloudwatch access"
+resource "aws_iam_role_policy" "cloudwatch_access" {
+    name = "cloudwatch"
+    role = "${aws_iam_role.cloudwatch_to_kinesis.name}"
     policy = "${data.aws_iam_policy_document.cloudwatch_access.json}"
-}
-
-resource "aws_iam_role_policy_attachment" "cloudwatch_access" {
-    role       = "${aws_iam_role.cloudwatch_to_kinesis.name}"
-    policy_arn = "${aws_iam_policy.cloudwatch_access.arn}"
 }
 
 resource "aws_cloudwatch_log_destination" "datastream" {

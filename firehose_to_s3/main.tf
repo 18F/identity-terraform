@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
   name        = "${var.env_name}-${var.name}"
   destination = "extended_s3"

@@ -1,10 +1,12 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
     name = "${var.env_name}-${var.stream_name}"
     destination = "redshift"
 
     kinesis_source_configuration {
-    kinesis_stream_arn = "${var.datastream_source_arn}"
-    role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
+      kinesis_stream_arn = "${var.datastream_source_arn}"
+      role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
   }
 
     s3_configuration {
