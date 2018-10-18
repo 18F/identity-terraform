@@ -199,7 +199,7 @@ data "aws_iam_policy_document" "deliverystreamkms" {
 }
 
 resource "aws_iam_role" "firehose_to_redshift" {
-  name = "${var.env_name}-firehose-${var.stream_name}"
+  name = "${var.env_name}-${var.stream_name}"
   path = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }

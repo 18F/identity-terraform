@@ -1,6 +1,6 @@
 resource "aws_kms_key" "key" {
     description = "${var.key_description}",
-    deletion_windows_in_days = 30,
+    deletion_window_in_days = 30,
     is_enabled = true,
     enable_key_rotation = true
 
