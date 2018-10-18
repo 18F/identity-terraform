@@ -6,7 +6,7 @@ variable "region" {
     description = "AWS region"
 }
 
-variable "name" {
+variable "stream_name" {
     description = "Firehose name"
 }
 

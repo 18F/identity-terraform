@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
-  name        = "${var.env_name}-${var.name}"
+  name = "${var.env_name}-${var.stream_name}"
   destination = "extended_s3"
 
   kinesis_source_configuration {
@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "lambda" {
        "lambda:GetFunctionConfiguration"
      ]
      resources = [
-       "${var.lambd_arn}:$LATEST"
+       "${var.lambda_arn}:$LATEST"
      ]
    }
 }
@@ -154,7 +154,7 @@ data "aws_iam_policy_document" "kinesis" {
    }
 }
 
-data "aws_iam_policy_document" "datastreamkms" {
+data "aws_iam_policy_document" "deliverystreamkms" {
    statement {
      sid = "kms2" 
      effect = "Allow"
@@ -213,10 +213,10 @@ resource "aws_iam_role_policy" "s3kms" {
   policy = "${data.aws_iam_policy_document.s3kms.json}"
 }
 
-resource "aws_iam_role_policy" "datastreamkms" {
-  name = "datastreamkms"
+resource "aws_iam_role_policy" "deliverytreamkms" {
+  name = "deliverystreamkms"
   role = "${aws_iam_role.firehose_to_s3.id}"
-  policy = "${data.aws_iam_policy_document.datastreamkms.json}"
+  policy = "${data.aws_iam_policy_document.deliverystreamkms.json}"
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
