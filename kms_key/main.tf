@@ -10,6 +10,6 @@ resource "aws_kms_key" "key" {
 }
 
 resource "aws_kms_alias" "alias" {
-  name          = "${var.env_name}/${var.key_alias}"
+  name          = "alias/${var.env_name}-${var.key_alias}"
   target_key_id = "${aws_kms_key.key.key_id}"
 }
