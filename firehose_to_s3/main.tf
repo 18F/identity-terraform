@@ -120,7 +120,7 @@ data "aws_iam_policy_document" "s3kms" {
        variable = "kms:EncryptionContext:aws:s3:arn"
 
        values = [
-         "arn:aws:s3:::${var.firehose_bucket_name}/${var.firehose_prefix}*"
+         "arn:aws:s3:::${var.firehose_bucket_name}/${var.firehose_bucket_prefix}*"
        ]
      }
    }
@@ -213,7 +213,7 @@ resource "aws_iam_role_policy" "s3kms" {
   policy = "${data.aws_iam_policy_document.s3kms.json}"
 }
 
-resource "aws_iam_role_policy" "deliverytreamkms" {
+resource "aws_iam_role_policy" "deliverystreamkms" {
   name = "deliverystreamkms"
   role = "${aws_iam_role.firehose_to_s3.id}"
   policy = "${data.aws_iam_policy_document.deliverystreamkms.json}"

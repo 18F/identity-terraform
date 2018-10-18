@@ -231,7 +231,7 @@ resource "aws_iam_role_policy" "s3kms" {
 resource "aws_iam_role_policy" "deliverystreamkms" {
   name = "deliverystreamkms"
   role = "${aws_iam_role.firehose_to_redshift.id}"
-  policy = "${data.aws_iam_policy_document.deliverytreamkms.json}"
+  policy = "${data.aws_iam_policy_document.deliverystreamkms.json}"
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {

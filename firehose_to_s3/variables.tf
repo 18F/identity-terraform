@@ -18,7 +18,7 @@ variable "firehose_bucket_name" {
     description = "S3 Bucket name for firehose output"
 }
 
-variable "firehose_prefix" {
+variable "firehose_bucket_prefix" {
     description = "Prefix for S3 in the form of prefix/"
 }
  
@@ -28,10 +28,6 @@ variable "kms_key_id" {
 
 variable "kms_key_arn" {
     description = "KMS Encrypttion Key arn"
-}
-
-variable "firehose_bucket_prefix" {
-    description = "Firehose S3 bucket prefix"
 }
 
 variable "lambda_arn" {
