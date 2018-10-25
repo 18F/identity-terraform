@@ -13,7 +13,7 @@ variable "kinesis_shard_count" {
 
 variable "kinesis_retention_hours" {
     description  = "Number of hours to retain data in Kinesis stream. (Acceptable values 24 to 168)."
-    default = 24
+    default = 72
 }
 
 variable "kinesis_kms_key_id" {
