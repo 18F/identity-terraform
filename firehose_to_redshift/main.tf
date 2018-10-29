@@ -30,6 +30,8 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
         s3_backup_configuration {
             bucket_arn = "${var.s3_backup_bucket_arn}"
             prefix = "${var.s3_backup_bucket_prefix}"
+            role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
+            compression_format = "GZIP"
         }
         processing_configuration = [
           {

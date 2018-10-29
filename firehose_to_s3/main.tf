@@ -22,7 +22,7 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
         enabled = "true"
         processors = [
           {
-            type = "lambda"
+            type = "Lambda"
             parameters = [
               {
                 parameter_name = "LambdaArn"
