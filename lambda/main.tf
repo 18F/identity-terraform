@@ -46,18 +46,13 @@ data "aws_iam_policy_document" "assume-role" {
     }
 }
 
-resource "aws_iam_policy" "lambda" {
-    name = "${var.env_name}-${var.lambda_name}-policy"
-    path = "/"
-    policy = "${data.aws_iam_policy_document.logging.json}"
-}
-
 resource "aws_iam_role" "lambda" {
     name = "${var.env_name}-lambda-${var.lambda_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
-resource "aws_iam_role_policy_attachment" "lambda" {
-    role = "${aws_iam_role.lambda.name}"
-    policy_arn = "${aws_iam_policy.lambda.arn}"
+resource "aws_iam_role_policy" "logging" {
+  name = "logging"
+  role = "${aws_iam_role.lambda}"
+  policy = "${data.aws_iam_policy_document.logging.json}"
 }
