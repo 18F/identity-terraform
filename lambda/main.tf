@@ -9,7 +9,7 @@ resource "aws_lambda_function" "lambda" {
   timeout          = "${var.lambda_timeout}"
   role             = "${aws_iam_role.lambda.arn}"
   handler          = "${var.lambda_handler}"
-  source_code_hash = "${base64sha256(file("${var.source_key}.zip"))}"
+  #source_code_hash = "${base64sha256(file("${var.source_key}.zip"))}"
   runtime          = "${var.lambda_runtime}"
 }
 

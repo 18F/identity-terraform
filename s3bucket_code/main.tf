@@ -17,6 +17,8 @@ resource "aws_s3_bucket" "bucket" {
         enabled = true
 
         transition {
+            #todo add transition for previous versions to ia at 30 days
+            #cleanup multipart uploads at 7 days
             days = 720
             storage_class = "STANDARD_IA"
         }
