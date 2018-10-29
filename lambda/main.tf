@@ -53,6 +53,6 @@ resource "aws_iam_role" "lambda" {
 
 resource "aws_iam_role_policy" "logging" {
   name = "logging"
-  role = "${aws_iam_role.lambda}"
+  role = "${aws_iam_role.lambda.id}"
   policy = "${data.aws_iam_policy_document.logging.json}"
 }
