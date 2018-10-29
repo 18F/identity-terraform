@@ -4,7 +4,7 @@ resource "aws_kinesis_stream" "datastream" {
     shard_count = "${var.kinesis_shard_count}"
     retention_period = "${var.kinesis_retention_hours}"
     encryption_type = "KMS",
-    kms_key_id="${var.kinesis_kms_key_id}"
+    #kms_key_id="${var.kinesis_kms_key_id}"
 
     shard_level_metrics = [
         "ReadProvisionedThroughputExceeded",
