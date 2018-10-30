@@ -9,6 +9,11 @@ resource "aws_cloudwatch_log_group" "log_group" {
     }
 }
 
+resource "aws_cloudwatch_log_stream" "log_stream" {
+  name           = "S3Delivery"
+  log_group_name = "${aws_cloudwatch_log_group.log_group.name}"
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
   name = "${var.env_name}-${var.stream_name}"
   destination = "extended_s3"

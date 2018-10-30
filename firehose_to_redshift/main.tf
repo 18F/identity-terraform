@@ -9,6 +9,11 @@ resource "aws_cloudwatch_log_group" "log_group" {
     }
 }
 
+resource "aws_cloudwatch_log_stream" "log_stream" {
+  name           = "RedshiftDelivery"
+  log_group_name = "${aws_cloudwatch_log_group.log_group.name}"
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
     name = "${var.env_name}-${var.stream_name}"
     destination = "redshift"
