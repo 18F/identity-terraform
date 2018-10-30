@@ -19,8 +19,7 @@ data "aws_iam_policy_document" "logging" {
     effect = "Allow"
     actions = [
         "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
+        "logs:CreateLogStream"
     ]
 
     resources = [
@@ -30,6 +29,9 @@ data "aws_iam_policy_document" "logging" {
   statement {
       sid = "PutLogEvents"
       effect = "Allow"
+      actions = [
+        "logs:PutLogEvents"
+      ]
 
       resources = [
           "arn:aws:logs:us-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}"
