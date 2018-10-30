@@ -105,7 +105,7 @@ data "aws_iam_policy_document" "lambda" {
 
 data "aws_iam_policy_document" "s3kms" {
    statement {
-     sid = "kms1" 
+     sid = "s3kms" 
      effect = "Allow"
      actions = [
        "kms:GenerateDataKey",
@@ -163,7 +163,7 @@ data "aws_iam_policy_document" "kinesis" {
 
 data "aws_iam_policy_document" "deliverystreamkms" {
    statement {
-     sid = "kms2" 
+     sid = "deliverystreamkms" 
      effect = "Allow"
      actions = [
        "kms:Decrypt"
