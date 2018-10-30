@@ -9,7 +9,6 @@ resource "aws_lambda_function" "lambda" {
   timeout          = "${var.lambda_timeout}"
   role             = "${aws_iam_role.lambda.arn}"
   handler          = "${var.lambda_handler}"
-  #source_code_hash = "${base64sha256(file("${var.source_key}.zip"))}"
   runtime          = "${var.lambda_runtime}"
 }
 
@@ -18,8 +17,7 @@ data "aws_iam_policy_document" "logging" {
     sid    = "CreateLogGroup"
     effect = "Allow"
     actions = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream"
+        "logs:CreateLogGroup"
     ]
 
     resources = [
@@ -30,11 +28,12 @@ data "aws_iam_policy_document" "logging" {
       sid = "PutLogEvents"
       effect = "Allow"
       actions = [
-        "logs:PutLogEvents"
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
       ]
 
       resources = [
-          "arn:aws:logs:us-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}"
+          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}"
       ]
   }
 }
