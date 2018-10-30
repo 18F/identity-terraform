@@ -47,11 +47,11 @@ variable "intermediate_bucket_arn" {
 }
 
 variable "s3_temp_key_arn" {
-    description = "KMS key arn for S3 bucket encryption"
+    description = "KMS key arn for S3 bucket backup/intermediate bucket"
 }
 
 variable "stream_key_arn" {
-    description = "KMS key arn for S3 bucket encryption"
+    description = "KMS key arn for source datastream"
 }
 
 variable "buffer_size" {

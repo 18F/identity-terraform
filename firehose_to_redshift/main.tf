@@ -15,7 +15,7 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
         buffer_size = "${var.buffer_size}"
         buffer_interval = "${var.buffer_interval}"
         compression_format = "GZIP"
-        kms_key_arn = "${var.s3_key_arn}"
+        kms_key_arn = "${var.s3_temp_key_arn}"
     }
 
     redshift_configuration {
@@ -122,7 +122,7 @@ data "aws_iam_policy_document" "s3kms" {
        "kms:Decrypt"
      ]
      resources = [
-       "${var.s3_key_arn}"
+       "${var.s3_temp_key_arn}"
      ]
      condition {
        test = "StringEquals"
