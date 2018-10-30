@@ -22,12 +22,12 @@ variable "firehose_bucket_prefix" {
     description = "Prefix for S3 in the form of prefix/"
 }
  
-variable "kms_key_id" {
-    description = "KMS Encryption Key Id"
+variable "s3_key_arn" {
+    description = "KMS Encryption Key arn for S3 bucket"
 }
 
-variable "kms_key_arn" {
-    description = "KMS Encrypttion Key arn"
+variable "stream_key_arn" {
+    description = "KMS Encryption Key arn for datastream"
 }
 
 variable "lambda_arn" {
@@ -44,3 +44,10 @@ variable "buffer_interval" {
     default = "60"
 }
 
+variable "s3_backup_bucket_arn" {
+    description = "Arn for s3 backup"
+}
+
+variable "s3_backup_bucket_prefix" {
+    description = "Prefix for S3 backup bucket"
+}

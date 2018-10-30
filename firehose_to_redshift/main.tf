@@ -115,14 +115,14 @@ data "aws_iam_policy_document" "lambda" {
 
 data "aws_iam_policy_document" "s3kms" {
    statement {
-     sid = "kms1" 
+     sid = "s3kms" 
      effect = "Allow"
      actions = [
        "kms:GenerateDataKey",
        "kms:Decrypt"
      ]
      resources = [
-       "${var.kms_key_arn}"
+       "${var.s3_key_arn}"
      ]
      condition {
        test = "StringEquals"
@@ -173,13 +173,13 @@ data "aws_iam_policy_document" "kinesis" {
 
 data "aws_iam_policy_document" "deliverystreamkms" {
    statement {
-     sid = "kms2" 
+     sid = "deliverystreamkms" 
      effect = "Allow"
      actions = [
        "kms:Decrypt"
      ]
      resources = [
-       "${var.kms_key_arn}"
+       "${var.stream_key_arn}"
      ]
      condition {
        test = "StringEquals"
@@ -194,7 +194,7 @@ data "aws_iam_policy_document" "deliverystreamkms" {
        variable = "kms:EncryptionContext:aws:kinesis:arn"
 
        values = [
-         "arn:aws:kinesis:${var.region}:${data.aws_caller_identity.current.account_id}:stream/${aws_kinesis_firehose_delivery_stream.rs_stream.name}"
+         "${var.datastream_source_arn}"
        ]
      }
    }

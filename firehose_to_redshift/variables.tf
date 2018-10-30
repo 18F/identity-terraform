@@ -46,7 +46,11 @@ variable "intermediate_bucket_arn" {
     description = "S3 bucket arn for intermediate storage"
 }
 
-variable "kms_key_arn" {
+variable "s3_temp_key_arn" {
+    description = "KMS key arn for S3 bucket encryption"
+}
+
+variable "stream_key_arn" {
     description = "KMS key arn for S3 bucket encryption"
 }
 

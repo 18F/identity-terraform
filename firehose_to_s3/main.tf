@@ -16,7 +16,14 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
     buffer_size = "${var.buffer_size}"
     buffer_interval = "${var.buffer_interval}"
     compression_format = "GZIP"
-    kms_key_arn = "${var.kms_key_arn}"
+    s3_backup_mode = "Enabled"
+    s3_backup_configuration {
+      bucket_arn = "${var.s3_backup_bucket_arn}"
+      prefix = "${var.s3_backup_bucket_prefix}"
+      role_arn = "${aws_iam_role.firehose_to_s3.arn}"
+      compression_format = "GZIP"
+    }
+    kms_key_arn = "${var.s3_key_arn}"
     processing_configuration = [
       {
         enabled = "true"
@@ -105,7 +112,7 @@ data "aws_iam_policy_document" "s3kms" {
        "kms:Decrypt"
      ]
      resources = [
-       "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_id}"
+       "${var.s3_key_arn}"
      ]
      condition {
        test = "StringEquals"
@@ -162,7 +169,7 @@ data "aws_iam_policy_document" "deliverystreamkms" {
        "kms:Decrypt"
      ]
      resources = [
-       "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_id}"
+       "${var.stream_key_arn}"
      ]
      condition {
        test = "StringEquals"
@@ -177,7 +184,7 @@ data "aws_iam_policy_document" "deliverystreamkms" {
        variable = "kms:EncryptionContext:aws:kinesis:arn"
 
        values = [
-         "arn:aws:kinesis:${var.region}:${data.aws_caller_identity.current.account_id}:stream/${aws_kinesis_firehose_delivery_stream.kinesis_s3.name}"
+         "${var.datastream_source_arn}"
        ]
      }
    }
