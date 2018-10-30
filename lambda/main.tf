@@ -17,6 +17,11 @@ data "aws_iam_policy_document" "logging" {
   statement {
     sid    = "CreateLogGroup"
     effect = "Allow"
+    actions = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+    ]
 
     resources = [
       "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
