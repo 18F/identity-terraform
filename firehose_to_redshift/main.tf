@@ -28,10 +28,15 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
         data_table_columns = "${var.columns}"
         s3_backup_mode = "Enabled"
         s3_backup_configuration {
-            bucket_arn = "${var.s3_backup_bucket_arn}"
-            prefix = "${var.s3_backup_bucket_prefix}"
-            role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
-            compression_format = "GZIP"
+          bucket_arn = "${var.s3_backup_bucket_arn}"
+          prefix = "${var.s3_backup_bucket_prefix}"
+          role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
+          compression_format = "GZIP"
+        }
+        cloudwatch_logging_options {
+          enabled = true
+          log_group_name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
+          log_stream_name = "RedshiftDelivery"
         }
         processing_configuration = [
           {

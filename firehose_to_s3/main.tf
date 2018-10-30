@@ -16,6 +16,11 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
     buffer_size = "${var.buffer_size}"
     buffer_interval = "${var.buffer_interval}"
     compression_format = "GZIP"
+    cloudwatch_logging_options {
+      enabled = true
+      log_group_name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
+      log_stream_name = "S3Delivery"
+    }
     s3_backup_mode = "Enabled"
     s3_backup_configuration {
       bucket_arn = "${var.s3_backup_bucket_arn}"
@@ -141,7 +146,7 @@ data "aws_iam_policy_document" "cloudwatch" {
        "logs:PutLogEvents"
      ]
      resources = [
-       "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kinesisfirehose/"
+       "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kinesisfirehose/${var.env_name}-${var.stream_name}:log-stream:*"
      ]
    }
 }
