@@ -72,3 +72,7 @@ variable "s3_backup_bucket_prefix" {
     description = "Prefix for S3 backup bucket"
 }
 
+variable "log_retention_in_days" {
+    description = "Number of days to retain CloudWatch log data for firehose"
+    default = 365
+}

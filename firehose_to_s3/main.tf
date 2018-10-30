@@ -1,5 +1,14 @@
 data "aws_caller_identity" "current" {}
 
+resource "aws_cloudwatch_log_group" "log_group" {
+    name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
+    retention_in_days = "${var.log_retention_in_days}"
+
+    tags {
+        environment = "${var.env_name}"
+    }
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
   name = "${var.env_name}-${var.stream_name}"
   destination = "extended_s3"
@@ -146,7 +155,7 @@ data "aws_iam_policy_document" "cloudwatch" {
        "logs:PutLogEvents"
      ]
      resources = [
-       "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kinesisfirehose/${var.env_name}-${var.stream_name}:log-stream:*"
+       "${aws_cloudwatch_log_group.log_group.arn}:log-stream:*"
      ]
    }
 }

@@ -1,5 +1,14 @@
 data "aws_caller_identity" "current" {}
 
+resource "aws_cloudwatch_log_group" "log_group" {
+    name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
+    retention_in_days = "${var.log_retention_in_days}"
+
+    tags {
+        environment = "${var.env_name}"
+    }
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
     name = "${var.env_name}-${var.stream_name}"
     destination = "redshift"
