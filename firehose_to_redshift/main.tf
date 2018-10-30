@@ -170,7 +170,7 @@ data "aws_iam_policy_document" "cloudwatch" {
        "logs:PutLogEvents"
      ]
      resources = [
-       "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kinesisfirehose/${var.env_name}-${var.stream_name}:log-stream:*"
+       "${aws_cloudwatch_log_group.log_group.arn}"
      ]
    }
 }
