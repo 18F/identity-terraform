@@ -166,7 +166,7 @@ data "aws_iam_policy_document" "kinesis" {
        "kinesis:GetRecords"
      ]
      resources = [
-       "${aws_kinesis_firehose_delivery_stream.rs_stream.arn}"
+       "${var.datastream_source_arn}"
      ]
    }
 }
