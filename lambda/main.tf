@@ -56,7 +56,7 @@ resource "aws_iam_role" "lambda" {
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
-resource "aws_iam_role_policy" "logging" {
+resource "aws_iam_role_policy" "logging1" {
   name = "logging"
   role = "${aws_iam_role.lambda.id}"
   policy = "${data.aws_iam_policy_document.logging.json}"
