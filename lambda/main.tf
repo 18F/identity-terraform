@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "logging" {
       ]
 
       resources = [
-          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}"
+          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}:*"
       ]
   }
 }
