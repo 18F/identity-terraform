@@ -30,7 +30,7 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
 
     s3_configuration {
         role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
-        bucket_arn = "${var.intermediate_bucket_arn}"
+        bucket_arn = "${var.s3_intermediate_bucket_arn}"
         buffer_size = "${var.buffer_size}"
         buffer_interval = "${var.buffer_interval}"
         compression_format = "GZIP"

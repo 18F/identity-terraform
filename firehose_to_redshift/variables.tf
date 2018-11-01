@@ -42,7 +42,7 @@ variable "lambda_arn" {
     description = "Transformation Lambda arn"
 }
 
-variable "intermediate_bucket_arn" {
+variable "s3_intermediate_bucket_arn" {
     description = "S3 bucket arn for intermediate storage"
 }
 
