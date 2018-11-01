@@ -46,6 +46,10 @@ variable "intermediate_bucket_arn" {
     description = "S3 bucket arn for intermediate storage"
 }
 
+variable "s3_intermediate_bucket_prefix" {
+    description = "Prefix for S3 intermediate bucket"
+}
+
 variable "s3_temp_key_arn" {
     description = "KMS key arn for S3 bucket backup/intermediate bucket"
 }
@@ -68,8 +72,8 @@ variable "s3_backup_bucket_arn" {
     description = "Arn for s3 backup"
 }
 
-variable "s3_bucket_prefix" {
-    description = "Prefix for S3 bucket(s)"
+variable "s3_backup_bucket_prefix" {
+    description = "Prefix for S3 backup bucket"
 }
 
 variable "log_retention_in_days" {

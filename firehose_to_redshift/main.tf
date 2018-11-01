@@ -35,7 +35,7 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
         buffer_interval = "${var.buffer_interval}"
         compression_format = "GZIP"
         kms_key_arn = "${var.s3_temp_key_arn}"
-        prefix = "${var.s3_bucket_prefix}"
+        prefix = "${var.s3_intermediate_bucket_prefix}"
     }
 
     redshift_configuration {
@@ -49,7 +49,7 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
         s3_backup_mode = "Enabled"
         s3_backup_configuration {
           bucket_arn = "${var.s3_backup_bucket_arn}"
-          prefix = "${var.s3_bucket_prefix}"
+          prefix = "${var.s3_backup_bucket_prefix}"
           role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
           compression_format = "GZIP"
         }
@@ -118,6 +118,8 @@ data "aws_iam_policy_document" "s3" {
      resources = [
         "${var.s3_backup_bucket_arn}",
         "${var.s3_backup_bucket_arn}/*",
+        "${var.s3_intermediate_bucket_arn}",
+        "${var.s3_intermediate_bucket_arn}/*",
         "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%",
         "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*"
      ]
@@ -162,7 +164,8 @@ data "aws_iam_policy_document" "s3kms" {
        variable = "kms:EncryptionContext:aws:s3:arn"
 
        values = [
-         "${var.s3_backup_bucket_arn}/${var.s3_bucket_prefix}*"
+         "${var.s3_backup_bucket_arn}/${var.s3_backup_bucket_prefix}*",
+         "${var.s3_intermediate_bucket_arn}/${var.s3_intermediate_bucket_prefix}*"
        ]
      }
    }
