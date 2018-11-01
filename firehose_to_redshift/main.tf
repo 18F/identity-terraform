@@ -127,16 +127,18 @@ data "aws_iam_policy_document" "s3" {
 }
 
 data "aws_iam_policy_document" "s3jsonpaths" {
-  sid = "S3jsonpaths"
-  effect = "Allow"
-  actions = [
-    "s3:GetObject",
-    "s3:ListBucket"
-  ]
-  resources = [
-    "${var.s3_jsonpaths_bucket_arn}",
-    "${var.s3_jsonpaths_bucket_arn}/*"
-  ] 
+  statement {
+    sid = "S3jsonpaths"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      "${var.s3_jsonpaths_bucket_arn}",
+      "${var.s3_jsonpaths_bucket_arn}/*"
+    ] 
+  }
 }
 
 data "aws_iam_policy_document" "lambda" {
@@ -287,4 +289,10 @@ resource "aws_iam_role_policy" "kinesis" {
   name = "kinesis"
   role = "${aws_iam_role.firehose_to_redshift.id}"
   policy = "${data.aws_iam_policy_document.kinesis.json}"
+}
+
+resource "aws_iam_role_policy" "s3jsonpaths" {
+  name = "s3jsonpaths"
+  role = "${aws_iam_role.firehose_to_redshift.id}"
+  policy = "${data.aws_iam_policy_document.s3jsonpaths.json}"
 }
