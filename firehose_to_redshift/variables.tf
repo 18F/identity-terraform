@@ -68,8 +68,8 @@ variable "s3_backup_bucket_arn" {
     description = "Arn for s3 backup"
 }
 
-variable "s3_backup_bucket_prefix" {
-    description = "Prefix for S3 backup bucket"
+variable "s3_bucket_prefix" {
+    description = "Prefix for S3 bucket(s)"
 }
 
 variable "log_retention_in_days" {
