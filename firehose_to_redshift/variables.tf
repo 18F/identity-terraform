@@ -80,3 +80,7 @@ variable "log_retention_in_days" {
     description = "Number of days to retain CloudWatch log data for firehose"
     default = 365
 }
+
+variable "s3_jsonpaths_bucket_arn" {
+    description = "S3 arn for jsonpaths bucket"
+}

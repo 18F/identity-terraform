@@ -126,6 +126,19 @@ data "aws_iam_policy_document" "s3" {
    }
 }
 
+data "aws_iam_policy_document" "s3jsonpaths" {
+  sid = "S3jsonpaths"
+  effect = "Allow"
+  actions = [
+    "s3:GetObject",
+    "s3:ListBucket"
+  ]
+  resources = [
+    "${var.s3_jsonpaths_bucket_arn}",
+    "${var.s3_jsonpaths_bucket_arn}/*"
+  ] 
+}
+
 data "aws_iam_policy_document" "lambda" {
    statement {
      sid = "Lambda" 
