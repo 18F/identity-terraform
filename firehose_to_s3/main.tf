@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 resource "aws_cloudwatch_log_group" "log_group" {
     name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
     retention_in_days = "${var.log_retention_in_days}"
@@ -100,10 +98,10 @@ data "aws_iam_policy_document" "s3" {
        "s3:PutObject"
      ]
      resources = [
-        "arn:aws:s3:::${var.firehose_bucket_name}",
-        "arn:aws:s3:::${var.firehose_bucket_name}/*",
-        "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%",
-        "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*"
+        "${var.firehose_bucket_arn}",
+        "${var.firehose_bucket_arn}/*",
+        "${var.s3_backup_bucket_arn}",
+        "${var.s3_backup_bucket_arn}/*"
      ]
    }
 }
@@ -146,7 +144,8 @@ data "aws_iam_policy_document" "s3kms" {
        variable = "kms:EncryptionContext:aws:s3:arn"
 
        values = [
-         "arn:aws:s3:::${var.firehose_bucket_name}/${var.firehose_bucket_prefix}*"
+         "${var.firehose_bucket_arn}/${var.firehose_bucket_prefix}*",
+         "${var.s3_backup_bucket_arn}/${var.s3_backup_bucket_prefix}*"
        ]
      }
    }

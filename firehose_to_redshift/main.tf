@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 resource "aws_cloudwatch_log_group" "log_group" {
     name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
     retention_in_days = "${var.log_retention_in_days}"
@@ -119,9 +117,7 @@ data "aws_iam_policy_document" "s3" {
         "${var.s3_backup_bucket_arn}",
         "${var.s3_backup_bucket_arn}/*",
         "${var.s3_intermediate_bucket_arn}",
-        "${var.s3_intermediate_bucket_arn}/*",
-        "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%",
-        "arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*"
+        "${var.s3_intermediate_bucket_arn}/*"
      ]
    }
 }
