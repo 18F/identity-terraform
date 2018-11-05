@@ -24,13 +24,14 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
     kinesis_source_configuration {
       kinesis_stream_arn = "${var.datastream_source_arn}"
       role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
-  }
+    }
 
+    # this is the configuration for the intermediate s3 destination
     s3_configuration {
         role_arn = "${aws_iam_role.firehose_to_redshift.arn}"
         bucket_arn = "${var.s3_intermediate_bucket_arn}"
-        buffer_size = "${var.buffer_size}"
-        buffer_interval = "${var.buffer_interval}"
+        buffer_size = "${var.s3_intermediate_buffer_size}"
+        buffer_interval = "${var.s3_intermediate_buffer_interval}"
         compression_format = "GZIP"
         kms_key_arn = "${var.s3_temp_key_arn}"
         prefix = "${var.s3_intermediate_bucket_prefix}"
@@ -66,6 +67,14 @@ resource "aws_kinesis_firehose_delivery_stream" "rs_stream" {
                   {
                     parameter_name = "LambdaArn"
                     parameter_value = "${var.lambda_arn}:$LATEST"
+                  },
+                  {
+                    parameter_name = "BufferSizeInMBs"
+                    parameter_value = "${var.lambda_buffer_size}"
+                  },
+                  {
+                    parameter_name = "BufferIntervalInSeconds"
+                    parameter_value = "${var.lambda_buffer_interval}"
                   }
                 ]
               }

@@ -42,6 +42,16 @@ variable "lambda_arn" {
     description = "Transformation Lambda arn"
 }
 
+variable "lambda_buffer_size" {
+    description = "Amount of data in MBs to buffer prior to calling transformation lambda value between 1 and 3"
+    default = "2"
+}
+
+variable "lambda_buffer_interval" {
+    description = "Amount of time in seconds to elapse prior to calling transformation lambda value between 60 and 900"
+    default = "120"
+}
+
 variable "s3_intermediate_bucket_arn" {
     description = "S3 bucket arn for intermediate storage"
 }
@@ -54,18 +64,18 @@ variable "s3_temp_key_arn" {
     description = "KMS key arn for S3 bucket backup/intermediate bucket"
 }
 
+variable "s3_intermediate_buffer_size" {
+    description = "Amount of data in mb to buffer before writing to S3 values between 1 and 128"
+    default = "50"
+}
+
+variable "s3_intermediate_buffer_interval" {
+    description = "Amount of time in seconds to wait before writing to S3 values between 60 and 900"
+    default = "120"
+}
+
 variable "stream_key_arn" {
     description = "KMS key arn for source datastream"
-}
-
-variable "buffer_size" {
-    description = "Amount of data in mb to buffer before writing to S3 values between 1 and 128"
-    default = "1"
-}
-
-variable "buffer_interval" {
-    description = "Amount of time in seconds to wait before writing to S3 values between 60 and 900"
-    default = "60"
 }
 
 variable "s3_backup_bucket_arn" {

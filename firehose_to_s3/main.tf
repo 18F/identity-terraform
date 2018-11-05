@@ -25,8 +25,8 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
     role_arn   = "${aws_iam_role.firehose_to_s3.arn}"
     bucket_arn = "${var.firehose_bucket_arn}"
     prefix = "${var.firehose_bucket_prefix}/"
-    buffer_size = "${var.buffer_size}"
-    buffer_interval = "${var.buffer_interval}"
+    buffer_size = "${var.s3_buffer_size}"
+    buffer_interval = "${var.s3_buffer_interval}"
     compression_format = "GZIP"
     cloudwatch_logging_options {
       enabled = true
@@ -51,6 +51,14 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
               {
                 parameter_name = "LambdaArn"
                 parameter_value = "${var.lambda_arn}:$LATEST"
+              },
+              {
+                parameter_name = "BufferSizeInMBs"
+                parameter_value = "${var.lambda_buffer_size}"
+              },
+              {
+                parameter_name = "BufferIntervalInSeconds"
+                parameter_value = "${var.lambda_buffer_interval}"
               }
             ]
           }
