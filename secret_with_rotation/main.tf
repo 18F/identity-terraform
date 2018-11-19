@@ -13,3 +13,63 @@ resource "aws_secretsmanager_secret" "secret_with_rotation" {
         environment = "${var.env_name}"
     }
 }
+
+data "aws_iam_policy_document" "EC2" {
+    statement {
+        sid = "EC2"
+        effect = "Allow"
+        actions = [
+            "ec2:CreateNetworkInterface",
+            "ec2:DeleteNetworkInterface",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DetachNetworkInterface"
+        ]
+        resources = [
+            "*"
+        ]
+    }
+}
+
+resource "aws_iam_role_policy_attachment" "EC2" {
+    role       = "${var.password_rotation_lambda_role_arn}"
+    policy_arn = "${aws_iam_policy.EC2.arn}"
+}
+
+data "aws_iam_policy_document" "secretsmanager" {
+    statement {
+        sid = "secretsmanager"
+        effect = "Allow"
+        actions = [
+            "secretsmanager:DescribeSecret",
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:PutSecretValue",
+            "secretsmanager:UpdateSecretVersionStage"
+        ]
+        resources = [
+            "arn:aws:secretsmanager:us-east-1:540430061122:secret:dev/redshift/*" # fix
+        ]
+        condition {
+            test = "StringEquals"
+            variable = "secretsmanager:resource/AllowRotationLambdaArn"
+            values = [
+                "arn:aws:lambda:us-east-1:540430061122:function:cloud9-rstest2-rstest2-CSTT3JTRKWWG" #fix
+            ]
+        }
+    }
+
+    statement {
+        sid = "secretsmanager_random"
+        effect = "Allow"
+        actions = [
+            "secretsmanager:GetRandomPassword"
+        ]
+        resources = [
+            "*"
+        ]
+    }
+}
+
+resource "aws_iam_role_policy_attachment" "secretsmanager" {
+    role       = "${var.password_rotation_lambda_role_arn}"
+    policy_arn = "${aws_iam_policy.secretsmanager.arn}"
+}
