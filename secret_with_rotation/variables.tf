@@ -33,6 +33,10 @@ variable "secret_rotation_days" {
     default = "15"
 }
 
+variable "lambda_source_bucket" {
+    description = "Lambda source bucket name"
+}
+
 variable "password_rotation_lambda_source_key" {
     description = "Path in S3 bucket to lambda function example: kinesis/events_transform.zip"
 }

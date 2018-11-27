@@ -16,7 +16,7 @@ module "password_rotation_lambda" {
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
     name = "${var.env_name}-${var.secret_name}"
     description = "${var.secret_description}"
-    rotation_lambda_arn = "${var.secret_rotation_lambda_arn}"
+    rotation_lambda_arn = "${module.password_rotation_lambda.lambda_arn}"
     kms_key_id = "${var.secret_kms_key_id}"
     recovery_windows_in_days = "${var.secret_recovery_window}"
     
