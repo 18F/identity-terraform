@@ -10,15 +10,15 @@ output "arn" {
 
 output "lambda_arn" {
     description = "Rotation lambda arn"
-    value = "${module.password_rotation_lambda.lambda_arn}"
+    value = "${aws_lambda_function.lambda.arn}"
 }
 
 output "lambda_role_arn" {
     description = "Rotation lambda role arn"
-    value = "${module.password_rotation_lambda.lambda_role_arn}"
+    value = "${aws_iam_role.lambda.arn}"
 }
 
 output "lambda_role_id" {
     description = "Rotation lambda role id"
-    value = "${module.password_rotation_lambda.lambda_role_id}"
+    value = "${aws_iam_role.lambda.unique_id}"
 }
