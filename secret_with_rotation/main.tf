@@ -17,7 +17,7 @@ resource "aws_secretsmanager_secret" "secret_with_rotation" {
     description = "${var.secret_description}"
     rotation_lambda_arn = "${aws_lambda_function.lambda.arn}"
     kms_key_id = "${var.secret_kms_key_id}"
-    recovery_windows_in_days = "${var.secret_recovery_window}"
+    recovery_window_in_days = "${var.secret_recovery_window}"
     
     rotation_rules {
         automatically_after_days = "${var.secret_rotation_days}"
