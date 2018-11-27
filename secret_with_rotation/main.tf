@@ -1,5 +1,5 @@
 module "password_rotation_lambda" {
-    source = "github.com/18F/identity-terraform//lambda?ref=2dc82332a105c47dd5695c53015bbb6b857c3016"
+    source = "github.com/18F/identity-terraform//lambda?ref=57f88f1d902167be291db4cc1a9eca69cdd47c64"
 
     env_name = "${var.env_name}"
     region = "${var.region}"
