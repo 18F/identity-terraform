@@ -12,3 +12,8 @@ output "lambda_role_name" {
     description = "Name of IAM Role assigned to Lambda"
     value = "${aws_iam_role.lambda.name}"
 }
+
+output "lambda_role_id" {
+    description = "Unique id for role"
+    value = "${aws_iam_role.lambda.unique_id}"
+}

@@ -28,5 +28,3 @@ variable "secret_rotation_days" {
     description = "Number of days between secret rotation"
     default = "15"
 }
-
-password_rotation_lambda_role_arn
