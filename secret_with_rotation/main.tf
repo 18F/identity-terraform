@@ -1,16 +1,15 @@
-module "password_rotation_lambda" {
-    source = "github.com/18F/identity-terraform//lambda?ref=57f88f1d902167be291db4cc1a9eca69cdd47c64"
+data "aws_caller_identity" "current" {}
 
-    env_name = "${var.env_name}"
-    region = "${var.region}"
-    source_bucket_name = "${var.lambda_source_bucket}"
-    source_key = "${var.password_rotation_lambda_source_key}"
-    lambda_name = "${var.env_name}-${var.secret_name}-password_rotation"
-    lambda_description = "Function to rotate password"
-    lambda_memory = "${var.password_rotation_lambda_memory}"
-    lambda_timeout = "${var.password_rotation_lambda_timeout}"
-    lambda_handler = "${var.password_rotation_lambda_handler}" 
-    lambda_runtime = "${var.password_rotation_lambda_runtime}"
+resource "aws_lambda_function" "lambda" {
+  s3_bucket = "${var.lambda_source_bucket}"
+  s3_key = "${var.password_rotation_lambda_source_key}"
+  function_name = "${var.env_name}-${var.secret_name}-password_rotation"
+  description = "Lambda for password rotation"
+  memory_size = "${var.password_rotation_lambda_memory}"
+  timeout = "${var.password_rotation_lambda_timeout}"
+  role = "${aws_iam_role.lambda.arn}"
+  handler = "${var.password_rotation_lambda_handler}"
+  runtime = "${var.password_rotation_lambda_runtime}"
 }
 
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
@@ -27,6 +26,57 @@ resource "aws_secretsmanager_secret" "secret_with_rotation" {
     tags {
         environment = "${var.env_name}"
     }
+}
+
+data "aws_iam_policy_document" "logging" {
+  statement {
+    sid    = "CreateLogGroup"
+    effect = "Allow"
+    actions = [
+        "logs:CreateLogGroup"
+    ]
+
+    resources = [
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+    ]
+  }
+  statement {
+      sid = "PutLogEvents"
+      effect = "Allow"
+      actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+      ]
+
+      resources = [
+          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.secret_name}-password_rotation:*"
+      ]
+  }
+}
+
+data "aws_iam_policy_document" "assume-role" {
+    statement {
+        actions = [
+            "sts:AssumeRole"
+        ]
+        principals {
+            type = "Service"
+            identifiers = [
+                "lambda.amazonaws.com"
+            ]
+        }
+    }
+}
+
+resource "aws_iam_role" "lambda" {
+    name = "${var.env_name}-${var.secret_name}-password_rotation-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+resource "aws_iam_role_policy" "logging" {
+  name = "logging"
+  role = "${aws_iam_role.lambda.id}"
+  policy = "${data.aws_iam_policy_document.logging.json}"
 }
 
 data "aws_iam_policy_document" "EC2" {
@@ -47,7 +97,7 @@ data "aws_iam_policy_document" "EC2" {
 
 resource "aws_iam_role_policy" "EC2" {
     name = "EC2"
-    role = "${module.password_rotation_lambda.lambda_role_id}"
+    role = "${aws_iam_role.lambda.id}"
     policy = "${data.aws_iam_policy_document.EC2.json}"
 }
 
@@ -69,7 +119,7 @@ data "aws_iam_policy_document" "secretsmanager" {
             test = "StringEquals"
             variable = "secretsmanager:resource/AllowRotationLambdaArn"
             values = [
-                "${module.password_rotation_lambda.lambda_arn}"
+                "${aws_iam_role.lambda.arn}"
             ]
         }
     }
@@ -88,6 +138,6 @@ data "aws_iam_policy_document" "secretsmanager" {
 
 resource "aws_iam_role_policy" "secretsmanager" {
     name = "secretsmanager"
-    role = "${module.password_rotation_lambda.lambda_role_id}"
+    role = "${aws_iam_role.lambda.id}"
     policy = "${data.aws_iam_policy_document.secretsmanager.json}"
 }
