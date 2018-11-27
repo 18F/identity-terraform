@@ -15,7 +15,7 @@ resource "aws_lambda_function" "lambda" {
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
     name = "${var.env_name}-${var.secret_name}"
     description = "${var.secret_description}"
-    rotation_lambda_arn = "${aws_lambda_function.lambda_arn}"
+    rotation_lambda_arn = "${aws_lambda_function.lambda.arn}"
     kms_key_id = "${var.secret_kms_key_id}"
     recovery_windows_in_days = "${var.secret_recovery_window}"
     
