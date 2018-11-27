@@ -1,3 +1,18 @@
+module "password_rotation_lambda" {
+    source = "github.com/18F/identity-terraform//lambda?ref=2dc82332a105c47dd5695c53015bbb6b857c3016"
+
+    env_name = "${var.env_name}"
+    region = "${var.region}"
+    source_bucket_name = "${var.lambda_source_bucket}"
+    source_key = "${var.password_rotation_lambda_source_key}"
+    lambda_name = "${var.env_name}-${var.secret_name}-password_rotation"
+    lambda_description = "Function to rotate password"
+    lambda_memory = "${var.password_rotation_lambda_memory}"
+    lambda_timeout = "${var.password_rotation_lambda_timeout}"
+    lambda_handler = "${var.password_rotation_lambda_handler}" 
+    lambda_runtime = "${var.password_rotation_lambda_runtime}"
+}
+
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
     name = "${var.env_name}-${var.secret_name}"
     description = "${var.secret_description}"
@@ -30,9 +45,10 @@ data "aws_iam_policy_document" "EC2" {
     }
 }
 
-resource "aws_iam_role_policy_attachment" "EC2" {
-    role       = "${var.password_rotation_lambda_role_arn}"
-    policy_arn = "${aws_iam_policy.EC2.arn}"
+resource "aws_iam_role_policy" "EC2" {
+    name = "EC2"
+    role = "${module.password_rotation_lambda.lambda_role_id}"
+    policy = "${data.aws_iam_policy_document.EC2.json}"
 }
 
 data "aws_iam_policy_document" "secretsmanager" {
@@ -46,13 +62,14 @@ data "aws_iam_policy_document" "secretsmanager" {
             "secretsmanager:UpdateSecretVersionStage"
         ]
         resources = [
-            "arn:aws:secretsmanager:us-east-1:540430061122:secret:dev/redshift/*" # fix
+            "${aws_secretsmanager_secret.secret_with_rotation.arn}"
+
         ]
         condition {
             test = "StringEquals"
             variable = "secretsmanager:resource/AllowRotationLambdaArn"
             values = [
-                "arn:aws:lambda:us-east-1:540430061122:function:cloud9-rstest2-rstest2-CSTT3JTRKWWG" #fix
+                "${module.password_rotation_lambda.lambda_arn}"
             ]
         }
     }
@@ -69,7 +86,8 @@ data "aws_iam_policy_document" "secretsmanager" {
     }
 }
 
-resource "aws_iam_role_policy_attachment" "secretsmanager" {
-    role       = "${var.password_rotation_lambda_role_arn}"
-    policy_arn = "${aws_iam_policy.secretsmanager.arn}"
+resource "aws_iam_role_policy" "secretsmanager" {
+    name = "secretsmanager"
+    role = "${module.password_rotation_lambda.lambda_role_id}"
+    policy = "${data.aws_iam_policy_document.secretsmanager.json}"
 }

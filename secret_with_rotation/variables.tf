@@ -2,6 +2,10 @@ variable "env_name" {
     description = "Environment Name"
 }
 
+variable "region" {
+    description = "AWS Region"
+}
+
 variable "secret_name" {
     description = "Name of secret"
 }
@@ -10,9 +14,9 @@ variable "secret_description" {
     description = "Description of secret"
 }
 
-variable "secret_rotation_lambda_arn" {
-    description = "Secret rotation lambda arn"
-}
+#variable "secret_rotation_lambda_arn" {
+#    description = "Secret rotation lambda arn"
+#}
 
 variable "secret_kms_key_id" {
     description = "KMS key used to encrypt secret"
