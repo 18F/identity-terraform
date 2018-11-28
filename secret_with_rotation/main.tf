@@ -129,7 +129,7 @@ data "aws_iam_policy_document" "secretsmanager" {
     }
 
     statement {
-        sid = "secretsmanager_random"
+        sid = "secretsmanagerrandom"
         effect = "Allow"
         actions = [
             "secretsmanager:GetRandomPassword"
