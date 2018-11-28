@@ -47,7 +47,7 @@ resource "aws_iam_role" "lambda" {
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
-data "aws_iam_role_policy" "secrets_manager_exec" {
+data "aws_iam_role_policy_document" "secrets_manager_exec" {
     sid = "secretsmanagerexec"
     effect = "Allow"
     principals = {
