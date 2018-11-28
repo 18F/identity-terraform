@@ -47,7 +47,7 @@ resource "aws_iam_role" "lambda" {
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
-data "aws_iam_role_policy" {
+data "aws_iam_role_policy" "secrets_manager_exec" {
     sid = "secretsmanagerexec"
     effect = "Allow"
     principals = {
@@ -60,6 +60,12 @@ data "aws_iam_role_policy" {
     resources = [
         "${aws_lambda_function.lambda.arn}"
     ]
+}
+
+resource "aws_iam_role_policy" "secrets_manager_exec" {
+  name = "secretsmanagerexec"
+  role = "${aws_iam_role.lambda.id}"
+  policy = "${data.aws_iam_policy_document.secrets_manager_exec.json}"
 }
 
 data "aws_iam_policy_document" "logging" {
