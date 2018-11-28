@@ -31,8 +31,7 @@ resource "aws_secretsmanager_secret" "secret_with_rotation" {
 data "aws_iam_policy_document" "assume-role" {
     statement {
         actions = [
-            "sts:AssumeRole",
-            "lambda:InvokeFunction"
+            "sts:AssumeRole"
         ]
         principals {
             type = "Service"
@@ -40,15 +39,6 @@ data "aws_iam_policy_document" "assume-role" {
                 "lambda.amazonaws.com"
             ]
         }
-        principals = {
-            type = "Service"
-            identifiers = [
-                "secretsmanager.amazonaws.com"
-            ]
-        }
-        resources = [
-            "${aws_lambda_function.lambda.arn}"
-        ]
     }
 }
 
@@ -129,7 +119,7 @@ data "aws_iam_policy_document" "secretsmanager" {
             test = "StringEquals"
             variable = "secretsmanager:resource/AllowRotationLambdaArn"
             values = [
-                "${aws_iam_role.lambda.arn}"
+                "${aws_lambda_function.lambda.arn}"
             ]
         }
     }
