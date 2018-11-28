@@ -1,9 +1,14 @@
 data "aws_caller_identity" "current" {}
 
+locals {
+    rotation_lambda_name = "${concat("${var.env_name}", "-", "${var.password_rotation_lambda_name}")}"
+    secret_name = "${concat("${var.env_name}", "/", "${var.secret_name}")}"
+}
+
 resource "aws_lambda_function" "lambda" {
     s3_bucket = "${var.lambda_source_bucket}"
     s3_key = "${var.password_rotation_lambda_source_key}"
-    function_name = "${var.env_name}-${var.password_rotation_lambda_name}_rotation"
+    function_name = "${local.rotation_lambda_name}"
     description = "Lambda for password rotation"
     memory_size = "${var.password_rotation_lambda_memory}"
     timeout = "${var.password_rotation_lambda_timeout}"
@@ -16,7 +21,7 @@ resource "aws_secretsmanager_secret" "secret_with_rotation" {
     depends_on = [
         "aws_lambda_function.lambda"
     ]
-    name = "${var.env_name}/${var.secret_name}"
+    name = "${local.secret_name}"
     description = "${var.secret_description}"
     rotation_lambda_arn = "${aws_lambda_function.lambda.arn}"
     kms_key_id = "${var.secret_kms_key_id}"
@@ -71,7 +76,7 @@ data "aws_iam_policy_document" "logging" {
       ]
 
       resources = [
-          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.secret_name}-password_rotation:*"
+          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.rotation_lambda_name}:*"
       ]
   }
 }
@@ -115,14 +120,14 @@ data "aws_iam_policy_document" "secretsmanager" {
             "secretsmanager:UpdateSecretVersionStage"
         ]
         resources = [
-            "arn:aws:secretmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.env_name}-${var.secret_name}"
+            "arn:aws:secretmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${local.secret_name}"
 
         ]
         condition {
             test = "StringEquals"
             variable = "secretsmanager:resource/AllowRotationLambdaArn"
             values = [
-                "arn:aws:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:${var.env_name}-${var.secret_name}-password_rotation"
+                "arn:aws:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:${local.rotation_lambda_name}"
             ]
         }
     }
