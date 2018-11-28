@@ -141,7 +141,7 @@ data "aws_iam_policy_document" "secretsmanager" {
 }
 
 resource "aws_iam_role_policy" "secretsmanager" {
-    depends_on = ["aws_lambda_function_lambda"]
+    depends_on = ["aws_lambda_function.lambda"]
     name = "secretsmanager"
     role = "${aws_iam_role.lambda.id}"
     policy = "${data.aws_iam_policy_document.secretsmanager.json}"
