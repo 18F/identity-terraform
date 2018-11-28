@@ -18,7 +18,7 @@ resource "aws_lambda_function" "lambda" {
 
     environment {
         variables = {
-            SECRETS_MANAGER_ENDPOINT = "secretsmanager.${var.region}.amazonaws.com"
+            SECRETS_MANAGER_ENDPOINT = "https://secretsmanager.${var.region}.amazonaws.com"
         }
     }
 }
