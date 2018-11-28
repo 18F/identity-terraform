@@ -1,8 +1,8 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-    rotation_lambda_name = "${concat("${var.env_name}", "-", "${var.password_rotation_lambda_name}")}"
-    secret_name = "${concat("${var.env_name}", "/", "${var.secret_name}")}"
+    rotation_lambda_name = "${var.env_name}-${var.password_rotation_lambda_name}"
+    secret_name = "${var.env_name}/${var.secret_name}"
 }
 
 resource "aws_lambda_function" "lambda" {
