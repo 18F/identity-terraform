@@ -14,13 +14,9 @@ variable "secret_description" {
     description = "Description of secret"
 }
 
-#variable "secret_rotation_lambda_arn" {
-#    description = "Secret rotation lambda arn"
-#}
-
 variable "secret_kms_key_id" {
     description = "KMS key used to encrypt secret"
-    default = "aws/secretsmanager"
+    default = "alias/aws/secretsmanager"
 }
 
 variable "secret_recovery_window" {

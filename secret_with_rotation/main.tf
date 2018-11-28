@@ -28,6 +28,40 @@ resource "aws_secretsmanager_secret" "secret_with_rotation" {
     }
 }
 
+data "aws_iam_policy_document" "assume-role" {
+    statement {
+        actions = [
+            "sts:AssumeRole"
+        ]
+        principals {
+            type = "Service"
+            identifiers = [
+                "lambda.amazonaws.com"
+            ]
+        }
+    }
+}
+
+resource "aws_iam_role" "lambda" {
+    name = "${var.env_name}-${var.secret_name}-password_rotation-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+data "aws_iam_role_policy" {
+    sid = "secretsmanagerexec"
+    effect = "Allow"
+    principals = {
+        type = "Service"
+        identifiers = ["secretsmanager.amazonaws.com"]
+    }
+    actions = [
+        "lambda:InvokeFunction"
+    ]
+    resources = [
+        "${aws_lambda_function.lambda.arn}"
+    ]
+}
+
 data "aws_iam_policy_document" "logging" {
   statement {
     sid    = "CreateLogGroup"
@@ -52,25 +86,6 @@ data "aws_iam_policy_document" "logging" {
           "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.secret_name}-password_rotation:*"
       ]
   }
-}
-
-data "aws_iam_policy_document" "assume-role" {
-    statement {
-        actions = [
-            "sts:AssumeRole"
-        ]
-        principals {
-            type = "Service"
-            identifiers = [
-                "lambda.amazonaws.com"
-            ]
-        }
-    }
-}
-
-resource "aws_iam_role" "lambda" {
-    name = "${var.env_name}-${var.secret_name}-password_rotation-execution"
-    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
 resource "aws_iam_role_policy" "logging" {
