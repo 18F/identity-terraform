@@ -1,15 +1,15 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_lambda_function" "lambda" {
-  s3_bucket = "${var.lambda_source_bucket}"
-  s3_key = "${var.password_rotation_lambda_source_key}"
-  function_name = "${var.env_name}-${var.secret_name}-password_rotation"
-  description = "Lambda for password rotation"
-  memory_size = "${var.password_rotation_lambda_memory}"
-  timeout = "${var.password_rotation_lambda_timeout}"
-  role = "${aws_iam_role.lambda.arn}"
-  handler = "${var.password_rotation_lambda_handler}"
-  runtime = "${var.password_rotation_lambda_runtime}"
+    s3_bucket = "${var.lambda_source_bucket}"
+    s3_key = "${var.password_rotation_lambda_source_key}"
+    function_name = "${var.env_name}-${var.secret_name}-password_rotation"
+    description = "Lambda for password rotation"
+    memory_size = "${var.password_rotation_lambda_memory}"
+    timeout = "${var.password_rotation_lambda_timeout}"
+    role = "${aws_iam_role.lambda.arn}"
+    handler = "${var.password_rotation_lambda_handler}"
+    runtime = "${var.password_rotation_lambda_runtime}"
 }
 
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
@@ -143,4 +143,11 @@ resource "aws_iam_role_policy" "secretsmanager" {
     name = "secretsmanager"
     role = "${aws_iam_role.lambda.id}"
     policy = "${data.aws_iam_policy_document.secretsmanager.json}"
+}
+
+resource "aws_lambda_permission" "allow_secretsmanager" {
+    statement_id = "secretsmanageraccess"
+    action = "lambda:InvokeFunction"
+    function_name = "${aws_lambda_function.lambda.arn}"
+    principal = "secretsmanager.amazonaws.com"
 }
