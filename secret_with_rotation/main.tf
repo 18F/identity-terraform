@@ -14,8 +14,7 @@ resource "aws_lambda_function" "lambda" {
 
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
     depends_on = [
-        "aws_lambda_function.lambda",
-        "aws_iam_role_policy.secretsmanager"
+        "aws_lambda_function.lambda"
     ]
     name = "${var.env_name}-${var.secret_name}"
     description = "${var.secret_description}"
@@ -123,7 +122,7 @@ data "aws_iam_policy_document" "secretsmanager" {
             test = "StringEquals"
             variable = "secretsmanager:resource/AllowRotationLambdaArn"
             values = [
-                "${aws_lambda_function.lambda.arn}"
+                "arn:aws:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:${var.env_name}-${var.secret_name}-password_rotation"
             ]
         }
     }
@@ -141,7 +140,6 @@ data "aws_iam_policy_document" "secretsmanager" {
 }
 
 resource "aws_iam_role_policy" "secretsmanager" {
-    depends_on = ["aws_lambda_function.lambda"]
     name = "secretsmanager"
     role = "${aws_iam_role.lambda.id}"
     policy = "${data.aws_iam_policy_document.secretsmanager.json}"
