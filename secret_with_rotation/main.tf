@@ -15,6 +15,12 @@ resource "aws_lambda_function" "lambda" {
     role = "${aws_iam_role.lambda.arn}"
     handler = "${var.password_rotation_lambda_handler}"
     runtime = "${var.password_rotation_lambda_runtime}"
+
+    environment {
+        variables = {
+            SECRETS_MANAGER_ENDPOINT = "secretsmanager.${var.region}.amazonaws.com"
+        }
+    }
 }
 
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
