@@ -126,7 +126,7 @@ data "aws_iam_policy_document" "secretsmanager" {
             "secretsmanager:UpdateSecretVersionStage"
         ]
         resources = [
-            "arn:aws:secretmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${local.secret_name}"
+            "${aws_secretsmanager_secret.secret_with_rotation.arn}"
 
         ]
         condition {
