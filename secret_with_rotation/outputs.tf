@@ -22,3 +22,8 @@ output "lambda_role_id" {
     description = "Rotation lambda role id"
     value = "${aws_iam_role.lambda.unique_id}"
 }
+
+output "lambda_role_name" {
+    description = "Rotation lambda role name"
+    value = "${aws_iam_role.lambda.name}"
+}
