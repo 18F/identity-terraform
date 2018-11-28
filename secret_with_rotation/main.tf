@@ -13,6 +13,10 @@ resource "aws_lambda_function" "lambda" {
 }
 
 resource "aws_secretsmanager_secret" "secret_with_rotation" {
+    depends_on = [
+        "aws_lambda_function.lambda",
+        "aws_iam_role_policy.secretsmanager"
+    ]
     name = "${var.env_name}-${var.secret_name}"
     description = "${var.secret_description}"
     rotation_lambda_arn = "${aws_lambda_function.lambda.arn}"
@@ -112,7 +116,7 @@ data "aws_iam_policy_document" "secretsmanager" {
             "secretsmanager:UpdateSecretVersionStage"
         ]
         resources = [
-            "${aws_secretsmanager_secret.secret_with_rotation.arn}"
+            "arn:aws:secretmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.env_name}-${var.secret_name}"
 
         ]
         condition {
@@ -137,6 +141,7 @@ data "aws_iam_policy_document" "secretsmanager" {
 }
 
 resource "aws_iam_role_policy" "secretsmanager" {
+    depends_on = ["aws_lambda_function_lambda"]
     name = "secretsmanager"
     role = "${aws_iam_role.lambda.id}"
     policy = "${data.aws_iam_policy_document.secretsmanager.json}"
