@@ -48,18 +48,20 @@ resource "aws_iam_role" "lambda" {
 }
 
 data "aws_iam_policy_document" "secrets_manager_exec" {
-    sid = "secretsmanagerexec"
-    effect = "Allow"
-    principals = {
-        type = "Service"
-        identifiers = ["secretsmanager.amazonaws.com"]
+    statement {
+        sid = "secretsmanagerexec"
+        effect = "Allow"
+        principals = {
+            type = "Service"
+            identifiers = ["secretsmanager.amazonaws.com"]
+        }
+        actions = [
+            "lambda:InvokeFunction"
+        ]
+        resources = [
+            "${aws_lambda_function.lambda.arn}"
+        ]
     }
-    actions = [
-        "lambda:InvokeFunction"
-    ]
-    resources = [
-        "${aws_lambda_function.lambda.arn}"
-    ]
 }
 
 resource "aws_iam_role_policy" "secrets_manager_exec" {
