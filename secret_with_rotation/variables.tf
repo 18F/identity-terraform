@@ -37,7 +37,7 @@ variable "password_rotation_lambda_source_key" {
     description = "Path in S3 bucket to lambda function example: kinesis/events_transform.zip"
 }
 
-variable "password_roation_lambda_name" {
+variable "password_rotation_lambda_name" {
     description = "Name for rotation lambda"
 }
 
