@@ -31,7 +31,8 @@ resource "aws_secretsmanager_secret" "secret_with_rotation" {
 data "aws_iam_policy_document" "assume-role" {
     statement {
         actions = [
-            "sts:AssumeRole"
+            "sts:AssumeRole",
+            "lambda:InvokeFunction"
         ]
         principals {
             type = "Service"
@@ -39,35 +40,21 @@ data "aws_iam_policy_document" "assume-role" {
                 "lambda.amazonaws.com"
             ]
         }
-    }
-}
-
-resource "aws_iam_role" "lambda" {
-    name = "${var.env_name}-${var.secret_name}-password_rotation-execution"
-    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
-}
-
-data "aws_iam_policy_document" "secrets_manager_exec" {
-    statement {
-        sid = "secretsmanagerexec"
-        effect = "Allow"
         principals = {
             type = "Service"
-            identifiers = ["secretsmanager.amazonaws.com"]
+            identifiers = [
+                "secretsmanager.amazonaws.com"
+            ]
         }
-        actions = [
-            "lambda:InvokeFunction"
-        ]
         resources = [
             "${aws_lambda_function.lambda.arn}"
         ]
     }
 }
 
-resource "aws_iam_role_policy" "secrets_manager_exec" {
-  name = "secretsmanagerexec"
-  role = "${aws_iam_role.lambda.id}"
-  policy = "${data.aws_iam_policy_document.secrets_manager_exec.json}"
+resource "aws_iam_role" "lambda" {
+    name = "${var.env_name}-${var.secret_name}-password_rotation-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
 data "aws_iam_policy_document" "logging" {
