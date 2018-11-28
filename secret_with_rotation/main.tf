@@ -3,7 +3,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_lambda_function" "lambda" {
     s3_bucket = "${var.lambda_source_bucket}"
     s3_key = "${var.password_rotation_lambda_source_key}"
-    function_name = "${var.env_name}-${var.secret_name}-password_rotation"
+    function_name = "${var.env_name}-${var.password_rotation_lambda_name}_rotation"
     description = "Lambda for password rotation"
     memory_size = "${var.password_rotation_lambda_memory}"
     timeout = "${var.password_rotation_lambda_timeout}"

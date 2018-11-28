@@ -37,6 +37,10 @@ variable "password_rotation_lambda_source_key" {
     description = "Path in S3 bucket to lambda function example: kinesis/events_transform.zip"
 }
 
+variable "password_roation_lambda_name" {
+    description = "Name for rotation lambda"
+}
+
 variable "password_rotation_lambda_memory" {
     description = "Amount of RAM to assign to lambda function min 128 max 3008 in 64mb increments"
     default = "128"
