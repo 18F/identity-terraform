@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "assume-role" {
 }
 
 resource "aws_iam_role" "lambda" {
-    name = "${var.env_name}-${var.secret_name}-password_rotation-execution"
+    name = "${local.rotation_lambda_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
