@@ -59,3 +59,11 @@ variable "password_rotation_lambda_runtime" {
     description = "Lambda runtime"
     default = "python2.7"
 }
+
+variable "password_rotation_lambda_vpc_id" {
+    description = "Lambda VPC ID a vpc_id is not provided a security group will not be created"
+}
+
+variable "password_rotation_lambda_subnets" {
+    description = "List of VPC subnets for lambda, leave blank if no vpc"
+}

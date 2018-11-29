@@ -5,6 +5,13 @@ locals {
     secret_name = "${var.env_name}/${var.secret_name}"
 }
 
+resource "aws_security_group" "lambda" {
+    count = "${var.password_rotation_lambda_vpc_id != "" ? 1 : 0}"
+    name = "${local.rotation_lambda_name}"
+    description = "Secret rotation lambda"
+    vpc_id = "${var.password_rotation_lambda_vpc_id}"
+}
+
 resource "aws_lambda_function" "lambda" {
     s3_bucket = "${var.lambda_source_bucket}"
     s3_key = "${var.password_rotation_lambda_source_key}"
@@ -20,6 +27,11 @@ resource "aws_lambda_function" "lambda" {
         variables = {
             SECRETS_MANAGER_ENDPOINT = "https://secretsmanager.${var.region}.amazonaws.com"
         }
+    }
+
+    vpc_config {
+        subnet_ids = ["${var.password_rotation_lambda_subnets}"]
+        security_group_ids = ["${var.password_rotation_lambda_security_groups}"]
     }
 }
 
