@@ -61,9 +61,9 @@ variable "password_rotation_lambda_runtime" {
 }
 
 variable "password_rotation_lambda_vpc_id" {
-    description = "Lambda VPC ID a vpc_id is not provided a security group will not be created"
+    description = "Lambda VPC ID"
 }
 
 variable "password_rotation_lambda_subnets" {
-    description = "List of VPC subnets for lambda, leave blank if no vpc"
+    description = "List of VPC subnets for lambda"
 }

@@ -6,7 +6,6 @@ locals {
 }
 
 resource "aws_security_group" "lambda" {
-    count = "${var.password_rotation_lambda_vpc_id != "" ? 1 : 0}"
     name = "${local.rotation_lambda_name}"
     description = "Secret rotation lambda"
     vpc_id = "${var.password_rotation_lambda_vpc_id}"
