@@ -31,7 +31,7 @@ resource "aws_lambda_function" "lambda" {
 
     vpc_config {
         subnet_ids = ["${var.password_rotation_lambda_subnets}"]
-        security_group_ids = ["${var.password_rotation_lambda_security_groups}"]
+        security_group_ids = ["${aws_security_group.lambda.id}"]
     }
 }
 
