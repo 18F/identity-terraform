@@ -12,6 +12,9 @@ resource "aws_security_group" "lambda" {
 }
 
 resource "aws_lambda_function" "lambda" {
+    depends_on = [
+        "${aws_security_group.lambda}"
+    ]
     s3_bucket = "${var.lambda_source_bucket}"
     s3_key = "${var.password_rotation_lambda_source_key}"
     function_name = "${local.rotation_lambda_name}"
