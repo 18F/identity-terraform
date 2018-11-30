@@ -9,11 +9,16 @@ resource "aws_security_group" "lambda" {
     name = "${local.rotation_lambda_name}"
     description = "Secret rotation lambda"
     vpc_id = "${var.password_rotation_lambda_vpc_id}"
+
+    tags {
+        Name = "${local.rotation_lambda_name}"
+        environment = "${var.env_name}"
+    }
 }
 
 resource "aws_lambda_function" "lambda" {
     depends_on = [
-        "${aws_security_group.lambda}"
+        "aws_security_group.lambda"
     ]
     s3_bucket = "${var.lambda_source_bucket}"
     s3_key = "${var.password_rotation_lambda_source_key}"

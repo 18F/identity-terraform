@@ -66,4 +66,5 @@ variable "password_rotation_lambda_vpc_id" {
 
 variable "password_rotation_lambda_subnets" {
     description = "List of VPC subnets for lambda"
+    type = "list"
 }

@@ -30,5 +30,5 @@ output "lambda_role_name" {
 
 output "lambda_security_group_id" {
     description = "Security Group Id for rotation lambda"
-    value = "${aws_security_group.lambda.*.id}"
+    value = "${aws_security_group.lambda.id}"
 }
