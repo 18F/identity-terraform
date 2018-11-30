@@ -19,29 +19,29 @@ resource "aws_lambda_function" "lambda" {
 }
 
 data "aws_iam_policy_document" "logging" {
-  statement {
-    sid    = "CreateLogGroup"
-    effect = "Allow"
-    actions = [
-        "logs:CreateLogGroup"
-    ]
+    statement {
+        sid    = "CreateLogGroup"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogGroup"
+        ]
 
-    resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
-    ]
-  }
-  statement {
-      sid = "PutLogEvents"
-      effect = "Allow"
-      actions = [
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+        ]
+    }
+    statement {
+        sid = "PutLogEvents"
+        effect = "Allow"
+        actions = [
             "logs:CreateLogStream",
             "logs:PutLogEvents"
-      ]
+        ]
 
-      resources = [
-          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}:*"
-      ]
-  }
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}:*"
+        ]
+    }
 }
 
 data "aws_iam_policy_document" "assume-role" {
@@ -64,7 +64,7 @@ resource "aws_iam_role" "lambda" {
 }
 
 resource "aws_iam_role_policy" "logging" {
-  name = "logging"
-  role = "${aws_iam_role.lambda.id}"
-  policy = "${data.aws_iam_policy_document.logging.json}"
+    name = "logging"
+    role = "${aws_iam_role.lambda.id}"
+    policy = "${data.aws_iam_policy_document.logging.json}"
 }
