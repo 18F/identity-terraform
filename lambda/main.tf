@@ -1,15 +1,21 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_lambda_function" "lambda" {
-  s3_bucket        = "${var.source_bucket_name}"
-  s3_key           = "${var.source_key}"
-  function_name    = "${var.env_name}-${var.lambda_name}"
-  description      = "${var.lambda_description}"
-  memory_size      = "${var.lambda_memory}"
-  timeout          = "${var.lambda_timeout}"
-  role             = "${aws_iam_role.lambda.arn}"
-  handler          = "${var.lambda_handler}"
-  runtime          = "${var.lambda_runtime}"
+    s3_bucket = "${var.source_bucket_name}"
+    s3_key = "${var.source_key}"
+    function_name = "${var.env_name}-${var.lambda_name}"
+    description = "${var.lambda_description}"
+    memory_size = "${var.lambda_memory}"
+    timeout = "${var.lambda_timeout}"
+    role = "${aws_iam_role.lambda.arn}"
+    handler = "${var.lambda_handler}"
+    runtime = "${var.lambda_runtime}"
+
+    environment {
+        variables = {
+            SECRETS_MANAGER_ENDPOINT = "https://secretsmanager.${var.region}.amazonaws.com"
+        }
+    }
 }
 
 data "aws_iam_policy_document" "logging" {
