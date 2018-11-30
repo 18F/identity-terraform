@@ -7,3 +7,8 @@ output "firehose_role_arn" {
     description = "Arn for IAM Role assigned to Firehose"
     value = "${aws_iam_role.firehose_to_redshift.arn}"
 }
+
+output "firehose_name" {
+    description = "Name of kinesis firehose stream"
+    value = "${local.kinesis_stream_name}"
+}

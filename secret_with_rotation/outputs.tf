@@ -8,6 +8,11 @@ output "arn" {
     value = "${aws_secretsmanager_secret.secret_with_rotation.arn}"
 }
 
+output "name" {
+    description = "Secret name"
+    value = "${local.secret_name}"
+}
+
 output "lambda_arn" {
     description = "Rotation lambda arn"
     value = "${aws_lambda_function.lambda.arn}"
