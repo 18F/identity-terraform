@@ -68,3 +68,8 @@ variable "password_rotation_lambda_subnets" {
     description = "List of VPC subnets for lambda"
     type = "list"
 }
+
+variable "password_rotation_lambda_environment" {
+    description = "Environment variables for password rotation lambda"
+    type = "map"
+}

@@ -31,9 +31,7 @@ resource "aws_lambda_function" "lambda" {
     runtime = "${var.password_rotation_lambda_runtime}"
 
     environment {
-        variables = {
-            SECRETS_MANAGER_ENDPOINT = "https://secretsmanager.${var.region}.amazonaws.com"
-        }
+        variables = "${var.password_rotation_lambda_environment}"
     }
 
     vpc_config {
