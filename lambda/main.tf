@@ -1,9 +1,13 @@
 data "aws_caller_identity" "current" {}
 
+locals {
+    lambda_function_name = "${var.env_name}-${var.lambda_name}"
+}
+
 resource "aws_lambda_function" "lambda" {
     s3_bucket = "${var.source_bucket_name}"
     s3_key = "${var.source_key}"
-    function_name = "${var.env_name}-${var.lambda_name}"
+    function_name = "${local.lambda_function_name}"
     description = "${var.lambda_description}"
     memory_size = "${var.lambda_memory}"
     timeout = "${var.lambda_timeout}"
@@ -39,7 +43,7 @@ data "aws_iam_policy_document" "logging" {
         ]
 
         resources = [
-            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.env_name}-${var.lambda_name}:*"
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.lambda_function_name}:*"
         ]
     }
 }
@@ -59,7 +63,7 @@ data "aws_iam_policy_document" "assume-role" {
 }
 
 resource "aws_iam_role" "lambda" {
-    name = "${var.env_name}-lambda-${var.lambda_name}-execution"
+    name = "${local.lambda_function_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
