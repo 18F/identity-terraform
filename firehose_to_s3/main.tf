@@ -1,5 +1,9 @@
+locals {
+    kinesis_stream_name = "${var.env_name}-${var.stream_name}"
+}
+
 resource "aws_cloudwatch_log_group" "log_group" {
-    name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
+    name = "/aws/kinesisfirehose/${local.kinesis_stream_name}"
     retention_in_days = "${var.log_retention_in_days}"
 
     tags {
@@ -13,7 +17,7 @@ resource "aws_cloudwatch_log_stream" "log_stream" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
-  name = "${var.env_name}-${var.stream_name}"
+  name = "${local.kinesis_stream_name}"
   destination = "extended_s3"
 
   kinesis_source_configuration {
@@ -30,7 +34,7 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_s3" {
     compression_format = "GZIP"
     cloudwatch_logging_options {
       enabled = true
-      log_group_name = "/aws/kinesisfirehose/${var.env_name}-${var.stream_name}"
+      log_group_name = "/aws/kinesisfirehose/${local.kinesis_stream_name}"
       log_stream_name = "S3Delivery"
     }
     s3_backup_mode = "Enabled"
@@ -217,7 +221,7 @@ data "aws_iam_policy_document" "deliverystreamkms" {
 }
 
 resource "aws_iam_role" "firehose_to_s3" {
-  name = "${var.env_name}-${var.stream_name}"
+  name = "${local.kinesis_stream_name}"
   path = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
