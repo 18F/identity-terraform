@@ -26,6 +26,9 @@ locals {
     log_group_name = "${var.log_group_name_override == "" ? "${var.env_name}_/var/log/squid/access.log" : var.log_group_name_override}"
 }
 
+resource "aws_cloudwatch_log_group" "squid" {
+    name = "${local.log_group_name}"
+}
 
 resource "aws_cloudwatch_log_metric_filter" "squid_requests_total" {
     name = "${var.env_name}-squid-requests-total"
