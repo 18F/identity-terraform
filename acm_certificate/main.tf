@@ -22,6 +22,14 @@ variable "validation_cname_ttl" {
   default = 300
 }
 
+variable "env_name" {
+
+}
+
+variable "root_domain" {
+
+}
+
 # -- Outputs --
 
 output "cert_arn" {
@@ -49,6 +57,10 @@ resource "aws_acm_certificate" "main" {
 
   lifecycle {
     create_before_destroy = true
+  }
+  
+  tags = {
+    domain = "${var.env_name}.${var.root_domain}"
   }
 }
 
