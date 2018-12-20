@@ -40,6 +40,14 @@ variable "template_tags" {
   default = {}
 }
 
+variable "block_device_mappings" {
+  description = "EBS or other block devices to map on created instances. https://www.terraform.io/docs/providers/aws/r/launch_template.html#block-devices"
+  type = "list"
+  default = []
+}
+
+# ----
+
 resource "aws_launch_template" "template" {
   name = "${var.env}-${var.role}"
 
@@ -88,6 +96,8 @@ resource "aws_launch_template" "template" {
       var.template_tags
     )
   }"
+
+  block_device_mappings = "${var.block_device_mappings}"
 }
 
 output "template_id" {
