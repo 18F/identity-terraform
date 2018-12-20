@@ -34,6 +34,12 @@ variable "security_group_ids" {
   type = "list"
 }
 
+variable "template_tags" {
+  description = "Tags to apply to the launch template"
+  type = "map"
+  default = {}
+}
+
 resource "aws_launch_template" "template" {
   name = "${var.env}-${var.role}"
 
@@ -61,7 +67,6 @@ resource "aws_launch_template" "template" {
       Name = "asg-${var.env}-${var.role}",
       prefix = "${var.role}",
       domain = "${var.env}.${var.root_domain}"
-      env = "${var.env}"
     }
   }
 
@@ -71,9 +76,18 @@ resource "aws_launch_template" "template" {
       Name = "asg-${var.env}-${var.role}",
       prefix = "${var.role}",
       domain = "${var.env}.${var.root_domain}"
-      env = "${var.env}"
     }
   }
+
+  tags = "${
+    merge(
+      map(
+        "prefix", "${var.role}",
+        "domain", "${var.env}.${var.root_domain}"
+      ),
+      var.template_tags
+    )
+  }"
 }
 
 output "template_id" {
