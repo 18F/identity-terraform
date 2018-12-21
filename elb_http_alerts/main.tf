@@ -32,7 +32,7 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
 
     statistic = "Sum"
     comparison_operator = "GreaterThanOrEqualToThreshold"
-    threshold = ${var.elb_threshold}
+    threshold = "${var.elb_threshold}"
     period = 60
     datapoints_to_alarm = 1
     evaluation_periods = 1
