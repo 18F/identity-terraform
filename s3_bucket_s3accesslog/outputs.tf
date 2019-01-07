@@ -1,0 +1,14 @@
+output "arn" {
+    description = "S3 server access logging bucket arn"
+    value = "${aws_s3_bucket.bucket.arn}"
+}
+
+output "name" {
+    description = "S3 server access logging bucket name"
+    value = "${local.bucket_name}"
+}
+
+output "domain_name" {
+    description = "S3 server access loggin bucket domain name"
+    value = "${aws_s3_bucket.bucket_domain_name}"
+}
