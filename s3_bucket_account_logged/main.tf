@@ -15,6 +15,7 @@ resource "aws_s3_bucket" "bucket" {
 
     logging {
         target_bucket = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+        target_prefix = "${local.bucket_name}"
     }
 
     lifecycle_rule {
