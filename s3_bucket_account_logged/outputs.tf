@@ -5,7 +5,7 @@ output "arn" {
 
 output "name" {
     description = "S3 server access logging bucket name"
-    value = "${local.bucket_name}"
+    value = "${aws_s3_bucket.bucket.id}"
 }
 
 output "domain_name" {
