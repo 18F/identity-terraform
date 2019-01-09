@@ -1,3 +1,8 @@
+output "lambda_name" {
+    description = "Lambda name"
+    value = "${local.lambda_function_name}"
+}
+
 output "lambda_arn" {
     description = "Lambda arn"
     value = "${aws_lambda_function.lambda.arn}"
