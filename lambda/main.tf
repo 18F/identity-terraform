@@ -5,6 +5,7 @@ locals {
 }
 
 resource "aws_lambda_function" "lambda" {
+    filename = "${var.source_filename}"
     s3_bucket = "${var.source_bucket_name}"
     s3_key = "${var.source_key}"
     function_name = "${local.lambda_function_name}"
