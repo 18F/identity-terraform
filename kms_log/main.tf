@@ -90,7 +90,8 @@ resource "aws_cloudwatch_event_rule" "decrypt" {
         "requestParameters": {
             "encryptionContext": {
                 "context": [
-                    "password-digest"
+                    "password-digest",
+                    "pii-encryption"
                 ]
             }
         },
