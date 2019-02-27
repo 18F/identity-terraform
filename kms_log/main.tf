@@ -31,7 +31,7 @@ resource "aws_kms_alias" "kms_logging" {
 
 # create queue to receive cloudwatch events
 resource "aws_sqs_queue" "dead_letter" {
-    name = "${var.env}-kms-dead-letter"
+    name = "${var.env_name}-kms-dead-letter"
     kms_master_key_id = "${local.kms_alias}"
     kms_data_key_reuse_period_seconds = 600
     redrive_policy = ""
