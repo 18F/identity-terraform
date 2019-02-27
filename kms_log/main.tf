@@ -12,6 +12,7 @@ data "aws_kms_key" "application"
 
 locals {
     kms_alias = "alias/${var.env_name}-kms-logging"
+    dynamodb_table_name = "${var.env_name}-kms-logging"
 }
 
 # create cmk for kms logging solution
@@ -88,7 +89,7 @@ resource "aws_cloudwatch_event_rule" "decrypt" {
         ],
         "requestParameters": {
             "keyId": [
-                "alias/"${var.env_name}-login-dot-gov-keymaker"
+                "alias/${var.env_name}-login-dot-gov-keymaker"
             ]
     },
     "eventName": [
@@ -126,17 +127,7 @@ resource "aws_dynamodb_table" "kms_events" {
 
     attribute {
         name = "Correlated"
-        type = "BOOL"
-    }
-
-    attribute {
-        name = "CTEvent"
-        type = "S"
-    }
-
-    attribute {
-        name = "AppEvent"
-        type = "S"
+        type = "B"
     }
 
     global_secondary_index {
@@ -151,7 +142,6 @@ resource "aws_dynamodb_table" "kms_events" {
     ttl {
         attribute_name = "TimeToExist"
         enabled = true
-        AttributeName = "ttl"
     }
 
   tags = {
