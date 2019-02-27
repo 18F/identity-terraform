@@ -46,7 +46,7 @@ resource "aws_sqs_queue" "kms_ct_events" {
 
 resource "aws_sqs_queue_policy" "default"{
     queue_url = "${aws_sqs_queue.kms_ct_events.id}"
-    policy = "${data.sqs_kms_ct_events_policy}"
+    policy = "${data.aws_iam_policy_document.sqs_kms_ct_events_policy.json}"
 }
 
 data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
