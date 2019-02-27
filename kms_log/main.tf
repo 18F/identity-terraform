@@ -44,7 +44,7 @@ resource "aws_sqs_queue" "kms_ct_events" {
     kms_data_key_reuse_period_seconds = 600
 }
 
-resource "aws_sqs_queue_policy" {
+resource "aws_sqs_queue_policy" "default"{
     queue_url = "${aws_sqs_queue.kms_ct_events.id}"
     policy = "${data.sqs_kms_ct_events_policy}"
 }
