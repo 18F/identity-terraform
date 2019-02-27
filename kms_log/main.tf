@@ -88,13 +88,20 @@ resource "aws_cloudwatch_event_rule" "decrypt" {
             "kms.amazonaws.com"
         ],
         "requestParameters": {
-            "keyId": [
-                "alias/${var.env_name}-login-dot-gov-keymaker"
+            "encryptionContext": {
+                "context": [
+                    "password-digest"
+                ]
+            }
+        },
+        "resources": {
+            "ARN": [
+                "${data.aws_kms_key.application.arn}"
             ]
-    },
-    "eventName": [
-        "Decrypt"
-    ]
+        },
+        "eventName": [
+            "Decrypt"
+        ]
     }
 }
 PATTERN
