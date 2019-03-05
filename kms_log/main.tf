@@ -58,7 +58,8 @@ data "aws_iam_policy_document" "kms"
         principals {
             type = "Service"
             identifiers = [
-                "events.amazonaws.com"
+                "events.amazonaws.com",
+                "sns.amazonaws.com"
             ]
         }
     }
@@ -217,4 +218,92 @@ resource "aws_dynamodb_table" "kms_events" {
     Name = "${local.dynamodb_table_name}"
     environment = "${var.env_name}"
   }
+}
+
+resource "aws_sns_topic" "kms_logging_events" {
+    name = "${var.env_name}-kms-logging-events"
+    display_name = "KMS Events"
+    kms_master_key_id = "${local.kms_alias}"
+}
+
+resource "aws_sqs_queue" "kms_cloudwatch_events" {
+    name = "${var.env_name}-kms-cw-events"
+    delay_seconds = 5
+    max_message_size = 2048
+    visibility_timeout_seconds = 60
+    message_retention_seconds = 345600 # 4 days
+    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
+    kms_data_key_reuse_period_seconds = 600
+    tags = {
+        environment = "${var.env_name}"
+    }
+}
+
+resource "aws_sqs_queue_policy" "kms_cloudwatch_events"{
+    queue_url = "${aws_sqs_queue.kms_cloudwatch_events.id}"
+    policy = "${data.aws_iam_policy_document.sqs_kms_cw_events_policy.json}"
+}
+
+data "aws_iam_policy_document" "sqs_kms_cw_events_policy" {
+    statement {
+        sid = "Allow SNS"
+        effect = "Allow"
+        actions = ["sqs:SendMessage"]
+        resources = ["${aws_sqs_queue.kms_cloudwatch_events.arn}"]
+        condition {
+            test = "StringLike"
+            variable = "aws:SourceArn"
+            values = [
+                "${aws_sns_topic.kms_logging_events.arn}"
+            ]
+
+        }
+    }
+}
+
+resource "aws_sns_topic_subscription" "kms_events_sqs_cw_target" {
+    topic_arn = "${aws_sns_topic.kms_logging_events.arn}"
+    protocol  = "sqs"
+    endpoint  = "${aws_sqs_queue.kms_cloudwatch_events.arn}"
+}
+
+resource "aws_sqs_queue" "kms_elasticsearch_events" {
+    name = "${var.env_name}-kms-es-events"
+    delay_seconds = 5
+    max_message_size = 2048
+    visibility_timeout_seconds = 60
+    message_retention_seconds = 345600 # 4 days
+    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
+    kms_data_key_reuse_period_seconds = 600
+    tags = {
+        environment = "${var.env_name}"
+    }
+}
+
+resource "aws_sqs_queue_policy" "es_events"{
+    queue_url = "${aws_sqs_queue.kms_elasticsearch_events.id}"
+    policy = "${data.aws_iam_policy_document.sqs_kms_es_events_policy.json}"
+}
+
+data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
+    statement {
+        sid = "Allow SNS"
+        effect = "Allow"
+        actions = ["sqs:SendMessage"]
+        resources = ["${aws_sqs_queue.kms_elasticsearch_events.arn}"]
+        condition {
+            test = "StringLike"
+            variable = "aws:SourceArn"
+            values = [
+                "${aws_sns_topic.kms_logging_events.arn}"
+            ]
+
+        }
+    }
+}
+
+resource "aws_sns_topic_subscription" "kms_events_sqs_es_target" {
+    topic_arn = "${aws_sns_topic.kms_logging_events.arn}"
+    protocol  = "sqs"
+    endpoint  = "${aws_sqs_queue.kms_elasticsearch_events.arn}"
 }
