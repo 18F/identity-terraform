@@ -128,6 +128,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
 
 # cloudwatch event rule to capture decryption events
 resource "aws_cloudwatch_event_rule" "decrypt" {
+    count = "${var.kmslogging_service_enabled}"
     name = "${var.env_name}-decryption-events"
     description = "Capture decryption events"
 
