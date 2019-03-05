@@ -169,8 +169,6 @@ resource "aws_cloudwatch_event_target" "sqs" {
     arn = "${aws_sqs_queue.kms_ct_events.arn}"
 }
 
-# create lambda for ct events
-
 # dynamodb table for event correlation
 resource "aws_dynamodb_table" "kms_events" {
     name = "${local.dynamodb_table_name}"
@@ -207,11 +205,16 @@ resource "aws_dynamodb_table" "kms_events" {
         enabled = true
     }
 
+    point_in_time_recovery {
+        enabled = true
+    }
+
+    server_side_encryption {
+        enabled = true
+    }
+
   tags = {
     Name = "${local.dynamodb_table_name}"
     environment = "${var.env_name}"
   }
 }
-
-# create lambda for kms.log events
-
