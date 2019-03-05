@@ -19,9 +19,48 @@ locals {
 resource "aws_kms_key" "kms_logging" {
     description = "KMS logging key"
     enable_key_rotation = true
+    policy = "${data.aws_iam_policy_document.kms.json}"
     tags {
        Name = "${var.env_name} KMS Logging Key"
        environment = "${var.env_name}" 
+    }
+}
+
+data "aws_iam_policy_document" "kms"
+{
+    statement {
+        sid = "Enable IAM User Permissions"
+        effect = "Allow"
+        actions = [
+            "kms:*"
+        ]
+        resources = [
+            "*"
+        ]
+        principals {
+            type = "AWS"
+            identifiers = [
+                "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+            ]
+        }
+    }
+
+    statement {
+        sid = "Allow CloudWatch Events Access"
+        effect = "Allow"
+        actions = [
+            "kms:GenerateDataKey",
+            "kms:Decrypt"
+        ]
+        resources = [
+            "*"
+        ]
+        principals {
+            type = "Service"
+            identifiers = [
+                "events.amazonaws.com"
+            ]
+        }
     }
 }
 
@@ -33,16 +72,31 @@ resource "aws_kms_alias" "kms_logging" {
 # create queue to receive cloudwatch events
 resource "aws_sqs_queue" "dead_letter" {
     name = "${var.env_name}-kms-dead-letter"
-    kms_master_key_id = "${local.kms_alias}"
+    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
     kms_data_key_reuse_period_seconds = 600
-    redrive_policy = ""
+    message_retention_seconds = 604800 # 7 days
+    tags = {
+        environment = "${var.env_name}"
+    }
 }
 
 resource "aws_sqs_queue" "kms_ct_events" {
     name = "${var.env_name}-kms-ct-events"
     delay_seconds = 60
     max_message_size = 2048
+    visibility_timeout_seconds = 60
+    message_retention_seconds = 345600 # 4 days
+    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
     kms_data_key_reuse_period_seconds = 600
+    redrive_policy = <<POLICY
+{
+    "deadLetterTargetArn": "${aws_sqs_queue.dead_letter.arn}",
+    "maxReceiveCount": 10
+}
+POLICY
+tags = {
+        environment = "${var.env_name}"
+    }
 }
 
 resource "aws_sqs_queue_policy" "default"{
@@ -52,6 +106,7 @@ resource "aws_sqs_queue_policy" "default"{
 
 data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
     statement {
+        sid = "Allow CloudWatch Events"
         effect = "Allow"
         actions = ["sqs:SendMessage"]
         principals {
@@ -63,7 +118,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
             test = "StringLike"
             variable = "aws:SourceArn"
             values = [
-                "${aws_sqs_queue.kms_ct_events.arn}"
+                "${aws_cloudwatch_event_rule.decrypt.arn}"
             ]
 
         }
