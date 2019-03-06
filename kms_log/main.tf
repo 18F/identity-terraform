@@ -190,7 +190,7 @@ resource "aws_dynamodb_table" "kms_events" {
 
     attribute {
         name = "Correlated"
-        type = "B"
+        type = "S"
     }
 
     global_secondary_index {
