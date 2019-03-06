@@ -197,8 +197,6 @@ resource "aws_dynamodb_table" "kms_events" {
         name = "Correlated_Index"
         hash_key = "UUID"
         range_key = "Correlated"
-        write_capacity = 10
-        read_capacity = 10
         projection_type = "KEYS_ONLY"
     }
 
