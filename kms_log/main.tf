@@ -13,6 +13,7 @@ data "aws_kms_key" "application"
 locals {
     kms_alias = "alias/${var.env_name}-kms-logging"
     dynamodb_table_name = "${var.env_name}-kms-logging"
+    kinesis_stream_name = "${var.env_name}-kms-app-events"
 }
 
 # create cmk for kms logging solution
@@ -305,4 +306,93 @@ resource "aws_sns_topic_subscription" "kms_events_sqs_es_target" {
     topic_arn = "${aws_sns_topic.kms_logging_events.arn}"
     protocol  = "sqs"
     endpoint  = "${aws_sqs_queue.kms_elasticsearch_events.arn}"
+}
+
+# create kinesis data stream for application kms events
+resource "aws_kinesis_stream" "datastream" {
+    name = "${var.env_name}-kms-app-events"
+    shard_count = "${var.kinesis_shard_count}"
+    retention_period = "${var.kinesis_retention_hours}"
+    encryption_type = "KMS",
+    kms_key_id="alias/aws/kinesis"
+
+    shard_level_metrics = [
+        "ReadProvisionedThroughputExceeded",
+        "WriteProvisionedThroughputExceeded"
+    ]
+    
+    tags {
+        environment = "${var.env_name}"
+    }
+}
+
+data "aws_iam_policy_document" "assume_role" {
+    statement {
+        sid = "AssumeRole"
+        actions = ["sts:AssumeRole"]
+
+        principals {
+            type        = "Service"
+            identifiers = ["logs.${var.region}.amazonaws.com"]
+        }
+    }
+}
+data "aws_iam_policy_document" "cloudwatch_access" {
+   statement {
+     sid = "KinesisPut" 
+     effect = "Allow"
+     actions = [
+       "kinesis:PutRecord"
+     ]
+     resources = [
+       "${aws_kinesis_stream.datastream.arn}"
+     ]
+   }
+}
+resource "aws_iam_role" "cloudwatch_to_kinesis" {
+ name = "${local.kinesis_stream_name}"
+ path = "/"
+ assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+}
+
+resource "aws_iam_role_policy" "cloudwatch_access" {
+    name = "cloudwatch"
+    role = "${aws_iam_role.cloudwatch_to_kinesis.name}"
+    policy = "${data.aws_iam_policy_document.cloudwatch_access.json}"
+}
+
+resource "aws_cloudwatch_log_destination" "datastream" {
+    name = "${local.kinesis_stream_name}"
+    role_arn = "${aws_iam_role.cloudwatch_to_kinesis.arn}"
+    target_arn = "${aws_kinesis_stream.datastream.arn}"
+}
+
+data "aws_iam_policy_document" "subscription" {
+    statement {
+        sid = "PutSubscription"
+        actions = ["logs:PutSubscriptionFiler"]
+
+        principals {
+            type        = "AWS"
+            identifiers = ["${data.aws_caller_identity.current.account_id}"]
+        }
+
+        resources = [
+            "${aws_cloudwatch_log_destination.datastream.arn}"
+        ]
+    }
+}
+
+resource "aws_cloudwatch_log_destination_policy" "subscription" {
+    destination_name = "${aws_cloudwatch_log_destination.datastream.name}"
+    access_policy = "${data.aws_iam_policy_document.subscription.json}"
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
+    count = "${var.kmslogging_service_enabled}"
+    name = "${var.env_name}-kms-app-log"
+    log_group_name = "${var.env_name}_/srv/idp/shared/log/kms.log"
+    filter_pattern = "${var.cloudwatch_filter_pattern}"
+    destination_arn = "${aws_kinesis_stream.datastream.arn}"
+    role_arn = "${aws_iam_role.cloudwatch_to_kinesis.arn}"
 }
