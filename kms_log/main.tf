@@ -370,7 +370,7 @@ resource "aws_cloudwatch_log_destination" "datastream" {
 data "aws_iam_policy_document" "subscription" {
     statement {
         sid = "PutSubscription"
-        actions = ["logs:PutSubscriptionFiler"]
+        actions = ["logs:PutSubscriptionFilter"]
 
         principals {
             type        = "AWS"
