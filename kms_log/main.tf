@@ -27,6 +27,7 @@ resource "aws_kms_key" "kms_logging" {
     }
 }
 
+# IAM policy for KMS access by CW Events and SNS
 data "aws_iam_policy_document" "kms"
 {
     statement {
@@ -47,7 +48,7 @@ data "aws_iam_policy_document" "kms"
     }
 
     statement {
-        sid = "Allow CloudWatch Events Access"
+        sid = "Allow CloudWatch Events and SNS Access"
         effect = "Allow"
         actions = [
             "kms:GenerateDataKey",
@@ -71,7 +72,7 @@ resource "aws_kms_alias" "kms_logging" {
     target_key_id = "${aws_kms_key.kms_logging.key_id}"
 }
 
-# create queue to receive cloudwatch events
+# create dead letter queue for kms cloudtrail events
 resource "aws_sqs_queue" "dead_letter" {
     name = "${var.env_name}-kms-dead-letter"
     kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
@@ -82,18 +83,19 @@ resource "aws_sqs_queue" "dead_letter" {
     }
 }
 
+# queue for cloudtrail kms events
 resource "aws_sqs_queue" "kms_ct_events" {
     name = "${var.env_name}-kms-ct-events"
-    delay_seconds = 60
-    max_message_size = 2048
-    visibility_timeout_seconds = 60
-    message_retention_seconds = 345600 # 4 days
+    delay_seconds = "${var.ct_queue_delay_seconds}"
+    max_message_size =  "${var.ct_queue_max_message_size}"
+    visibility_timeout_seconds = "${var.ct_queue_visibility_timeout_seconds}"
+    message_retention_seconds = "${var.ct_queue_message_retention_seconds}"
     kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
-    kms_data_key_reuse_period_seconds = 600
+    kms_data_key_reuse_period_seconds = 600 # number of seconds the kms key is cached
     redrive_policy = <<POLICY
 {
     "deadLetterTargetArn": "${aws_sqs_queue.dead_letter.arn}",
-    "maxReceiveCount": 10
+    "maxReceiveCount": ${var.ct_queue_maxreceivecount}
 }
 POLICY
 tags = {
@@ -106,6 +108,8 @@ resource "aws_sqs_queue_policy" "default"{
     policy = "${data.aws_iam_policy_document.sqs_kms_ct_events_policy.json}"
 }
 
+# iam policy for sqs that allows cloudwatch events to 
+# deliver events to the queue
 data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
     statement {
         sid = "Allow CloudWatch Events"
@@ -127,7 +131,12 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
     }
 }
 
-# cloudwatch event rule to capture decryption events
+# cloudwatch event rule to capture cloudtrail kms decryption events
+# this filter will only capture events where the
+# encryption context is set and has the values of
+# password-digest or pii-encryption
+# this filter also is only capturing events for a single 
+# kms key
 resource "aws_cloudwatch_event_rule" "decrypt" {
     count = "${var.kmslogging_service_enabled}"
     name = "${var.env_name}-decryption-events"
@@ -166,6 +175,8 @@ resource "aws_cloudwatch_event_rule" "decrypt" {
 PATTERN
 }
 
+# sets the receiver of the cloudwatch events
+# to the sqs queue
 resource "aws_cloudwatch_event_target" "sqs" {
     rule = "${aws_cloudwatch_event_rule.decrypt.name}"
     target_id = "${var.env_name}-sqs"
@@ -220,12 +231,17 @@ resource "aws_dynamodb_table" "kms_events" {
   }
 }
 
+# sns topic for metrics and events sent
+# by the lambda that process the cloudtrail 
+# events
 resource "aws_sns_topic" "kms_logging_events" {
     name = "${var.env_name}-kms-logging-events"
     display_name = "KMS Events"
     kms_master_key_id = "${local.kms_alias}"
 }
 
+# queue to receive events from the logging events
+# sns topic for delivery of metrics to cloudwatch
 resource "aws_sqs_queue" "kms_cloudwatch_events" {
     name = "${var.env_name}-kms-cw-events"
     delay_seconds = 5
@@ -244,6 +260,7 @@ resource "aws_sqs_queue_policy" "kms_cloudwatch_events"{
     policy = "${data.aws_iam_policy_document.sqs_kms_cw_events_policy.json}"
 }
 
+# policy for queue that receives events for cloudwatch metrics
 data "aws_iam_policy_document" "sqs_kms_cw_events_policy" {
     statement {
         sid = "Allow SNS"
@@ -261,12 +278,15 @@ data "aws_iam_policy_document" "sqs_kms_cw_events_policy" {
     }
 }
 
+# subscription for cloudwatch metrics queue to the sns topic
 resource "aws_sns_topic_subscription" "kms_events_sqs_cw_target" {
     topic_arn = "${aws_sns_topic.kms_logging_events.arn}"
     protocol  = "sqs"
     endpoint  = "${aws_sqs_queue.kms_cloudwatch_events.arn}"
 }
 
+# queue to deliver metrics from cloudtrail lambda to
+# elasticsearch
 resource "aws_sqs_queue" "kms_elasticsearch_events" {
     name = "${var.env_name}-kms-es-events"
     delay_seconds = 5
@@ -285,6 +305,7 @@ resource "aws_sqs_queue_policy" "es_events"{
     policy = "${data.aws_iam_policy_document.sqs_kms_es_events_policy.json}"
 }
 
+# elasticsearch queue policy
 data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
     statement {
         sid = "Allow SNS"
@@ -302,6 +323,7 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
     }
 }
 
+# elasticsearch queue subscription to sns topic for metrics
 resource "aws_sns_topic_subscription" "kms_events_sqs_es_target" {
     topic_arn = "${aws_sns_topic.kms_logging_events.arn}"
     protocol  = "sqs"
@@ -326,6 +348,7 @@ resource "aws_kinesis_stream" "datastream" {
     }
 }
 
+# policy to allow kinesis access to cloudwatch
 data "aws_iam_policy_document" "assume_role" {
     statement {
         sid = "AssumeRole"
@@ -337,6 +360,8 @@ data "aws_iam_policy_document" "assume_role" {
         }
     }
 }
+
+# policy to allow cloudwatch to put log records into kinesis
 data "aws_iam_policy_document" "cloudwatch_access" {
    statement {
      sid = "KinesisPut" 
@@ -349,24 +374,29 @@ data "aws_iam_policy_document" "cloudwatch_access" {
      ]
    }
 }
+
+# kinesis role 
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
  name = "${local.kinesis_stream_name}"
  path = "/"
  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
+# add cloudwatch access to kinesis role
 resource "aws_iam_role_policy" "cloudwatch_access" {
     name = "cloudwatch"
     role = "${aws_iam_role.cloudwatch_to_kinesis.name}"
     policy = "${data.aws_iam_policy_document.cloudwatch_access.json}"
 }
 
+# set cloudwatch destination
 resource "aws_cloudwatch_log_destination" "datastream" {
     name = "${local.kinesis_stream_name}"
     role_arn = "${aws_iam_role.cloudwatch_to_kinesis.arn}"
     target_arn = "${aws_kinesis_stream.datastream.arn}"
 }
 
+# configure policy to allow subscription acccess
 data "aws_iam_policy_document" "subscription" {
     statement {
         sid = "PutSubscription"
@@ -383,11 +413,14 @@ data "aws_iam_policy_document" "subscription" {
     }
 }
 
+# create destination polciy
 resource "aws_cloudwatch_log_destination_policy" "subscription" {
     destination_name = "${aws_cloudwatch_log_destination.datastream.name}"
     access_policy = "${data.aws_iam_policy_document.subscription.json}"
 }
 
+# create subscription filter 
+# this filter will send the kms.log events to kinesis
 resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
     count = "${var.kmslogging_service_enabled}"
     name = "${var.env_name}-kms-app-log"
