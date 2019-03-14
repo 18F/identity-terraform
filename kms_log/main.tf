@@ -104,7 +104,6 @@ tags = {
 }
 
 resource "aws_sqs_queue_policy" "default" {
-    count = "${var.kmslogging_service_enabled}"
     queue_url = "${aws_sqs_queue.kms_ct_events.id}"
     policy = "${data.aws_iam_policy_document.sqs_kms_ct_events_policy.json}"
 }
@@ -125,7 +124,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
             test = "StringLike"
             variable = "aws:SourceArn"
             values = [
-                "${aws_cloudwatch_event_rule.decrypt.arn}"
+                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${var.env_name}-decryption-events"
             ]
 
         }
@@ -179,6 +178,7 @@ PATTERN
 # sets the receiver of the cloudwatch events
 # to the sqs queue
 resource "aws_cloudwatch_event_target" "sqs" {
+    count = "${var.kmslogging_service_enabled}"
     rule = "${aws_cloudwatch_event_rule.decrypt.name}"
     target_id = "${var.env_name}-sqs"
     arn = "${aws_sqs_queue.kms_ct_events.arn}"
