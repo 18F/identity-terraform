@@ -103,7 +103,8 @@ tags = {
     }
 }
 
-resource "aws_sqs_queue_policy" "default"{
+resource "aws_sqs_queue_policy" "default" {
+    count = "${var.kmslogging_service_enabled}"
     queue_url = "${aws_sqs_queue.kms_ct_events.id}"
     policy = "${data.aws_iam_policy_document.sqs_kms_ct_events_policy.json}"
 }
