@@ -14,6 +14,7 @@ locals {
     kms_alias = "alias/${var.env_name}-kms-logging"
     dynamodb_table_name = "${var.env_name}-kms-logging"
     kinesis_stream_name = "${var.env_name}-kms-app-events"
+    event_rule_name = "${var.env_name}-decryption-events"
 }
 
 # create cmk for kms logging solution
@@ -104,7 +105,6 @@ tags = {
 }
 
 resource "aws_sqs_queue_policy" "default" {
-    count = "${var.kmslogging_service_enabled}"
     queue_url = "${aws_sqs_queue.kms_ct_events.id}"
     policy = "${data.aws_iam_policy_document.sqs_kms_ct_events_policy.json}"
 }
@@ -125,7 +125,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
             test = "StringLike"
             variable = "aws:SourceArn"
             values = [
-                "${aws_cloudwatch_event_rule.decrypt.arn}"
+                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.event_rule_name}"
             ]
 
         }
@@ -140,7 +140,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
 # kms key
 resource "aws_cloudwatch_event_rule" "decrypt" {
     count = "${var.kmslogging_service_enabled}"
-    name = "${var.env_name}-decryption-events"
+    name = "${local.event_rule_name}"
     description = "Capture decryption events"
 
     event_pattern = <<PATTERN
@@ -179,6 +179,7 @@ PATTERN
 # sets the receiver of the cloudwatch events
 # to the sqs queue
 resource "aws_cloudwatch_event_target" "sqs" {
+    count = "${var.kmslogging_service_enabled}"
     rule = "${aws_cloudwatch_event_rule.decrypt.name}"
     target_id = "${var.env_name}-sqs"
     arn = "${aws_sqs_queue.kms_ct_events.arn}"
