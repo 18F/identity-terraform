@@ -15,6 +15,7 @@ locals {
     dynamodb_table_name = "${var.env_name}-kms-logging"
     kinesis_stream_name = "${var.env_name}-kms-app-events"
     event_rule_name = "${var.env_name}-decryption-events"
+    dashboard_name = "${var.env_name}-kms-logging"
 }
 
 # create cmk for kms logging solution
@@ -431,3 +432,115 @@ resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
     destination_arn = "${aws_kinesis_stream.datastream.arn}"
     role_arn = "${aws_iam_role.cloudwatch_to_kinesis.arn}"
 }
+
+resource "aws_cloudwatch_dashboard" "kms_log" {
+    dashboard_name = "${local.dashboard_name}"
+    dashboard_body = <<EOF
+{
+    "widgets": [
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 0,
+            "width": 6,
+            "height": 3,
+            "properties": {
+                "metrics": [
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${aws_sqs_queue.dead_letter.name}", { "stat": "Sum", "period": 86400 } ]
+                ],
+                "view": "singleValue",
+                "region": "us-west-2",
+                "title": "Dead Letter Day",
+                "period": 300
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${aws_sqs_queue.kms_cloudwatch_events.name}" ],
+                    [ ".", "NumberOfMessagesDeleted", ".", "." ]
+                ],
+                "region": "us-west-2",
+                "title": "Cloudtrail Queue"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "AWS/Kinesis", "PutRecord.Success", "StreamName", "${aws_kinesis_stream.datastream.name}" ],
+                    [ ".", "GetRecords.Success", ".", "." ]
+                ],
+                "region": "us-west-2",
+                "title": "Kinesis"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 3,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "${aws_dynamodb_table.kms_events.name}", "Operation", "PutItem", { "period": 300 } ],
+                    [ "...", "GetItem" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-west-2",
+                "period": 300,
+                "title": "DynamoDB Latency"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 9,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${aws_dynamodb_table.kms_events.name}" ],
+                    [ ".", "ConsumedWriteCapacityUnits", ".", "." ]
+                ],
+                "region": "us-west-2",
+                "title": "DynamoDB Capacity"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 0,
+            "width": 6,
+            "height": 3,
+            "properties": {
+                "metrics": [
+                    [ "AWS/Kinesis", "GetRecords.IteratorAgeMilliseconds", "StreamName", "${aws_kinesis_stream.datastream.name}", { "stat": "Average", "period": 86400 } ]
+                ],
+                "view": "singleValue",
+                "region": "us-west-2",
+                "title": "Kinesis Iterator Day",
+                "period": 300
+            }
+        }
+    ]
+}
+EOF
+}
+
