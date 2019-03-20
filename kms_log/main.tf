@@ -10,6 +10,11 @@ data "aws_kms_key" "application"
     key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
+data "aws_sns_topic" "identity"
+{
+    name = "identity-events"
+}
+
 locals {
     kms_alias = "alias/${var.env_name}-kms-logging"
     dynamodb_table_name = "${var.env_name}-kms-logging"
@@ -544,3 +549,18 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
 EOF
 }
 
+resource "aws_cloudwatch_metric_alarm" "dead_letter" {
+    alarm_name = "${var.env_name}-kms_log_dead_letter"
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods = 1
+    metric_name = "NumberOfMessagesReceived"
+    namespace = "AWS/SQS"
+    period = "180"
+    statistic = "Sum"
+    threshold = 1
+    alarm_description = "This alarm notifies when messages are on dead letter queue"
+    treat_missing_data = "ignore"
+    alarm_actions = [
+        "${data.aws_sns_topic.identity.arn}"
+    ]
+}
