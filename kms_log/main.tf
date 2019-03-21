@@ -12,7 +12,7 @@ data "aws_kms_key" "application"
 
 data "aws_sns_topic" "identity"
 {
-    name = "identity-events"
+    name = "${var.sns_topic_dead_letter}"
 }
 
 locals {
