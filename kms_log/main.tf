@@ -605,8 +605,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 
     function_name = "${var.env_name}-kmslog-ct-processor"
     description = "18F/identity-lambda-functions: KMS CT Log Processor"
-    role = "${aws_iam_role.lambda-ct-processor.arn}"
-    handler = "main.Functions::KMSCloudTrailHandler.process"
+    role = "${aws_iam_role.cloudtrail_processor.arn}"
+    handler = "main.Functions::KMSCloudTrailHandler.process"  #TODO Verify
     runtime = "ruby2.5"
     timeout = 30 # seconds
 
@@ -762,4 +762,156 @@ resource "aws_iam_role_policy" "ctprocessor_sqs" {
     name = "SQS"
     role = "${aws_iam_role.cloudtrail_processor.id}"
     policy = "${data.aws_iam_policy_document.ctprocessor_sqs.json}"
+}
+
+resource "aws_lambda_function" "cloudwatch_processor" {
+    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
+
+    lifecycle {
+        ignore_changes = ["s3_key", "last_modified"]
+    }
+
+    function_name = "${var.env_name}-kmslog-cw-processor"
+    description = "18F/identity-lambda-functions: KMS CW Log Processor"
+    role = "${aws_iam_role.cloudwatch_processor.arn}"
+    handler = "main.Functions::KMSCloudWatchHandler.process"  #TODO Verify
+    runtime = "ruby2.5"
+    timeout = 30 # seconds
+
+    environment {
+        variables = {
+            DEBUG = "${var.lambda_audit_github_debug ? "1" : ""}"
+            LOG_LEVEL = "0"
+            DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
+            DDB_TABLE = "${aws_dynamodb_table.kms_events.id}"
+            SNS_EVENT_TOPIC_ARN = "${aws_sns_topic.kms_logging_events.arn}"
+        }
+    }
+
+    tags {
+        source_repo = "https://github.com/18F/identity-lambda-functions"
+        environment = "${var.env_name}"
+    }
+}
+
+resource "aws_iam_role" "cloudtrail_processor" {
+    name = "${aws_lambda_function.cloudwatch_processor.id}-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+data "aws_iam_policy_document" "cwprocessor_cloudwatch" {
+    statement {
+        sid = "CreateLogGroup"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogGroup"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+        ]
+    }
+    statement {
+        sid = "PutLogEvents"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.cloudwatch_processor.id}:*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "cwprocessor_dynamodb" {
+    statement {
+        sid = "DynamoDb"
+        effect = "Allow"
+        actions = [
+            "dynamodb:PutItem",
+            "dynamodb:GetItem"
+        ]
+
+        resources = [
+            "${aws_dynamodb_table.kms_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "cwprocessor_kms" {
+    statement {
+        sid = "KMS"
+        effect = "Allow"
+        actions = [
+            "kms:Decrypt",
+            "kms:GenerateDataKey"
+        ]
+
+        resources = [
+            "${aws_kms_key.kms_logging.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "cwprocessor_sns" {
+    statement {
+        sid = "SNS"
+        effect = "Allow"
+        actions = [
+            "sns:Publish"
+        ]
+
+        resources = [
+            "${aws_sns_topic.kms_logging_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "cwprocessor_kinesis" {
+    statement {
+        sid = "Kinesis"
+        effect = "Allow"
+        actions = [
+            "kinesis:GetShardIterator",
+            "kinesis:GetRecords",
+            "kinesis:DescribeStream"
+        ]
+
+        resources = [
+            "${aws_kinesis_stream.datastream.arn}"
+        ]
+    }
+}
+
+resource "aws_iam_role_policy" "cwprocessor_cloudwatch" {
+    name = "CloudWatch"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_cloudwatch.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_dynamodb" {
+    name = "DynamoDb"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_dynamodb.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_kms" {
+    name = "KMS"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_kms.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_sns" {
+    name = "KMS"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_sns.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_kinesis" {
+    name = "Kinesis"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_kinesis.json}"
 }
