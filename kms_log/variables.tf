@@ -54,7 +54,6 @@ variable "ct_queue_maxreceivecount" {
   description = "Number of times a message will be received before going to the deadletter queue"
 }
 
-variable "sns_topic_dead_letter" {
-  description = "SNS topic name for dead letter queue"
-  default = "identity-events"
+variable "sns_topic_dead_letter_arn" {
+  description = "SNS topic ARN for dead letter queue"
 }
