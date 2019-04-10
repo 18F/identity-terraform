@@ -626,3 +626,140 @@ resource "aws_lambda_function" "cloudtrail_processor" {
         environment = "${var.env_name}"
     }
 }
+
+data "aws_iam_policy_document" "ctprocessor_cloudwatch" {
+    statement {
+        sid = "CreateLogGroup"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogGroup"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+        ]
+    }
+    statement {
+        sid = "PutLogEvents"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.cloudtrail_processor.id}:*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "ctprocessor_kms" {
+    statement {
+        sid = "KMS"
+        effect = "Allow"
+        actions = [
+            "kms:Decrypt",
+            "kms:GenerateDataKey"
+        ]
+
+        resources = [
+            "${aws_kms_key.kms_logging.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "ctprocessor_dynamodb" {
+    statement {
+        sid = "DynamoDb"
+        effect = "Allow"
+        actions = [
+            "dynamodb:PutItem",
+            "dynamodb:GetItem"
+        ]
+
+        resources = [
+            "${aws_dynamodb_table.kms_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "ctprocessor_sns" {
+    statement {
+        sid = "SNS"
+        effect = "Allow"
+        actions = [
+            "sns:Publish"
+        ]
+
+        resources = [
+            "${aws_sns_topic.kms_logging_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "ctprocessor_sqs" {
+    statement {
+        sid = "SQS"
+        effect = "Allow"
+        actions = [
+            "sqs:DeleteMessage",
+            "sqs:ChangeMessageVisibility",
+            "sqs:ReceiveMessage",
+            "sqs:SendMessage",
+            "sqs:GetQueueAttributes"
+        ]
+
+        resources = [
+            "${aws_sqs_queue.kms_ct_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "assume-role" {
+    statement {
+        actions = [
+            "sts:AssumeRole"
+        ]
+        principals {
+            type = "Service"
+            identifiers = [
+                "lambda.amazonaws.com"
+            ]
+        }
+    }
+}
+
+resource "aws_iam_role" "cloudtrail_processor" {
+    name = "${aws_lambda_function.cloudtrail_processor.id}-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_cloudwatch" {
+    name = "CloudWatch"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_cloudwatch.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_dynamodb" {
+    name = "DynamoDb"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_dynamodb.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_kms" {
+    name = "DynamoDb"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_kms.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_sns" {
+    name = "SNS"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_sns.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_sqs" {
+    name = "SQS"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_sqs.json}"
+}
