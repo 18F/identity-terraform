@@ -54,7 +54,16 @@ variable "ct_queue_maxreceivecount" {
   description = "Number of times a message will be received before going to the deadletter queue"
 }
 
-variable "sns_topic_dead_letter" {
-  description = "SNS topic name for dead letter queue"
-  default = "identity-events"
+variable "sns_topic_dead_letter_arn" {
+  description = "SNS topic ARN for dead letter queue"
+}
+
+variable "lambda_identity_lambda_functions_gitrev" {
+  default = "40a8d2e68705313599e972a1cf50fd5a897ecc45"
+  description = "Initial gitrev of identity-lambda-functions to deploy (updated outside of terraform)"
+}
+
+variable "dynamodb_retention_days" {
+  default = "365"
+  description = "Number of days to retain kms log records in dynamodb"
 }

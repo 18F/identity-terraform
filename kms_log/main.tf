@@ -10,16 +10,17 @@ data "aws_kms_key" "application"
     key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
-data "aws_sns_topic" "identity"
+data "aws_s3_bucket" "lambda"
 {
-    name = "${var.sns_topic_dead_letter}"
+    bucket = "login-gov.lambda-functions.${data.aws_caller_identity.current.account_id}-${var.region}"
 }
 
 locals {
     kms_alias = "alias/${var.env_name}-kms-logging"
     dynamodb_table_name = "${var.env_name}-kms-logging"
     kinesis_stream_name = "${var.env_name}-kms-app-events"
-    event_rule_name = "${var.env_name}-decryption-events"
+    decryption_event_rule_name = "${var.env_name}-decryption-events"
+    kmslog_event_rule_name = "${var.env_name}-unmatched-kmslog"
     dashboard_name = "${var.env_name}-kms-logging"
 }
 
@@ -146,7 +147,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
 # kms key
 resource "aws_cloudwatch_event_rule" "decrypt" {
     count = "${var.kmslogging_service_enabled}"
-    name = "${local.event_rule_name}"
+    name = "${local.ecryption_event_rule_name}"
     description = "Capture decryption events"
 
     event_pattern = <<PATTERN
@@ -189,6 +190,26 @@ resource "aws_cloudwatch_event_target" "sqs" {
     rule = "${aws_cloudwatch_event_rule.decrypt.name}"
     target_id = "${var.env_name}-sqs"
     arn = "${aws_sqs_queue.kms_ct_events.arn}"
+}
+
+# event rule for custom events
+resource "aws_cloudwatch_event_rule" "unmatched" {
+    count = "${var.kmslogging_service_enabled}"
+    name = "${local.kmslog_event_rule_name}"
+    description = "Capture Unmatched KMS Log Events"
+
+    event_pattern = <<PATTERN
+{
+    "source":"gov.login.app"
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_event_target" "unmatched" {
+    count = "${var.kmslogging_service_enabled}"
+    rule = "${aws_cloudwatch_event_rule.unmatched.name}"
+    target_id = "${var.env_name}-slack"
+    arn = "${var.sns_topic_dead_letter_arn}"
 }
 
 # dynamodb table for event correlation
@@ -569,6 +590,39 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     alarm_description = "This alarm notifies when messages are on dead letter queue"
     treat_missing_data = "ignore"
     alarm_actions = [
-        "${data.aws_sns_topic.identity.arn}"
+        "${var.sns_topic_dead_letter_arn}"
     ]
+}
+
+#lambda functions
+resource "aws_lambda_function" "cloudtrail_processor" {
+    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
+
+    lifecycle {
+        ignore_changes = ["s3_key", "last_modified"]
+    }
+
+    function_name = "${var.env_name}-kmslog-ct-processor"
+    description = "18F/identity-lambda-functions: KMS CT Log Processor"
+    role = "${aws_iam_role.lambda-ct-processor.arn}"
+    handler = "main.Functions::KMSCloudTrailHandler.process"
+    runtime = "ruby2.5"
+    timeout = 30 # seconds
+
+    environment {
+        variables = {
+            DEBUG = "${var.lambda_audit_github_debug ? "1" : ""}"
+            LOG_LEVEL = "0"
+            CT_SQS_QUEUE = "${aws_sqs_queue.kms_ct_events.id}"
+            DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
+            DDB_TABLE = "${aws_dynamodb_table.kms_events.id}"
+            SNS_EVENT_TOPIC_ARN = "${aws_sns_topic.kms_logging_events.arn}"
+        }
+    }
+
+    tags {
+        source_repo = "https://github.com/18F/identity-lambda-functions"
+        environment = "${var.env_name}"
+    }
 }
