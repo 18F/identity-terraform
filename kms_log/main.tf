@@ -10,11 +10,6 @@ data "aws_kms_key" "application"
     key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
-data "aws_sns_topic" "identity"
-{
-    name = "${var.sns_topic_dead_letter}"
-}
-
 locals {
     kms_alias = "alias/${var.env_name}-kms-logging"
     dynamodb_table_name = "${var.env_name}-kms-logging"
@@ -561,6 +556,6 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     alarm_description = "This alarm notifies when messages are on dead letter queue"
     treat_missing_data = "ignore"
     alarm_actions = [
-        "${data.aws_sns_topic.identity.arn}"
+        "${var.sns_topic_dead_letter_arn}"
     ]
 }
