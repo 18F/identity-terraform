@@ -9,7 +9,7 @@ variable "region" {
 
 variable "kmslogging_service_enabled" {
   default = 0
-  description = "Enable KMS Logging service.  If disabled the CloudWatch rule will not be created."
+  description = "Enable KMS Logging service.  If disabled the CloudWatch rules and Lambdas will not be created."
 }
 
 variable "kinesis_shard_count" {
