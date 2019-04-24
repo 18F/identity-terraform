@@ -416,7 +416,7 @@ data "aws_iam_policy_document" "subscription" {
     }
 }
 
-# create destination polciy
+# create destination policy
 resource "aws_cloudwatch_log_destination_policy" "subscription" {
     destination_name = "${aws_cloudwatch_log_destination.datastream.name}"
     access_policy = "${data.aws_iam_policy_document.subscription.json}"
@@ -558,4 +558,207 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     alarm_actions = [
         "${var.sns_topic_dead_letter_arn}"
     ]
+}
+
+data "aws_iam_policy_document" "lambda-assume-role-policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lambda-cloudtrail-kms" {
+  name = "${var.env_name}-lambda-cloudtrail-kms"
+
+  assume_role_policy = "${data.aws_iam_policy_document.lambda-assume-role-policy.json}"
+}
+
+resource "aws_iam_role" "lambda-cloudwatch-kms" {
+  name = "${var.env_name}-lambda-cloudwatch-kms"
+
+  assume_role_policy = "${data.aws_iam_policy_document.lambda-assume-role-policy.json}"
+}
+
+# Create a common policy for lambdas to allow pushing logs to CloudWatch Logs.
+# Ideally we would scope these more finely to only allow writing to aws/lambda/name-of-lambda.
+resource "aws_iam_policy" "lambda-allow-logs" {
+  name        = "${var.env_name}-lambda-allow-logs-tf"
+  path        = "/"
+  description = "Policy allowing lambdas to log to CloudWatch log groups starting with 'aws/lambda/'"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:/aws/lambda/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:/aws/lambda/*:log-stream:*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-cloudtrail-kms-logs" {
+  role       = "${aws_iam_role.lambda-cloudtrail-kms.name}"
+  policy_arn = "${aws_iam_policy.lambda-allow-logs.arn}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-cloudwatch-kms-logs" {
+  role       = "${aws_iam_role.lambda-cloudwatch-kms.name}"
+  policy_arn = "${aws_iam_policy.lambda-allow-logs.arn}"
+}
+
+# == Lambda: cloudtrail-kms ==
+resource "aws_lambda_function" "cloudtrail-kms" {
+  count = "${var.kmslogging_service_enabled}"
+
+  s3_bucket        = "${var.lambda_functions_s3_bucket}"
+  s3_key           = "circleci/identity-lambda-functions/${var.identity_lambda_functions_gitrev}.zip"
+
+  lifecycle {
+    ignore_changes = ["s3_key", "last_modified"]
+  }
+
+  function_name    = "${var.env_name}-cloudtrail-kms"
+  description      = "18F/identity-lambda-functions: CloudTrailToDynamoHandler"
+  role             = "${aws_iam_role.lambda-cloudtrail-kms.arn}"
+  handler          = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
+  runtime          = "ruby2.5"
+  timeout          = 30 # seconds
+
+  environment {
+    variables = {
+      DEBUG = "1"
+      LOG_LEVEL = "0"
+      DDB_TABLE = "${local.dynamodb_table_name}"
+    }
+  }
+  
+  tags {
+    source_repo = "https://github.com/18F/identity-lambda-functions"
+  }
+}
+
+# == Lambda: cloudwatch-kms ==
+resource "aws_lambda_function" "cloudwatch-kms" {
+  count = "${var.kmslogging_service_enabled}"
+
+  s3_bucket        = "${var.lambda_functions_s3_bucket}"
+  s3_key           = "circleci/identity-lambda-functions/${var.identity_lambda_functions_gitrev}.zip"
+
+  lifecycle {
+    ignore_changes = ["s3_key", "last_modified"]
+  }
+
+  function_name    = "${var.env_name}-cloudwatch-kms"
+  description      = "18F/identity-lambda-functions: CloudWatchKMSHandler"
+  role             = "${aws_iam_role.lambda-cloudwatch-kms.arn}"
+  handler          = "main.Functions::IdentityKMSMonitor::CloudWatchKMSHandler.process"
+  runtime          = "ruby2.5"
+  timeout          = 30 # seconds
+
+  environment {
+    variables = {
+      DEBUG = "1"
+      LOG_LEVEL = "0"
+      DDB_TABLE = "${local.dynamodb_table_name}"
+    }
+  }
+  
+  tags {
+    source_repo = "https://github.com/18F/identity-lambda-functions"
+  }
+}
+
+resource "aws_iam_policy" "lambda-allow-kms-kinesis" {
+  name        = "${var.env_name}-lambda-allow-kms-kinesis"
+  path        = "/"
+  description = "Policy allowing lambdas to read KMS events from Kinesis"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kinesis:GetRecords",
+                "kinesis:GetShardIterator",
+                "kinesis:DescribeStream",
+                "kinesis:ListStreams"
+            ],
+            "Resource": [
+                "${aws_kinesis_stream.datastream.arn}"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-cloudwatch-kms-kinesis" {
+  role       = "${aws_iam_role.lambda-cloudwatch-kms.name}"
+  policy_arn = "${aws_iam_policy.lambda-allow-kms-kinesis.arn}"
+}
+
+resource "aws_iam_policy" "lambda-allow-dynamo" {
+  name        = "${var.env_name}-lambda-allow-dynamo"
+  path        = "/"
+  description = "Policy allowing lambdas to read and write KMS events in Dynamo"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:GetItem"
+            ],
+            "Resource": [
+                "${aws_dynamodb_table.kms_events.arn}"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-cloudwatch-dynamo" {
+  role       = "${aws_iam_role.lambda-cloudwatch-kms.name}"
+  policy_arn = "${aws_iam_policy.lambda-allow-dynamo.arn}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-cloudtrail-dynamo" {
+  role       = "${aws_iam_role.lambda-cloudtrail-kms.name}"
+  policy_arn = "${aws_iam_policy.lambda-allow-dynamo.arn}"
+}
+
+resource "aws_lambda_event_source_mapping" "kinesis-to-cloudwatch-lambda" {
+  event_source_arn  = "${aws_kinesis_stream.datastream.arn}"
+  function_name     = "${aws_lambda_function.cloudwatch-kms.arn}"
+  starting_position = "LATEST"
 }
