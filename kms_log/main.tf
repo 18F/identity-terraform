@@ -560,6 +560,7 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     ]
 }
 
+# Allow Lambda to take on a given role.
 data "aws_iam_policy_document" "lambda-assume-role-policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -722,6 +723,7 @@ resource "aws_iam_policy" "lambda-allow-kms-kinesis" {
 EOF
 }
 
+# Note that this policy is NOT applied to the CloudTrail Lambda role.
 resource "aws_iam_role_policy_attachment" "lambda-cloudwatch-kms-kinesis" {
   role       = "${aws_iam_role.lambda-cloudwatch-kms.name}"
   policy_arn = "${aws_iam_policy.lambda-allow-kms-kinesis.arn}"
