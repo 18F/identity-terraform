@@ -653,6 +653,9 @@ resource "aws_lambda_function" "cloudtrail-kms" {
       DEBUG = "1"
       LOG_LEVEL = "0"
       DDB_TABLE = "${local.dynamodb_table_name}"
+      RETENTION_DAYS = "365"
+      # An ARN would be nice but to generate the URL we need a name.
+      CT_SQS_QUEUE_NAME = "${aws_sqs_queue.dead_letter.name"}
     }
   }
   
@@ -684,6 +687,7 @@ resource "aws_lambda_function" "cloudwatch-kms" {
       DEBUG = "1"
       LOG_LEVEL = "0"
       DDB_TABLE = "${local.dynamodb_table_name}"
+      RETENTION_DAYS = "365"
     }
   }
   
