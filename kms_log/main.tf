@@ -656,7 +656,7 @@ resource "aws_lambda_function" "cloudtrail-kms" {
       DDB_TABLE = "${local.dynamodb_table_name}"
       RETENTION_DAYS = "365"
       # An ARN would be nice but to generate the URL we need a name.
-      CT_SQS_QUEUE_NAME = "${aws_sqs_queue.dead_letter.name"}
+      CT_SQS_QUEUE_NAME = "${aws_sqs_queue.dead_letter.name}"
     }
   }
   
@@ -767,4 +767,41 @@ resource "aws_lambda_event_source_mapping" "kinesis-to-cloudwatch-lambda" {
   event_source_arn  = "${aws_kinesis_stream.datastream.arn}"
   function_name     = "${aws_lambda_function.cloudwatch-kms.arn}"
   starting_position = "LATEST"
+}
+
+resource "aws_iam_policy" "lambda-allow-kms-sqs" {
+  name        = "${var.env_name}-lambda-allow-kms-sqs"
+  path        = "/"
+  description = "Policy allowing lambdas to read KMS events from CloudTrail via SQS"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes"
+            ],
+            "Resource": [
+                "${aws_sqs_queue.kms_ct_events.arn}"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+# Note that this policy is NOT applied to the CloudWatch Lambda role.
+resource "aws_iam_role_policy_attachment" "lambda-cloudtrail-kms-sqs" {
+  role       = "${aws_iam_role.lambda-cloudtrail-kms.name}"
+  policy_arn = "${aws_iam_policy.lambda-allow-kms-sqs.arn}"
+}
+
+# Pipe events from SQS into the CloudTrail lambda.
+resource "aws_lambda_event_source_mapping" "sqs-to-cloudtrail-lambda" {
+  event_source_arn  = "${aws_sqs_queue.kms_ct_events.arn}"
+  function_name     = "${aws_lambda_function.cloudtrail-kms.arn}"
 }
