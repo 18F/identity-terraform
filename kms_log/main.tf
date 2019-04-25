@@ -805,3 +805,32 @@ resource "aws_lambda_event_source_mapping" "sqs-to-cloudtrail-lambda" {
   event_source_arn  = "${aws_sqs_queue.kms_ct_events.arn}"
   function_name     = "${aws_lambda_function.cloudtrail-kms.arn}"
 }
+
+resource "aws_iam_policy" "lambda-allow-kms-decrypt" {
+  name        = "${var.env_name}-lambda-allow-kms-decrypt"
+  path        = "/"
+  description = "Policy allowing lambdas to decrypt KMS logs"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:Decrypt"
+            ],
+            "Resource": [
+                "${aws_kms_key.kms_logging.arn}"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+# Note that this policy is NOT applied to the CloudWatch Lambda role.
+resource "aws_iam_role_policy_attachment" "lambda-cloudtrail-kms-decrypt" {
+  role       = "${aws_iam_role.lambda-cloudtrail-kms.name}"
+  policy_arn = "${aws_iam_policy.lambda-allow-kms-decrypt.arn}"
+}
