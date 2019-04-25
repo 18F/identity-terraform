@@ -59,7 +59,6 @@ variable "sns_topic_dead_letter_arn" {
 }
 
 variable "identity_lambda_functions_gitrev" {
-  default = "bda05730bb1b559c2377ba813145468c1621b742"
   description = "Initial gitrev of identity-lambda-functions to deploy"
 }
 
