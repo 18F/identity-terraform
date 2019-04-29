@@ -785,7 +785,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
     function_name = "${var.env_name}-kmslog-cw-processor"
     description = "18F/identity-lambda-functions: KMS CW Log Processor"
     role = "${aws_iam_role.cloudwatch_processor.arn}"
-    handler = "main.Functions::KMSCloudWatchHandler.process"  #TODO Verify
+    handler = "main.Functions::CloudWatchKMSHandler.process"
     runtime = "ruby2.5"
     timeout = 30 # seconds
 
