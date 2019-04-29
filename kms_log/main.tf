@@ -608,7 +608,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
     function_name = "${var.env_name}-kmslog-ct-processor"
     description = "18F/identity-lambda-functions: KMS CT Log Processor"
     role = "${aws_iam_role.cloudtrail_processor.arn}"
-    handler = "main.Functions::KMSCloudTrailHandler.process"  #TODO Verify
+    handler = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
     runtime = "ruby2.5"
     timeout = 30 # seconds
 
