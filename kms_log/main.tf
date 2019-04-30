@@ -639,7 +639,7 @@ resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
 }
 
 
-data "aws_iam_policy_document" "lambda_cloudwatch" {
+data "aws_iam_policy_document" "ctprocessor_cloudwatch" {
     statement {
         sid = "CreateLogGroup"
         effect = "Allow"
@@ -660,12 +660,12 @@ data "aws_iam_policy_document" "lambda_cloudwatch" {
         ]
 
         resources = [
-            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.cloudtrail_processor.id}:*"
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.ct_processor_lambda_name}:*"
         ]
     }
 }
 
-data "aws_iam_policy_document" "ctprocessor_kms" {
+data "aws_iam_policy_document" "lambda_kms" {
     statement {
         sid = "KMS"
         effect = "Allow"
@@ -680,7 +680,7 @@ data "aws_iam_policy_document" "ctprocessor_kms" {
     }
 }
 
-data "aws_iam_policy_document" "ctprocessor_dynamodb" {
+data "aws_iam_policy_document" "lambda_dynamodb" {
     statement {
         sid = "DynamoDb"
         effect = "Allow"
@@ -749,19 +749,19 @@ resource "aws_iam_role" "cloudtrail_processor" {
 resource "aws_iam_role_policy" "ctprocessor_cloudwatch" {
     name = "CloudWatch"
     role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_cloudwatch.json}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_cloudwatch.json}"
 }
 
 resource "aws_iam_role_policy" "ctprocessor_dynamodb" {
     name = "DynamoDb"
     role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.ctprocessor_dynamodb.json}"
+    policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
 }
 
 resource "aws_iam_role_policy" "ctprocessor_kms" {
     name = "DynamoDb"
     role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.ctprocessor_kms.json}"
+    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
 }
 
 resource "aws_iam_role_policy" "ctprocessor_sns" {
@@ -841,37 +841,7 @@ data "aws_iam_policy_document" "cwprocessor_cloudwatch" {
         ]
 
         resources = [
-            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.cloudwatch_processor.id}:*"
-        ]
-    }
-}
-
-data "aws_iam_policy_document" "cwprocessor_dynamodb" {
-    statement {
-        sid = "DynamoDb"
-        effect = "Allow"
-        actions = [
-            "dynamodb:PutItem",
-            "dynamodb:GetItem"
-        ]
-
-        resources = [
-            "${aws_dynamodb_table.kms_events.arn}"
-        ]
-    }
-}
-
-data "aws_iam_policy_document" "cwprocessor_kms" {
-    statement {
-        sid = "KMS"
-        effect = "Allow"
-        actions = [
-            "kms:Decrypt",
-            "kms:GenerateDataKey"
-        ]
-
-        resources = [
-            "${aws_kms_key.kms_logging.arn}"
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.cw_processor_lambda_name}:*"
         ]
     }
 }
@@ -909,19 +879,19 @@ data "aws_iam_policy_document" "cwprocessor_kinesis" {
 resource "aws_iam_role_policy" "cwprocessor_cloudwatch" {
     name = "CloudWatch"
     role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_cloudwatch.json}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_cloudwatch.json}"
 }
 
 resource "aws_iam_role_policy" "cwprocessor_dynamodb" {
     name = "DynamoDb"
     role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.cwprocessor_dynamodb.json}"
+    policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
 }
 
 resource "aws_iam_role_policy" "cwprocessor_kms" {
     name = "KMS"
     role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.cwprocessor_kms.json}"
+    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
 }
 
 resource "aws_iam_role_policy" "cwprocessor_sns" {
@@ -978,6 +948,32 @@ resource "aws_iam_role" "event_processor" {
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
+data "aws_iam_policy_document" "event_processor_cloudwatch" {
+    statement {
+        sid = "CreateLogGroup"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogGroup"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+        ]
+    }
+    statement {
+        sid = "PutLogEvents"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.event_processor_lambda_name}:*"
+        ]
+    }
+}
+
 data "aws_iam_policy_document" "event_processor_cloudwatch_events" {
     statement {
         sid = "CloudWatchEvents"
@@ -1006,21 +1002,6 @@ data "aws_iam_policy_document" "event_processor_cloudwatch_metrics" {
     }
 }
 
-data "aws_iam_policy_document" "event_processor_kms" {
-    statement {
-        sid = "KMS"
-        effect = "Allow"
-        actions = [
-            "kms:Decrypt",
-            "kms:GenerateDataKey"
-        ]
-
-        resources = [
-            "${aws_kms_key.kms_logging.arn}"
-        ]
-    }
-}
-
 data "aws_iam_policy_document" "event_processor_sqs" {
     statement {
         sid = "SQS"
@@ -1042,7 +1023,7 @@ data "aws_iam_policy_document" "event_processor_sqs" {
 resource "aws_iam_role_policy" "event_processor_cloudwatch" {
     name = "CloudWatch"
     role = "${aws_iam_role.event_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_cloudwatch.json}"
+    policy = "${data.aws_iam_policy_document.event_processor_cloudwatch.json}"
 }
 
 resource "aws_iam_role_policy" "event_processor_cloudwatch_events" {
@@ -1060,11 +1041,11 @@ resource "aws_iam_role_policy" "event_processor_cloudwatch_metrics" {
 resource "aws_iam_role_policy" "event_processor_kms" {
     name = "KMS"
     role = "${aws_iam_role.event_processor.id}"
-    policy = "${data.aws_iam_policy_document.event_processor_kms.json}"
+    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
 }
 
 resource "aws_iam_role_policy" "event_processor_sqs" {
-    name = "KMS"
+    name = "SQS"
     role = "${aws_iam_role.event_processor.id}"
     policy = "${data.aws_iam_policy_document.event_processor_sqs.json}"
 }
