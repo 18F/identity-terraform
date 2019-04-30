@@ -617,7 +617,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 
     environment {
         variables = {
-            DEBUG = "${var.lambda_audit_github_debug ? "1" : ""}"
+            DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
             LOG_LEVEL = "0"
             CT_SQS_QUEUE = "${aws_sqs_queue.kms_ct_events.id}"
             DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
@@ -794,7 +794,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 
     environment {
         variables = {
-            DEBUG = "${var.lambda_audit_github_debug ? "1" : ""}"
+            DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
             LOG_LEVEL = "0"
             DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
             DDB_TABLE = "${aws_dynamodb_table.kms_events.id}"
@@ -955,7 +955,7 @@ resource "aws_lambda_function" "event_processor" {
 
     environment {
         variables = {
-            DEBUG = "${var.lambda_audit_github_debug ? "1" : ""}"
+            DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
             LOG_LEVEL = "0"
             ENV_NAME = "${var.env_name}"
         }

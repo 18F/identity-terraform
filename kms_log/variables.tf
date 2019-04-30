@@ -67,3 +67,8 @@ variable "dynamodb_retention_days" {
   default = "365"
   description = "Number of days to retain kms log records in dynamodb"
 }
+
+variable "kmslog_lambda_debug" {
+  default = 0
+  description = "Whether to run the kms logging lambdas in debug mode in this account"
+}
