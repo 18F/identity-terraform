@@ -288,7 +288,7 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
     }
 }
 
-resource "aws_sqs_queue_policy" "kms_cloudwatch_events"{
+resource "aws_sqs_queue_policy" "kms_cloudwatch_events" {
     queue_url = "${aws_sqs_queue.kms_cloudwatch_events.id}"
     policy = "${data.aws_iam_policy_document.sqs_kms_cw_events_policy.json}"
 }
@@ -969,7 +969,7 @@ resource "aws_lambda_function" "event_processor" {
 
 resource "aws_lambda_event_source_mapping" "event_processor" {
     count = "${var.kmslogging_service_enabled}"
-    event_source_arn = "${aws_sqs_queue.kms_cw_events.arn}"
+    event_source_arn = "${aws_sqs_queue.kms_cloudwatch_events.arn}"
     function_name = "${aws_lambda_function.event_processor.arn}"
 }
 
@@ -1034,7 +1034,7 @@ data "aws_iam_policy_document" "event_processor_sqs" {
         ]
 
         resources = [
-            "${aws_sqs_queue.kms_cw_events.arn}"
+            "${aws_sqs_queue.kms_cloudwatch_events.arn}"
         ]
     }
 }
