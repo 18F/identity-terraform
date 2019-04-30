@@ -815,7 +815,7 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
     starting_position = "LATEST"
 }
 
-resource "aws_iam_role" "cloudtrail_processor" {
+resource "aws_iam_role" "cloudwatch_processor" {
     name = "${local.cw_processor_lambda_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
