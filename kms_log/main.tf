@@ -23,6 +23,9 @@ locals {
     decryption_event_rule_name = "${var.env_name}-decryption-events"
     kmslog_event_rule_name = "${var.env_name}-unmatched-kmslog"
     dashboard_name = "${var.env_name}-kms-logging"
+    ct_processor_lambda_name = "${var.env_name}-kmslog-ct-processor"
+    cw_processor_lambda_name = "${var.env_name}-kmslog-cw-processor"
+    event_processor_lambda_name = "${var.env_name}-kmslog-event-processor"
 }
 
 # create cmk for kms logging solution
@@ -605,7 +608,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
         ignore_changes = ["s3_key", "last_modified"]
     }
 
-    function_name = "${var.env_name}-kmslog-ct-processor"
+    function_name = "${local.ct_processor_lambda_name}"
     description = "18F/identity-lambda-functions: KMS CT Log Processor"
     role = "${aws_iam_role.cloudtrail_processor.arn}"
     handler = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
@@ -739,7 +742,7 @@ data "aws_iam_policy_document" "assume-role" {
 }
 
 resource "aws_iam_role" "cloudtrail_processor" {
-    name = "${aws_lambda_function.cloudtrail_processor.id}-execution"
+    name = "${local.ct_processor_lambda_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
@@ -782,7 +785,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
         ignore_changes = ["s3_key", "last_modified"]
     }
 
-    function_name = "${var.env_name}-kmslog-cw-processor"
+    function_name = "${local.cw_processor_lambda_name}"
     description = "18F/identity-lambda-functions: KMS CW Log Processor"
     role = "${aws_iam_role.cloudwatch_processor.arn}"
     handler = "main.Functions::CloudWatchKMSHandler.process"
@@ -813,7 +816,7 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
 }
 
 resource "aws_iam_role" "cloudtrail_processor" {
-    name = "${aws_lambda_function.cloudwatch_processor.id}-execution"
+    name = "${local.cw_processor_lambda_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
@@ -943,7 +946,7 @@ resource "aws_lambda_function" "event_processor" {
         ignore_changes = ["s3_key", "last_modified"]
     }
 
-    function_name = "${var.env_name}-kmslog-event-processor"
+    function_name = "${local.event_processor_lambda_name}"
     description = "18F/identity-lambda-functions: KMS Log Event Processor"
     role = "${aws_iam_role.event_processor.arn}"
     handler = "main.Functions::KMSEventHandler.process"  #TODO Verify
@@ -971,7 +974,7 @@ resource "aws_lambda_event_source_mapping" "event_processor" {
 }
 
 resource "aws_iam_role" "event_processor" {
-    name = "${aws_lambda_function.event_processor.id}-execution"
+    name = "${local.event_processor_lambda_name}-execution"
     assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
 }
 
