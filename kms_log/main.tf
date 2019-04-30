@@ -136,7 +136,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
             test = "StringLike"
             variable = "aws:SourceArn"
             values = [
-                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.event_rule_name}"
+                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.kmslog_event_rule_name}"
             ]
 
         }
@@ -296,12 +296,12 @@ resource "aws_sqs_queue_policy" "kms_cloudwatch_events" {
 # policy for queue that receives events for cloudwatch metrics
 data "aws_iam_policy_document" "sqs_kms_cw_events_policy" {
     statement {
-        sid = "Allow SNS"
+        sid = "Allow SQS"
         effect = "Allow"
         actions = ["sqs:SendMessage"]
         principals {
             type        = "AWS"
-            identifiers = ["arn:aws:iam:${data.aws_caller_identity.current.account_id}:root"]
+            identifiers = ["${data.aws_caller_identity.current.account_id}"]
         }
         resources = ["${aws_sqs_queue.kms_cloudwatch_events.arn}"]
         condition {
@@ -350,7 +350,7 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
         actions = ["sqs:SendMessage"]
         principals {
             type        = "AWS"
-            identifiers = ["arn:aws:iam:${data.aws_caller_identity.current.account_id}:root"]
+            identifiers = ["${data.aws_caller_identity.current.account_id}"]
         }
         resources = ["${aws_sqs_queue.kms_elasticsearch_events.arn}"]
         condition {
@@ -359,7 +359,6 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
             values = [
                 "${aws_sns_topic.kms_logging_events.arn}"
             ]
-
         }
     }
 }
