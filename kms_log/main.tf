@@ -10,12 +10,22 @@ data "aws_kms_key" "application"
     key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
+
+data "aws_s3_bucket" "lambda"
+{
+    bucket = "login-gov.lambda-functions.${data.aws_caller_identity.current.account_id}-${var.region}"
+}
+
 locals {
     kms_alias = "alias/${var.env_name}-kms-logging"
     dynamodb_table_name = "${var.env_name}-kms-logging"
     kinesis_stream_name = "${var.env_name}-kms-app-events"
-    event_rule_name = "${var.env_name}-decryption-events"
+    decryption_event_rule_name = "${var.env_name}-decryption-events"
+    kmslog_event_rule_name = "${var.env_name}-unmatched-kmslog"
     dashboard_name = "${var.env_name}-kms-logging"
+    ct_processor_lambda_name = "${var.env_name}-kmslog-ct-processor"
+    cw_processor_lambda_name = "${var.env_name}-kmslog-cw-processor"
+    event_processor_lambda_name = "${var.env_name}-kmslog-event-processor"
 }
 
 # create cmk for kms logging solution
@@ -126,7 +136,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
             test = "StringLike"
             variable = "aws:SourceArn"
             values = [
-                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.event_rule_name}"
+                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.kmslog_event_rule_name}"
             ]
 
         }
@@ -141,7 +151,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
 # kms key
 resource "aws_cloudwatch_event_rule" "decrypt" {
     count = "${var.kmslogging_service_enabled}"
-    name = "${local.event_rule_name}"
+    name = "${local.decryption_event_rule_name}"
     description = "Capture decryption events"
 
     event_pattern = <<PATTERN
@@ -184,6 +194,26 @@ resource "aws_cloudwatch_event_target" "sqs" {
     rule = "${aws_cloudwatch_event_rule.decrypt.name}"
     target_id = "${var.env_name}-sqs"
     arn = "${aws_sqs_queue.kms_ct_events.arn}"
+}
+
+# event rule for custom events
+resource "aws_cloudwatch_event_rule" "unmatched" {
+    count = "${var.kmslogging_service_enabled}"
+    name = "${local.kmslog_event_rule_name}"
+    description = "Capture Unmatched KMS Log Events"
+
+    event_pattern = <<PATTERN
+{
+    "source":["gov.login.app"]
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_event_target" "unmatched" {
+    count = "${var.kmslogging_service_enabled}"
+    rule = "${aws_cloudwatch_event_rule.unmatched.name}"
+    target_id = "${var.env_name}-slack"
+    arn = "${var.sns_topic_dead_letter_arn}"
 }
 
 # dynamodb table for event correlation
@@ -258,7 +288,7 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
     }
 }
 
-resource "aws_sqs_queue_policy" "kms_cloudwatch_events"{
+resource "aws_sqs_queue_policy" "kms_cloudwatch_events" {
     queue_url = "${aws_sqs_queue.kms_cloudwatch_events.id}"
     policy = "${data.aws_iam_policy_document.sqs_kms_cw_events_policy.json}"
 }
@@ -266,9 +296,13 @@ resource "aws_sqs_queue_policy" "kms_cloudwatch_events"{
 # policy for queue that receives events for cloudwatch metrics
 data "aws_iam_policy_document" "sqs_kms_cw_events_policy" {
     statement {
-        sid = "Allow SNS"
+        sid = "Allow SQS"
         effect = "Allow"
         actions = ["sqs:SendMessage"]
+        principals {
+            type        = "AWS"
+            identifiers = ["${data.aws_caller_identity.current.account_id}"]
+        }
         resources = ["${aws_sqs_queue.kms_cloudwatch_events.arn}"]
         condition {
             test = "StringLike"
@@ -314,6 +348,10 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
         sid = "Allow SNS"
         effect = "Allow"
         actions = ["sqs:SendMessage"]
+        principals {
+            type        = "AWS"
+            identifiers = ["${data.aws_caller_identity.current.account_id}"]
+        }
         resources = ["${aws_sqs_queue.kms_elasticsearch_events.arn}"]
         condition {
             test = "StringLike"
@@ -321,7 +359,6 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
             values = [
                 "${aws_sns_topic.kms_logging_events.arn}"
             ]
-
         }
     }
 }
@@ -558,4 +595,456 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     alarm_actions = [
         "${var.sns_topic_dead_letter_arn}"
     ]
+}
+
+#lambda functions
+resource "aws_lambda_function" "cloudtrail_processor" {
+    count = "${var.kmslogging_service_enabled}"
+    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
+
+    lifecycle {
+        ignore_changes = ["s3_key", "last_modified"]
+    }
+
+    function_name = "${local.ct_processor_lambda_name}"
+    description = "18F/identity-lambda-functions: KMS CT Log Processor"
+    role = "${aws_iam_role.cloudtrail_processor.arn}"
+    handler = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
+    runtime = "ruby2.5"
+    timeout = 30 # seconds
+
+    environment {
+        variables = {
+            DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
+            LOG_LEVEL = "0"
+            CT_SQS_QUEUE = "${aws_sqs_queue.kms_ct_events.id}"
+            DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
+            DDB_TABLE = "${aws_dynamodb_table.kms_events.id}"
+            SNS_EVENT_TOPIC_ARN = "${aws_sns_topic.kms_logging_events.arn}"
+        }
+    }
+
+    tags {
+        source_repo = "https://github.com/18F/identity-lambda-functions"
+        environment = "${var.env_name}"
+    }
+}
+
+resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
+    count = "${var.kmslogging_service_enabled}"
+    event_source_arn = "${aws_sqs_queue.kms_ct_events.arn}"
+    function_name = "${aws_lambda_function.cloudtrail_processor.arn}"
+}
+
+
+data "aws_iam_policy_document" "ctprocessor_cloudwatch" {
+    statement {
+        sid = "CreateLogGroup"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogGroup"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+        ]
+    }
+    statement {
+        sid = "PutLogEvents"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.ct_processor_lambda_name}:*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "lambda_kms" {
+    statement {
+        sid = "KMS"
+        effect = "Allow"
+        actions = [
+            "kms:Decrypt",
+            "kms:GenerateDataKey"
+        ]
+
+        resources = [
+            "${aws_kms_key.kms_logging.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "lambda_dynamodb" {
+    statement {
+        sid = "DynamoDb"
+        effect = "Allow"
+        actions = [
+            "dynamodb:PutItem",
+            "dynamodb:GetItem"
+        ]
+
+        resources = [
+            "${aws_dynamodb_table.kms_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "ctprocessor_sns" {
+    statement {
+        sid = "SNS"
+        effect = "Allow"
+        actions = [
+            "sns:Publish"
+        ]
+
+        resources = [
+            "${aws_sns_topic.kms_logging_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "ctprocessor_sqs" {
+    statement {
+        sid = "SQS"
+        effect = "Allow"
+        actions = [
+            "sqs:DeleteMessage",
+            "sqs:ChangeMessageVisibility",
+            "sqs:ReceiveMessage",
+            "sqs:SendMessage",
+            "sqs:GetQueueAttributes"
+        ]
+
+        resources = [
+            "${aws_sqs_queue.kms_ct_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "assume-role" {
+    statement {
+        actions = [
+            "sts:AssumeRole"
+        ]
+        principals {
+            type = "Service"
+            identifiers = [
+                "lambda.amazonaws.com"
+            ]
+        }
+    }
+}
+
+resource "aws_iam_role" "cloudtrail_processor" {
+    name = "${local.ct_processor_lambda_name}-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_cloudwatch" {
+    name = "CloudWatch"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_cloudwatch.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_dynamodb" {
+    name = "DynamoDb"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_kms" {
+    name = "DynamoDb"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_sns" {
+    name = "SNS"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_sns.json}"
+}
+
+resource "aws_iam_role_policy" "ctprocessor_sqs" {
+    name = "SQS"
+    role = "${aws_iam_role.cloudtrail_processor.id}"
+    policy = "${data.aws_iam_policy_document.ctprocessor_sqs.json}"
+}
+
+resource "aws_lambda_function" "cloudwatch_processor" {
+    count = "${var.kmslogging_service_enabled}"
+    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
+
+    lifecycle {
+        ignore_changes = ["s3_key", "last_modified"]
+    }
+
+    function_name = "${local.cw_processor_lambda_name}"
+    description = "18F/identity-lambda-functions: KMS CW Log Processor"
+    role = "${aws_iam_role.cloudwatch_processor.arn}"
+    handler = "main.Functions::CloudWatchKMSHandler.process"
+    runtime = "ruby2.5"
+    timeout = 30 # seconds
+
+    environment {
+        variables = {
+            DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
+            LOG_LEVEL = "0"
+            DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
+            DDB_TABLE = "${aws_dynamodb_table.kms_events.id}"
+            SNS_EVENT_TOPIC_ARN = "${aws_sns_topic.kms_logging_events.arn}"
+        }
+    }
+
+    tags {
+        source_repo = "https://github.com/18F/identity-lambda-functions"
+        environment = "${var.env_name}"
+    }
+}
+
+resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
+    count = "${var.kmslogging_service_enabled}"
+    event_source_arn = "${aws_kinesis_stream.datastream.arn}"
+    function_name = "${aws_lambda_function.cloudwatch_processor.arn}"
+    starting_position = "LATEST"
+}
+
+resource "aws_iam_role" "cloudwatch_processor" {
+    name = "${local.cw_processor_lambda_name}-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+data "aws_iam_policy_document" "cwprocessor_cloudwatch" {
+    statement {
+        sid = "CreateLogGroup"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogGroup"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+        ]
+    }
+    statement {
+        sid = "PutLogEvents"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.cw_processor_lambda_name}:*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "cwprocessor_sns" {
+    statement {
+        sid = "SNS"
+        effect = "Allow"
+        actions = [
+            "sns:Publish"
+        ]
+
+        resources = [
+            "${aws_sns_topic.kms_logging_events.arn}"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "cwprocessor_kinesis" {
+    statement {
+        sid = "Kinesis"
+        effect = "Allow"
+        actions = [
+            "kinesis:GetShardIterator",
+            "kinesis:GetRecords",
+            "kinesis:DescribeStream"
+        ]
+
+        resources = [
+            "${aws_kinesis_stream.datastream.arn}"
+        ]
+    }
+}
+
+resource "aws_iam_role_policy" "cwprocessor_cloudwatch" {
+    name = "CloudWatch"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_cloudwatch.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_dynamodb" {
+    name = "DynamoDb"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_kms" {
+    name = "KMS"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_sns" {
+    name = "KMS"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_sns.json}"
+}
+
+resource "aws_iam_role_policy" "cwprocessor_kinesis" {
+    name = "Kinesis"
+    role = "${aws_iam_role.cloudwatch_processor.id}"
+    policy = "${data.aws_iam_policy_document.cwprocessor_kinesis.json}"
+}
+
+# lambda for creating cloudwatch metrics and events
+resource "aws_lambda_function" "event_processor" {
+    count = "${var.kmslogging_service_enabled}"
+    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
+
+    lifecycle {
+        ignore_changes = ["s3_key", "last_modified"]
+    }
+
+    function_name = "${local.event_processor_lambda_name}"
+    description = "18F/identity-lambda-functions: KMS Log Event Processor"
+    role = "${aws_iam_role.event_processor.arn}"
+    handler = "main.Functions::KMSEventHandler.process"  #TODO Verify
+    runtime = "ruby2.5"
+    timeout = 30 # seconds
+
+    environment {
+        variables = {
+            DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
+            LOG_LEVEL = "0"
+            ENV_NAME = "${var.env_name}"
+        }
+    }
+
+    tags {
+        source_repo = "https://github.com/18F/identity-lambda-functions"
+        environment = "${var.env_name}"
+    }
+}
+
+resource "aws_lambda_event_source_mapping" "event_processor" {
+    count = "${var.kmslogging_service_enabled}"
+    event_source_arn = "${aws_sqs_queue.kms_cloudwatch_events.arn}"
+    function_name = "${aws_lambda_function.event_processor.arn}"
+}
+
+resource "aws_iam_role" "event_processor" {
+    name = "${local.event_processor_lambda_name}-execution"
+    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+data "aws_iam_policy_document" "event_processor_cloudwatch" {
+    statement {
+        sid = "CreateLogGroup"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogGroup"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+        ]
+    }
+    statement {
+        sid = "PutLogEvents"
+        effect = "Allow"
+        actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ]
+
+        resources = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.event_processor_lambda_name}:*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "event_processor_cloudwatch_events" {
+    statement {
+        sid = "CloudWatchEvents"
+        effect = "Allow"
+        actions = [
+            "events:PutEvents"
+        ]
+
+        resources = [
+            "*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "event_processor_cloudwatch_metrics" {
+    statement {
+        sid = "CloudWatchMetrics"
+        effect = "Allow"
+        actions = [
+            "cloudwatch:PutMetricData"
+        ]
+
+        resources = [
+            "*"
+        ]
+    }
+}
+
+data "aws_iam_policy_document" "event_processor_sqs" {
+    statement {
+        sid = "SQS"
+        effect = "Allow"
+        actions = [
+            "sqs:DeleteMessage",
+            "sqs:ChangeMessageVisibility",
+            "sqs:ReceiveMessage",
+            "sqs:SendMessage",
+            "sqs:GetQueueAttributes"
+        ]
+
+        resources = [
+            "${aws_sqs_queue.kms_cloudwatch_events.arn}"
+        ]
+    }
+}
+
+resource "aws_iam_role_policy" "event_processor_cloudwatch" {
+    name = "CloudWatch"
+    role = "${aws_iam_role.event_processor.id}"
+    policy = "${data.aws_iam_policy_document.event_processor_cloudwatch.json}"
+}
+
+resource "aws_iam_role_policy" "event_processor_cloudwatch_events" {
+    name = "CloudWatchEvents"
+    role = "${aws_iam_role.event_processor.id}"
+    policy = "${data.aws_iam_policy_document.event_processor_cloudwatch_events.json}"
+}
+
+resource "aws_iam_role_policy" "event_processor_cloudwatch_metrics" {
+    name = "CloudWatchMetrics"
+    role = "${aws_iam_role.event_processor.id}"
+    policy = "${data.aws_iam_policy_document.event_processor_cloudwatch_metrics.json}"
+}
+
+resource "aws_iam_role_policy" "event_processor_kms" {
+    name = "KMS"
+    role = "${aws_iam_role.event_processor.id}"
+    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
+}
+
+resource "aws_iam_role_policy" "event_processor_sqs" {
+    name = "SQS"
+    role = "${aws_iam_role.event_processor.id}"
+    policy = "${data.aws_iam_policy_document.event_processor_sqs.json}"
 }

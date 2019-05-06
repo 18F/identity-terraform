@@ -57,3 +57,18 @@ variable "ct_queue_maxreceivecount" {
 variable "sns_topic_dead_letter_arn" {
   description = "SNS topic ARN for dead letter queue"
 }
+
+variable "lambda_identity_lambda_functions_gitrev" {
+  default = "40a8d2e68705313599e972a1cf50fd5a897ecc45"
+  description = "Initial gitrev of identity-lambda-functions to deploy (updated outside of terraform)"
+}
+
+variable "dynamodb_retention_days" {
+  default = "365"
+  description = "Number of days to retain kms log records in dynamodb"
+}
+
+variable "kmslog_lambda_debug" {
+  default = 0
+  description = "Whether to run the kms logging lambdas in debug mode in this account"
+}
