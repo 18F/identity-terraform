@@ -23,8 +23,8 @@ locals {
     decryption_event_rule_name = "${var.env_name}-decryption-events"
     kmslog_event_rule_name = "${var.env_name}-unmatched-kmslog"
     dashboard_name = "${var.env_name}-kms-logging"
-    ct_processor_lambda_name = "${var.env_name}-kmslog-ct-processor"
-    cw_processor_lambda_name = "${var.env_name}-kmslog-cw-processor"
+    ct_processor_lambda_name = "${var.env_name}-cloudtrail-kms"
+    cw_processor_lambda_name = "${var.env_name}-cloudwatch-kms"
     event_processor_lambda_name = "${var.env_name}-kmslog-event-processor"
 }
 
@@ -136,7 +136,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
             test = "StringLike"
             variable = "aws:SourceArn"
             values = [
-                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.kmslog_event_rule_name}"
+                "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.decryption_event_rule_name}"
             ]
 
         }
@@ -424,7 +424,7 @@ resource "aws_iam_role" "cloudwatch_to_kinesis" {
 
 # add cloudwatch access to kinesis role
 resource "aws_iam_role_policy" "cloudwatch_access" {
-    name = "cloudwatch"
+    name = "cloudwatch_access"
     role = "${aws_iam_role.cloudwatch_to_kinesis.name}"
     policy = "${data.aws_iam_policy_document.cloudwatch_access.json}"
 }
@@ -618,8 +618,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
         variables = {
             DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
             LOG_LEVEL = "0"
-            CT_SQS_QUEUE = "${aws_sqs_queue.kms_ct_events.id}"
-            DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
+            CT_QUEUE_URL = "${aws_sqs_queue.kms_ct_events.id}"
+            RETENTION_DAYS = "${var.dynamodb_retention_days}"
             DDB_TABLE = "${aws_dynamodb_table.kms_events.id}"
             SNS_EVENT_TOPIC_ARN = "${aws_sns_topic.kms_logging_events.arn}"
         }
@@ -696,7 +696,7 @@ data "aws_iam_policy_document" "lambda_dynamodb" {
 
 data "aws_iam_policy_document" "ctprocessor_sns" {
     statement {
-        sid = "SNS"
+        sid = "ctprocessorSNS"
         effect = "Allow"
         actions = [
             "sns:Publish"
@@ -746,31 +746,31 @@ resource "aws_iam_role" "cloudtrail_processor" {
 }
 
 resource "aws_iam_role_policy" "ctprocessor_cloudwatch" {
-    name = "CloudWatch"
+    name = "ctprocessor_cloudwatch"
     role = "${aws_iam_role.cloudtrail_processor.id}"
     policy = "${data.aws_iam_policy_document.ctprocessor_cloudwatch.json}"
 }
 
 resource "aws_iam_role_policy" "ctprocessor_dynamodb" {
-    name = "DynamoDb"
+    name = "ctprocessor_dynamodb"
     role = "${aws_iam_role.cloudtrail_processor.id}"
     policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
 }
 
 resource "aws_iam_role_policy" "ctprocessor_kms" {
-    name = "DynamoDb"
+    name = "ctprocessor_kms"
     role = "${aws_iam_role.cloudtrail_processor.id}"
     policy = "${data.aws_iam_policy_document.lambda_kms.json}"
 }
 
 resource "aws_iam_role_policy" "ctprocessor_sns" {
-    name = "SNS"
+    name = "ctprocessor_sns"
     role = "${aws_iam_role.cloudtrail_processor.id}"
     policy = "${data.aws_iam_policy_document.ctprocessor_sns.json}"
 }
 
 resource "aws_iam_role_policy" "ctprocessor_sqs" {
-    name = "SQS"
+    name = "ctprocessor_sqs"
     role = "${aws_iam_role.cloudtrail_processor.id}"
     policy = "${data.aws_iam_policy_document.ctprocessor_sqs.json}"
 }
@@ -787,7 +787,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
     function_name = "${local.cw_processor_lambda_name}"
     description = "18F/identity-lambda-functions: KMS CW Log Processor"
     role = "${aws_iam_role.cloudwatch_processor.arn}"
-    handler = "main.Functions::CloudWatchKMSHandler.process"
+    handler = "main.Functions::IdentityKMSMonitor::CloudWatchKMSHandler.process"
     runtime = "ruby2.5"
     timeout = 30 # seconds
 
@@ -795,7 +795,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
         variables = {
             DEBUG = "${var.kmslog_lambda_debug ? "1" : ""}"
             LOG_LEVEL = "0"
-            DDB_RETENTION_DAYS = "${var.dynamodb_retention_days}"
+            RETENTION_DAYS = "${var.dynamodb_retention_days}"
             DDB_TABLE = "${aws_dynamodb_table.kms_events.id}"
             SNS_EVENT_TOPIC_ARN = "${aws_sns_topic.kms_logging_events.arn}"
         }
@@ -847,7 +847,7 @@ data "aws_iam_policy_document" "cwprocessor_cloudwatch" {
 
 data "aws_iam_policy_document" "cwprocessor_sns" {
     statement {
-        sid = "SNS"
+        sid = "cwprocessorSNS"
         effect = "Allow"
         actions = [
             "sns:Publish"
@@ -876,31 +876,31 @@ data "aws_iam_policy_document" "cwprocessor_kinesis" {
 }
 
 resource "aws_iam_role_policy" "cwprocessor_cloudwatch" {
-    name = "CloudWatch"
+    name = "cwprocessor_cloudwatch"
     role = "${aws_iam_role.cloudwatch_processor.id}"
     policy = "${data.aws_iam_policy_document.cwprocessor_cloudwatch.json}"
 }
 
 resource "aws_iam_role_policy" "cwprocessor_dynamodb" {
-    name = "DynamoDb"
+    name = "cwprocessor_dynamodb"
     role = "${aws_iam_role.cloudwatch_processor.id}"
     policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
 }
 
 resource "aws_iam_role_policy" "cwprocessor_kms" {
-    name = "KMS"
+    name = "cwprocessor_kms"
     role = "${aws_iam_role.cloudwatch_processor.id}"
     policy = "${data.aws_iam_policy_document.lambda_kms.json}"
 }
 
 resource "aws_iam_role_policy" "cwprocessor_sns" {
-    name = "KMS"
+    name = "cwprocessor_sns"
     role = "${aws_iam_role.cloudwatch_processor.id}"
     policy = "${data.aws_iam_policy_document.cwprocessor_sns.json}"
 }
 
 resource "aws_iam_role_policy" "cwprocessor_kinesis" {
-    name = "Kinesis"
+    name = "cwprocessor_kinesis"
     role = "${aws_iam_role.cloudwatch_processor.id}"
     policy = "${data.aws_iam_policy_document.cwprocessor_kinesis.json}"
 }
@@ -918,7 +918,7 @@ resource "aws_lambda_function" "event_processor" {
     function_name = "${local.event_processor_lambda_name}"
     description = "18F/identity-lambda-functions: KMS Log Event Processor"
     role = "${aws_iam_role.event_processor.arn}"
-    handler = "main.Functions::KMSEventHandler.process"  #TODO Verify
+    handler = "main.Functions::IdentityKMSMonitor::CloudWatchEventGenerator.process"
     runtime = "ruby2.5"
     timeout = 30 # seconds
 
@@ -1038,7 +1038,7 @@ resource "aws_iam_role_policy" "event_processor_cloudwatch_metrics" {
 }
 
 resource "aws_iam_role_policy" "event_processor_kms" {
-    name = "KMS"
+    name = "event_processor_kms"
     role = "${aws_iam_role.event_processor.id}"
     policy = "${data.aws_iam_policy_document.lambda_kms.json}"
 }
