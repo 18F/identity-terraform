@@ -300,8 +300,10 @@ data "aws_iam_policy_document" "sqs_kms_cw_events_policy" {
         effect = "Allow"
         actions = ["sqs:SendMessage"]
         principals {
-            type        = "AWS"
-            identifiers = ["${data.aws_caller_identity.current.account_id}"]
+            type = "Service"
+            identifiers = [
+                "sns.amazonaws.com"
+            ]
         }
         resources = ["${aws_sqs_queue.kms_cloudwatch_events.arn}"]
         condition {
@@ -349,8 +351,10 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
         effect = "Allow"
         actions = ["sqs:SendMessage"]
         principals {
-            type        = "AWS"
-            identifiers = ["${data.aws_caller_identity.current.account_id}"]
+            type = "Service"
+            identifiers = [
+                "sns.amazonaws.com"
+            ]
         }
         resources = ["${aws_sqs_queue.kms_elasticsearch_events.arn}"]
         condition {
