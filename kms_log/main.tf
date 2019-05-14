@@ -204,7 +204,8 @@ resource "aws_cloudwatch_event_rule" "unmatched" {
 
     event_pattern = <<PATTERN
 {
-    "source":["gov.login.app"]
+    "source":["gov.login.app"],
+    "detail": {"environment": ["${var.env_name}"]}
 }
 PATTERN
 }
