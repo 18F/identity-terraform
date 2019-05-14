@@ -538,7 +538,8 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
             "properties": {
                 "metrics": [
                     [ "AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "${aws_dynamodb_table.kms_events.name}", "Operation", "PutItem", { "period": 300 } ],
-                    [ "...", "GetItem" ]
+                    [ "...", "GetItem" ],
+                    [ "...", "Query" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -689,7 +690,8 @@ data "aws_iam_policy_document" "lambda_dynamodb" {
         effect = "Allow"
         actions = [
             "dynamodb:PutItem",
-            "dynamodb:GetItem"
+            "dynamodb:GetItem",
+            "dynamodb:Query"
         ]
 
         resources = [
