@@ -25,7 +25,7 @@ variable "kinesis_retention_hours" {
 # this filter will parse and only send log events that have
 # an encryption context of pii-encryption or password-digest
 variable "cloudwatch_filter_pattern" {
-  default = "[type, datetime, info, whitespace, json = *pii-encryption* || json = *password-digest*]"
+  default = "[type, datetime, info, whitespace, (json = *decrypt* && json = *pii-encryption*) || (json = *decrypt* && json = *password-digest*)]"
   description = "Filter pattern for CloudWatch kms.log file"
 }
 
