@@ -72,3 +72,7 @@ variable "kmslog_lambda_debug" {
   default = 0
   description = "Whether to run the kms logging lambdas in debug mode in this account"
 }
+
+variable "logstash_iam_role_arn" {
+  description = "IAM role that will read from the es-events SQS queue"
+}

@@ -366,6 +366,29 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
             ]
         }
     }
+    # These actions are taken from
+    # https://www.elastic.co/guide/en/logstash/current/plugins-inputs-sqs.html
+    # except that two of those (ending in "Batch") are not actual permissions
+    # according to https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-api-permissions-reference.html
+    statement {
+        sid = "Allow reads by Logstash"
+        effect = "Allow"
+        actions = [
+          "sqs:ChangeMessageVisibility",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:ListQueues",
+          "sqs:ReceiveMessage"
+        ],
+        principals {
+            type = "AWS"
+            identifiers = [
+                "${var.logstash_iam_role_arn}"
+            ]
+        }
+        resources = ["${aws_sqs_queue.kms_elasticsearch_events.arn}"]
+    }
 }
 
 # elasticsearch queue subscription to sns topic for metrics
