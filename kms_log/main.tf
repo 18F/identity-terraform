@@ -384,7 +384,7 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
         principals {
             type = "AWS"
             identifiers = [
-                "${var.logstash_iam_role_arn}"
+                "${var.logstash_iam_role_id}"
             ]
         }
         resources = ["${aws_sqs_queue.kms_elasticsearch_events.arn}"]
@@ -1070,6 +1070,12 @@ resource "aws_iam_role_policy" "event_processor_cloudwatch_metrics" {
 resource "aws_iam_role_policy" "event_processor_kms" {
     name = "event_processor_kms"
     role = "${aws_iam_role.event_processor.id}"
+    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
+}
+
+resource "aws_iam_role_policy" "logstash_kms" {
+    name = "logstash_kms"
+    role = "${var.logstash_iam_role_id}"
     policy = "${data.aws_iam_policy_document.lambda_kms.json}"
 }
 

@@ -74,5 +74,9 @@ variable "kmslog_lambda_debug" {
 }
 
 variable "logstash_iam_role_arn" {
-  description = "IAM role that will read from the es-events SQS queue"
+  description = "ARN of IAM role that runs Logstash and reads SQS events"
+}
+
+variable "logstash_iam_role_id" {
+  description = "ID of IAM role that runs Logstash and reads SQS events"
 }
