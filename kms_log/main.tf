@@ -506,6 +506,22 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
+                    [ "AWS/Lambda", "IteratorAge", "FunctionName", "${local.cw_processor_lambda_name}" ]
+                ],
+                "region": "us-west-2",
+                "title": "Cloudwatch Kinesis queue age"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
                     [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${aws_sqs_queue.kms_cloudwatch_events.name}" ],
                     [ ".", "NumberOfMessagesDeleted", ".", "." ]
                 ],
