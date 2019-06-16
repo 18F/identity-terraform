@@ -522,11 +522,28 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
+                    [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${aws_sqs_queue.kms_ct_events.name}" ]
+                ],
+                "region": "us-west-2",
+                "title": "CloudTrail SQS queue depth"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
                     [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${aws_sqs_queue.kms_cloudwatch_events.name}" ],
+                    [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
                     [ ".", "NumberOfMessagesDeleted", ".", "." ]
                 ],
                 "region": "us-west-2",
-                "title": "Cloudtrail Queue"
+                "title": "CloudWatch events queue"
             }
         },
         {
@@ -581,22 +598,6 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                 "region": "us-west-2",
                 "title": "DynamoDB Capacity"
             }
-        },
-        {
-            "type": "metric",
-            "x": 18,
-            "y": 0,
-            "width": 6,
-            "height": 3,
-            "properties": {
-                "metrics": [
-                    [ "AWS/Kinesis", "GetRecords.IteratorAgeMilliseconds", "StreamName", "${aws_kinesis_stream.datastream.name}", { "stat": "Average", "period": 86400 } ]
-                ],
-                "view": "singleValue",
-                "region": "us-west-2",
-                "title": "Kinesis Iterator Day",
-                "period": 300
-            }
         }
     ]
 }
@@ -609,6 +610,9 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     evaluation_periods = 1
     metric_name = "NumberOfMessagesReceived"
     namespace = "AWS/SQS"
+    dimensions = {
+        QueueName = "${aws_sqs_queue.dead_letter.name}"
+    }
     period = "180"
     statistic = "Sum"
     threshold = 1
@@ -616,6 +620,48 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     treat_missing_data = "ignore"
     alarm_actions = [
         "${var.sns_topic_dead_letter_arn}"
+    ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "cloudwatch_lambda_backlog" {
+    alarm_name = "${var.env_name}-cloudwatch-kms-backlog"
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods = 1
+    namespace = "AWS/Lambda"
+    metric_name = "IteratorAge"
+    dimensions = {
+        FunctionName = "${local.cw_processor_lambda_name}"
+    }
+    period = "180"
+    statistic = "Maximum"
+    # 3600000 ms = 1 hour
+    threshold = 3600000
+    alarm_description = "Kinesis backlog for ${var.env_name}-cloudwatch-kms"
+    treat_missing_data = "ignore"
+    alarm_actions = [
+        "${aws_sns_topic.kms_logging_events.arn}"
+    ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
+    alarm_name = "${var.env_name}-cloudtrail-kms-backlog"
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods = 1
+    metric_name = "ApproximateNumberOfMessagesVisible"
+    namespace = "AWS/SQS"
+    dimensions = {
+        QueueName = "${aws_sqs_queue.kms_ct_events.name}"
+    }
+    period = "180"
+    statistic = "Maximum"
+    # the previous alarm is measured in milliseconds, this is a raw number of
+    # messages - it has never gone above 1, but if the Lambda breaks it will
+    # get to 10000 in under an hour
+    threshold = 10000
+    alarm_description = "Kinesis backlog for ${var.env_name}-cloudtrail-kms"
+    treat_missing_data = "ignore"
+    alarm_actions = [
+        "${aws_sns_topic.kms_logging_events.arn}"
     ]
 }
 
