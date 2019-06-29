@@ -5,11 +5,24 @@ data "aws_s3_bucket" "ct_log_bucket"
     bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
 }
 
-data "aws_kms_key" "application"
-{
-    key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
+
+resource "null_resource" "key_found" {
+  triggers = {
+    key_name = "alias/${var.env_name}-login-dot-gov-keymaker"
+  }
 }
 
+resource "null_resource" "kms_log_found" {
+  triggers = {
+    kms_log = "${var.env_name}_/srv/idp/shared/log/kms.log"
+  }
+}
+
+data "aws_kms_key" "application"
+{
+    depends_on = ["null_resource.key_found"]
+    key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
+}
 
 data "aws_s3_bucket" "lambda"
 {
@@ -467,6 +480,7 @@ resource "aws_cloudwatch_log_destination_policy" "subscription" {
 # create subscription filter 
 # this filter will send the kms.log events to kinesis
 resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
+    depends_on = ["null_resource.kms_log_found"]
     count = "${var.kmslogging_service_enabled}"
     name = "${var.env_name}-kms-app-log"
     log_group_name = "${var.env_name}_/srv/idp/shared/log/kms.log"
