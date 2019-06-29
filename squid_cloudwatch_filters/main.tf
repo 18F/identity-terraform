@@ -33,7 +33,7 @@ resource "null_resource" "log_group_found" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "squid_requests_total" {
-    depends_on = ["null_resource.log_group"]
+    depends_on = ["null_resource.log_group_found"]
     name = "${var.env_name}-squid-requests-total"
     pattern = "" # all events
     log_group_name = "${local.log_group_name}"
@@ -46,7 +46,7 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_total" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "squid_requests_denied" {
-    depends_on = ["null_resource.key_found"]
+    depends_on = ["null_resource.log_group_found"]
     name = "${var.env_name}-squid-requests-denied"
     pattern = "\"DENIED\"" # logs containing DENIED anywhere
     log_group_name = "${local.log_group_name}"
