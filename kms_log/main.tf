@@ -694,7 +694,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
     role = "${aws_iam_role.cloudtrail_processor.arn}"
     handler = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
     runtime = "ruby2.5"
-    timeout = 30 # seconds
+    timeout = 120 # seconds
 
     environment {
         variables = {
@@ -872,7 +872,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
     role = "${aws_iam_role.cloudwatch_processor.arn}"
     handler = "main.Functions::IdentityKMSMonitor::CloudWatchKMSHandler.process"
     runtime = "ruby2.5"
-    timeout = 30 # seconds
+    timeout = 120 # seconds
 
     environment {
         variables = {
@@ -1003,7 +1003,7 @@ resource "aws_lambda_function" "event_processor" {
     role = "${aws_iam_role.event_processor.arn}"
     handler = "main.Functions::IdentityKMSMonitor::CloudWatchEventGenerator.process"
     runtime = "ruby2.5"
-    timeout = 30 # seconds
+    timeout = 120 # seconds
 
     environment {
         variables = {
