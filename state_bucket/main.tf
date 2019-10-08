@@ -60,7 +60,6 @@ resource "aws_s3_bucket" "s3-logs" {
   }
 
   lifecycle {
-    prevent_destroy = true
   }
 }
 
@@ -107,7 +106,6 @@ resource "aws_s3_bucket" "tf-state" {
   }
 
   lifecycle {
-    prevent_destroy = true
   }
 }
 resource "aws_s3_bucket_public_access_block" "tf-state" {
@@ -154,7 +152,6 @@ resource "aws_dynamodb_table" "tf-lock-table" {
   }
 
   lifecycle {
-    prevent_destroy = true
   }
 }
 
