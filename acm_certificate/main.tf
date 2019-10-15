@@ -49,6 +49,11 @@ resource "aws_acm_certificate" "main" {
 
   lifecycle {
     create_before_destroy = true
+
+    # TODO: this is a workaround for an AWS API / Terraform AWS provider bug
+    # https://github.com/terraform-providers/terraform-provider-aws/issues/8531
+    # https://github.com/18F/identity-devops/issues/1469
+    ignore_changes = ["subject_alternative_names"]
   }
 }
 
