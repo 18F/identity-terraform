@@ -293,7 +293,7 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
     name = "${var.env_name}-kms-cw-events"
     delay_seconds = 5
     max_message_size = 2048
-    visibility_timeout_seconds = 60
+    visibility_timeout_seconds = 120
     message_retention_seconds = 345600 # 4 days
     kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
     kms_data_key_reuse_period_seconds = 600
@@ -344,7 +344,7 @@ resource "aws_sqs_queue" "kms_elasticsearch_events" {
     name = "${var.env_name}-kms-es-events"
     delay_seconds = 5
     max_message_size = 2048
-    visibility_timeout_seconds = 60
+    visibility_timeout_seconds = 120
     message_retention_seconds = 345600 # 4 days
     kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
     kms_data_key_reuse_period_seconds = 600
