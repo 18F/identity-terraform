@@ -40,7 +40,7 @@ variable "ct_queue_max_message_size" {
 }
 
 variable "ct_queue_visibility_timeout_seconds" {
-  default = 60
+  default = 120
   description = "Number of seconds that a received message is not visible to other workers"
 }
 
