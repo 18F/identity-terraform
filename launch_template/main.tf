@@ -36,13 +36,11 @@ variable "security_group_ids" {
 
 variable "template_tags" {
   description = "Tags to apply to the launch template"
-  type = "map"
   default = {}
 }
 
 variable "block_device_mappings" {
   description = "EBS or other block devices to map on created instances. https://www.terraform.io/docs/providers/aws/r/launch_template.html#block-devices"
-  type = "list"
   default = []
 }
 
