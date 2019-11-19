@@ -36,9 +36,9 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_total" {
     depends_on = ["null_resource.log_group_found"]
     name = "${var.env_name}-squid-requests-total"
     pattern = "" # all events
-    log_group_name = "${local.log_group_name}"
+    log_group_name = local.log_group_name
     metric_transformation {
-        namespace = "${var.metric_namespace}"
+        namespace = var.metric_namespace
         name = "${var.env_name}/TotalRequests"
         value = 1
         default_value = 0
@@ -49,9 +49,9 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_denied" {
     depends_on = ["null_resource.log_group_found"]
     name = "${var.env_name}-squid-requests-denied"
     pattern = "\"DENIED\"" # logs containing DENIED anywhere
-    log_group_name = "${local.log_group_name}"
+    log_group_name = local.log_group_name
     metric_transformation {
-        namespace = "${var.metric_namespace}"
+        namespace = var.metric_namespace
         name = "${var.env_name}/DeniedRequests"
         value = 1
         default_value = 0
@@ -61,7 +61,7 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_denied" {
 resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
     alarm_name = "${var.env_name}-squid-denials"
     alarm_description = "(Managed by Terraform) Alarm when the Squid access log shows any denied requests"
-    namespace = "${var.metric_namespace}"
+    namespace = var.metric_namespace
     metric_name = "${var.env_name}/DeniedRequests"
 
     # alert when sum(denials) >= 1 for any 1 minute out of 15 eval periods
@@ -72,7 +72,7 @@ resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
     datapoints_to_alarm = 1
     evaluation_periods = 15
 
-    treat_missing_data = "${var.treat_missing_data}"
+    treat_missing_data = var.treat_missing_data
 
-    alarm_actions = "${var.alarm_actions}"
+    alarm_actions = var.alarm_actions
 }

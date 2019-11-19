@@ -41,8 +41,8 @@ locals {
 resource "aws_kms_key" "kms_logging" {
     description = "KMS logging key"
     enable_key_rotation = true
-    policy = "${data.aws_iam_policy_document.kms.json}"
-    tags {
+    policy = data.aws_iam_policy_document.kms.json
+    tags = {
        Name = "${var.env_name} KMS Logging Key"
        environment = "${var.env_name}" 
     }
@@ -88,14 +88,14 @@ data "aws_iam_policy_document" "kms" {
 }
 
 resource "aws_kms_alias" "kms_logging" {
-    name = "${local.kms_alias}"
-    target_key_id = "${aws_kms_key.kms_logging.key_id}"
+    name = local.kms_alias
+    target_key_id = aws_kms_key.kms_logging.key_id
 }
 
 # create dead letter queue for kms cloudtrail events
 resource "aws_sqs_queue" "dead_letter" {
     name = "${var.env_name}-kms-dead-letter"
-    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
+    kms_master_key_id = aws_kms_key.kms_logging.arn
     kms_data_key_reuse_period_seconds = 600
     message_retention_seconds = 604800 # 7 days
     tags = {
@@ -106,11 +106,11 @@ resource "aws_sqs_queue" "dead_letter" {
 # queue for cloudtrail kms events
 resource "aws_sqs_queue" "kms_ct_events" {
     name = "${var.env_name}-kms-ct-events"
-    delay_seconds = "${var.ct_queue_delay_seconds}"
-    max_message_size =  "${var.ct_queue_max_message_size}"
-    visibility_timeout_seconds = "${var.ct_queue_visibility_timeout_seconds}"
-    message_retention_seconds = "${var.ct_queue_message_retention_seconds}"
-    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
+    delay_seconds = var.ct_queue_delay_seconds
+    max_message_size =  var.ct_queue_max_message_size
+    visibility_timeout_seconds = var.ct_queue_visibility_timeout_seconds
+    message_retention_seconds = var.ct_queue_message_retention_seconds
+    kms_master_key_id = aws_kms_key.kms_logging.arn
     kms_data_key_reuse_period_seconds = 600 # number of seconds the kms key is cached
     redrive_policy = <<POLICY
 {
@@ -124,8 +124,8 @@ tags = {
 }
 
 resource "aws_sqs_queue_policy" "default" {
-    queue_url = "${aws_sqs_queue.kms_ct_events.id}"
-    policy = "${data.aws_iam_policy_document.sqs_kms_ct_events_policy.json}"
+    queue_url = aws_sqs_queue.kms_ct_events.id
+    policy = data.aws_iam_policy_document.sqs_kms_ct_events_policy.json
 }
 
 # iam policy for sqs that allows cloudwatch events to 
@@ -158,8 +158,8 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
 # this filter also is only capturing events for a single 
 # kms key
 resource "aws_cloudwatch_event_rule" "decrypt" {
-    count = "${var.kmslogging_service_enabled}"
-    name = "${local.decryption_event_rule_name}"
+    count = var.kmslogging_service_enabled
+    name = local.decryption_event_rule_name
     description = "Capture decryption events"
 
     event_pattern = <<PATTERN
@@ -198,16 +198,16 @@ PATTERN
 # sets the receiver of the cloudwatch events
 # to the sqs queue
 resource "aws_cloudwatch_event_target" "sqs" {
-    count = "${var.kmslogging_service_enabled}"
-    rule = "${aws_cloudwatch_event_rule.decrypt.name}"
+    count = var.kmslogging_service_enabled
+    rule = aws_cloudwatch_event_rule.decrypt[count.index].name
     target_id = "${var.env_name}-sqs"
-    arn = "${aws_sqs_queue.kms_ct_events.arn}"
+    arn = aws_sqs_queue.kms_ct_events.arn
 }
 
 # event rule for custom events
 resource "aws_cloudwatch_event_rule" "unmatched" {
-    count = "${var.kmslogging_service_enabled}"
-    name = "${local.kmslog_event_rule_name}"
+    count = var.kmslogging_service_enabled
+    name = local.kmslog_event_rule_name
     description = "Capture Unmatched KMS Log Events"
 
     event_pattern = <<PATTERN
@@ -219,15 +219,15 @@ PATTERN
 }
 
 resource "aws_cloudwatch_event_target" "unmatched" {
-    count = "${var.kmslogging_service_enabled}"
-    rule = "${aws_cloudwatch_event_rule.unmatched.name}"
+    count = var.kmslogging_service_enabled
+    rule = aws_cloudwatch_event_rule.unmatched[0].name
     target_id = "${var.env_name}-slack"
-    arn = "${var.sns_topic_dead_letter_arn}"
+    arn = var.sns_topic_dead_letter_arn
 }
 
 # dynamodb table for event correlation
 resource "aws_dynamodb_table" "kms_events" {
-    name = "${local.dynamodb_table_name}"
+    name = local.dynamodb_table_name
     billing_mode = "PAY_PER_REQUEST"
     hash_key = "UUID"
     range_key = "Timestamp"
@@ -279,7 +279,7 @@ resource "aws_dynamodb_table" "kms_events" {
 resource "aws_sns_topic" "kms_logging_events" {
     name = "${var.env_name}-kms-logging-events"
     display_name = "KMS Events"
-    kms_master_key_id = "${local.kms_alias}"
+    kms_master_key_id = local.kms_alias
 }
 
 # queue to receive events from the logging events
@@ -290,7 +290,7 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
     max_message_size = 2048
     visibility_timeout_seconds = 120
     message_retention_seconds = 345600 # 4 days
-    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
+    kms_master_key_id = aws_kms_key.kms_logging.arn
     kms_data_key_reuse_period_seconds = 600
     tags = {
         environment = "${var.env_name}"
@@ -298,8 +298,8 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
 }
 
 resource "aws_sqs_queue_policy" "kms_cloudwatch_events" {
-    queue_url = "${aws_sqs_queue.kms_cloudwatch_events.id}"
-    policy = "${data.aws_iam_policy_document.sqs_kms_cw_events_policy.json}"
+    queue_url = aws_sqs_queue.kms_cloudwatch_events.id
+    policy = data.aws_iam_policy_document.sqs_kms_cw_events_policy.json
 }
 
 # policy for queue that receives events for cloudwatch metrics
@@ -328,9 +328,9 @@ data "aws_iam_policy_document" "sqs_kms_cw_events_policy" {
 
 # subscription for cloudwatch metrics queue to the sns topic
 resource "aws_sns_topic_subscription" "kms_events_sqs_cw_target" {
-    topic_arn = "${aws_sns_topic.kms_logging_events.arn}"
+    topic_arn = aws_sns_topic.kms_logging_events.arn
     protocol  = "sqs"
-    endpoint  = "${aws_sqs_queue.kms_cloudwatch_events.arn}"
+    endpoint  = aws_sqs_queue.kms_cloudwatch_events.arn
 }
 
 # queue to deliver metrics from cloudtrail lambda to
@@ -341,7 +341,7 @@ resource "aws_sqs_queue" "kms_elasticsearch_events" {
     max_message_size = 2048
     visibility_timeout_seconds = 120
     message_retention_seconds = 345600 # 4 days
-    kms_master_key_id = "${aws_kms_key.kms_logging.arn}"
+    kms_master_key_id = aws_kms_key.kms_logging.arn
     kms_data_key_reuse_period_seconds = 600
     tags = {
         environment = "${var.env_name}"
@@ -349,8 +349,8 @@ resource "aws_sqs_queue" "kms_elasticsearch_events" {
 }
 
 resource "aws_sqs_queue_policy" "es_events"{
-    queue_url = "${aws_sqs_queue.kms_elasticsearch_events.id}"
-    policy = "${data.aws_iam_policy_document.sqs_kms_es_events_policy.json}"
+    queue_url = aws_sqs_queue.kms_elasticsearch_events.id
+    policy = data.aws_iam_policy_document.sqs_kms_es_events_policy.json
 }
 
 # elasticsearch queue policy
@@ -378,16 +378,16 @@ data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
 
 # elasticsearch queue subscription to sns topic for metrics
 resource "aws_sns_topic_subscription" "kms_events_sqs_es_target" {
-    topic_arn = "${aws_sns_topic.kms_logging_events.arn}"
+    topic_arn = aws_sns_topic.kms_logging_events.arn
     protocol  = "sqs"
-    endpoint  = "${aws_sqs_queue.kms_elasticsearch_events.arn}"
+    endpoint  = aws_sqs_queue.kms_elasticsearch_events.arn
 }
 
 # create kinesis data stream for application kms events
 resource "aws_kinesis_stream" "datastream" {
     name = "${var.env_name}-kms-app-events"
-    shard_count = "${var.kinesis_shard_count}"
-    retention_period = "${var.kinesis_retention_hours}"
+    shard_count = var.kinesis_shard_count
+    retention_period = var.kinesis_retention_hours
     encryption_type = "KMS"
     kms_key_id="alias/aws/kinesis"
 
@@ -396,7 +396,7 @@ resource "aws_kinesis_stream" "datastream" {
         "WriteProvisionedThroughputExceeded"
     ]
     
-    tags {
+    tags = {
         environment = "${var.env_name}"
     }
 }
@@ -430,23 +430,23 @@ data "aws_iam_policy_document" "cloudwatch_access" {
 
 # kinesis role 
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
- name = "${local.kinesis_stream_name}"
+ name = local.kinesis_stream_name
  path = "/"
- assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+ assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 # add cloudwatch access to kinesis role
 resource "aws_iam_role_policy" "cloudwatch_access" {
     name = "cloudwatch_access"
-    role = "${aws_iam_role.cloudwatch_to_kinesis.name}"
-    policy = "${data.aws_iam_policy_document.cloudwatch_access.json}"
+    role = aws_iam_role.cloudwatch_to_kinesis.name
+    policy = data.aws_iam_policy_document.cloudwatch_access.json
 }
 
 # set cloudwatch destination
 resource "aws_cloudwatch_log_destination" "datastream" {
-    name = "${local.kinesis_stream_name}"
-    role_arn = "${aws_iam_role.cloudwatch_to_kinesis.arn}"
-    target_arn = "${aws_kinesis_stream.datastream.arn}"
+    name = local.kinesis_stream_name
+    role_arn = aws_iam_role.cloudwatch_to_kinesis.arn
+    target_arn = aws_kinesis_stream.datastream.arn
 }
 
 # configure policy to allow subscription acccess
@@ -468,24 +468,24 @@ data "aws_iam_policy_document" "subscription" {
 
 # create destination polciy
 resource "aws_cloudwatch_log_destination_policy" "subscription" {
-    destination_name = "${aws_cloudwatch_log_destination.datastream.name}"
-    access_policy = "${data.aws_iam_policy_document.subscription.json}"
+    destination_name = aws_cloudwatch_log_destination.datastream.name
+    access_policy = data.aws_iam_policy_document.subscription.json
 }
 
 # create subscription filter 
 # this filter will send the kms.log events to kinesis
 resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
     depends_on = ["null_resource.kms_log_found"]
-    count = "${var.kmslogging_service_enabled}"
+    count = var.kmslogging_service_enabled
     name = "${var.env_name}-kms-app-log"
     log_group_name = "${var.env_name}_/srv/idp/shared/log/kms.log"
-    filter_pattern = "${var.cloudwatch_filter_pattern}"
-    destination_arn = "${aws_kinesis_stream.datastream.arn}"
-    role_arn = "${aws_iam_role.cloudwatch_to_kinesis.arn}"
+    filter_pattern = var.cloudwatch_filter_pattern
+    destination_arn = aws_kinesis_stream.datastream.arn
+    role_arn = aws_iam_role.cloudwatch_to_kinesis.arn
 }
 
 resource "aws_cloudwatch_dashboard" "kms_log" {
-    dashboard_name = "${local.dashboard_name}"
+    dashboard_name = local.dashboard_name
     dashboard_body = <<EOF
 {
     "widgets": [
@@ -676,17 +676,17 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
 
 #lambda functions
 resource "aws_lambda_function" "cloudtrail_processor" {
-    count = "${var.kmslogging_service_enabled}"
-    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    count = var.kmslogging_service_enabled
+    s3_bucket = data.aws_s3_bucket.lambda.id
     s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
     lifecycle {
         ignore_changes = ["s3_key", "last_modified"]
     }
 
-    function_name = "${local.ct_processor_lambda_name}"
+    function_name = local.ct_processor_lambda_name
     description = "18F/identity-lambda-functions: KMS CT Log Processor"
-    role = "${aws_iam_role.cloudtrail_processor.arn}"
+    role = aws_iam_role.cloudtrail_processor.arn
     handler = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
     runtime = "ruby2.5"
     timeout = 120 # seconds
@@ -702,16 +702,16 @@ resource "aws_lambda_function" "cloudtrail_processor" {
         }
     }
 
-    tags {
+    tags = {
         source_repo = "https://github.com/18F/identity-lambda-functions"
         environment = "${var.env_name}"
     }
 }
 
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
-    count = "${var.kmslogging_service_enabled}"
-    event_source_arn = "${aws_sqs_queue.kms_ct_events.arn}"
-    function_name = "${aws_lambda_function.cloudtrail_processor.arn}"
+    count = var.kmslogging_service_enabled
+    event_source_arn = aws_sqs_queue.kms_ct_events.arn
+    function_name = aws_lambda_function.cloudtrail_processor[count.index].arn
 }
 
 
@@ -820,51 +820,51 @@ data "aws_iam_policy_document" "assume-role" {
 
 resource "aws_iam_role" "cloudtrail_processor" {
     name = "${local.ct_processor_lambda_name}-execution"
-    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+    assume_role_policy = data.aws_iam_policy_document.assume-role.json
 }
 
 resource "aws_iam_role_policy" "ctprocessor_cloudwatch" {
     name = "ctprocessor_cloudwatch"
-    role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.ctprocessor_cloudwatch.json}"
+    role = aws_iam_role.cloudtrail_processor.id
+    policy = data.aws_iam_policy_document.ctprocessor_cloudwatch.json
 }
 
 resource "aws_iam_role_policy" "ctprocessor_dynamodb" {
     name = "ctprocessor_dynamodb"
-    role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
+    role = aws_iam_role.cloudtrail_processor.id
+    policy = data.aws_iam_policy_document.lambda_dynamodb.json
 }
 
 resource "aws_iam_role_policy" "ctprocessor_kms" {
     name = "ctprocessor_kms"
-    role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
+    role = aws_iam_role.cloudtrail_processor.id
+    policy = data.aws_iam_policy_document.lambda_kms.json
 }
 
 resource "aws_iam_role_policy" "ctprocessor_sns" {
     name = "ctprocessor_sns"
-    role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.ctprocessor_sns.json}"
+    role = aws_iam_role.cloudtrail_processor.id
+    policy = data.aws_iam_policy_document.ctprocessor_sns.json
 }
 
 resource "aws_iam_role_policy" "ctprocessor_sqs" {
     name = "ctprocessor_sqs"
-    role = "${aws_iam_role.cloudtrail_processor.id}"
-    policy = "${data.aws_iam_policy_document.ctprocessor_sqs.json}"
+    role = aws_iam_role.cloudtrail_processor.id
+    policy = data.aws_iam_policy_document.ctprocessor_sqs.json
 }
 
 resource "aws_lambda_function" "cloudwatch_processor" {
-    count = "${var.kmslogging_service_enabled}"
-    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    count = var.kmslogging_service_enabled
+    s3_bucket = data.aws_s3_bucket.lambda.id
     s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
     lifecycle {
         ignore_changes = ["s3_key", "last_modified"]
     }
 
-    function_name = "${local.cw_processor_lambda_name}"
+    function_name = local.cw_processor_lambda_name
     description = "18F/identity-lambda-functions: KMS CW Log Processor"
-    role = "${aws_iam_role.cloudwatch_processor.arn}"
+    role = aws_iam_role.cloudwatch_processor.arn
     handler = "main.Functions::IdentityKMSMonitor::CloudWatchKMSHandler.process"
     runtime = "ruby2.5"
     timeout = 120 # seconds
@@ -879,22 +879,22 @@ resource "aws_lambda_function" "cloudwatch_processor" {
         }
     }
 
-    tags {
+    tags = {
         source_repo = "https://github.com/18F/identity-lambda-functions"
         environment = "${var.env_name}"
     }
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
-    count = "${var.kmslogging_service_enabled}"
-    event_source_arn = "${aws_kinesis_stream.datastream.arn}"
-    function_name = "${aws_lambda_function.cloudwatch_processor.arn}"
+    count = var.kmslogging_service_enabled
+    event_source_arn = aws_kinesis_stream.datastream.arn
+    function_name = aws_lambda_function.cloudwatch_processor[count.index].arn
     starting_position = "LATEST"
 }
 
 resource "aws_iam_role" "cloudwatch_processor" {
     name = "${local.cw_processor_lambda_name}-execution"
-    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+    assume_role_policy = data.aws_iam_policy_document.assume-role.json
 }
 
 data "aws_iam_policy_document" "cwprocessor_cloudwatch" {
@@ -955,47 +955,47 @@ data "aws_iam_policy_document" "cwprocessor_kinesis" {
 
 resource "aws_iam_role_policy" "cwprocessor_cloudwatch" {
     name = "cwprocessor_cloudwatch"
-    role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.cwprocessor_cloudwatch.json}"
+    role = aws_iam_role.cloudwatch_processor.id
+    policy = data.aws_iam_policy_document.cwprocessor_cloudwatch.json
 }
 
 resource "aws_iam_role_policy" "cwprocessor_dynamodb" {
     name = "cwprocessor_dynamodb"
-    role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_dynamodb.json}"
+    role = aws_iam_role.cloudwatch_processor.id
+    policy = data.aws_iam_policy_document.lambda_dynamodb.json
 }
 
 resource "aws_iam_role_policy" "cwprocessor_kms" {
     name = "cwprocessor_kms"
-    role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
+    role = aws_iam_role.cloudwatch_processor.id
+    policy = data.aws_iam_policy_document.lambda_kms.json
 }
 
 resource "aws_iam_role_policy" "cwprocessor_sns" {
     name = "cwprocessor_sns"
-    role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.cwprocessor_sns.json}"
+    role = aws_iam_role.cloudwatch_processor.id
+    policy = data.aws_iam_policy_document.cwprocessor_sns.json
 }
 
 resource "aws_iam_role_policy" "cwprocessor_kinesis" {
     name = "cwprocessor_kinesis"
-    role = "${aws_iam_role.cloudwatch_processor.id}"
-    policy = "${data.aws_iam_policy_document.cwprocessor_kinesis.json}"
+    role = aws_iam_role.cloudwatch_processor.id
+    policy = data.aws_iam_policy_document.cwprocessor_kinesis.json
 }
 
 # lambda for creating cloudwatch metrics and events
 resource "aws_lambda_function" "event_processor" {
-    count = "${var.kmslogging_service_enabled}"
-    s3_bucket = "${data.aws_s3_bucket.lambda.id}"
+    count = var.kmslogging_service_enabled
+    s3_bucket = data.aws_s3_bucket.lambda.id
     s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
     lifecycle {
         ignore_changes = ["s3_key", "last_modified"]
     }
 
-    function_name = "${local.event_processor_lambda_name}"
+    function_name = local.event_processor_lambda_name
     description = "18F/identity-lambda-functions: KMS Log Event Processor"
-    role = "${aws_iam_role.event_processor.arn}"
+    role = aws_iam_role.event_processor.arn
     handler = "main.Functions::IdentityKMSMonitor::CloudWatchEventGenerator.process"
     runtime = "ruby2.5"
     timeout = 120 # seconds
@@ -1008,21 +1008,21 @@ resource "aws_lambda_function" "event_processor" {
         }
     }
 
-    tags {
+    tags = {
         source_repo = "https://github.com/18F/identity-lambda-functions"
         environment = "${var.env_name}"
     }
 }
 
 resource "aws_lambda_event_source_mapping" "event_processor" {
-    count = "${var.kmslogging_service_enabled}"
-    event_source_arn = "${aws_sqs_queue.kms_cloudwatch_events.arn}"
-    function_name = "${aws_lambda_function.event_processor.arn}"
+    count = var.kmslogging_service_enabled
+    event_source_arn = aws_sqs_queue.kms_cloudwatch_events.arn
+    function_name = aws_lambda_function.event_processor[count.index].arn
 }
 
 resource "aws_iam_role" "event_processor" {
     name = "${local.event_processor_lambda_name}-execution"
-    assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+    assume_role_policy = data.aws_iam_policy_document.assume-role.json
 }
 
 data "aws_iam_policy_document" "event_processor_cloudwatch" {
@@ -1099,30 +1099,30 @@ data "aws_iam_policy_document" "event_processor_sqs" {
 
 resource "aws_iam_role_policy" "event_processor_cloudwatch" {
     name = "CloudWatch"
-    role = "${aws_iam_role.event_processor.id}"
-    policy = "${data.aws_iam_policy_document.event_processor_cloudwatch.json}"
+    role = aws_iam_role.event_processor.id
+    policy = data.aws_iam_policy_document.event_processor_cloudwatch.json
 }
 
 resource "aws_iam_role_policy" "event_processor_cloudwatch_events" {
     name = "CloudWatchEvents"
-    role = "${aws_iam_role.event_processor.id}"
-    policy = "${data.aws_iam_policy_document.event_processor_cloudwatch_events.json}"
+    role = aws_iam_role.event_processor.id
+    policy = data.aws_iam_policy_document.event_processor_cloudwatch_events.json
 }
 
 resource "aws_iam_role_policy" "event_processor_cloudwatch_metrics" {
     name = "CloudWatchMetrics"
-    role = "${aws_iam_role.event_processor.id}"
-    policy = "${data.aws_iam_policy_document.event_processor_cloudwatch_metrics.json}"
+    role = aws_iam_role.event_processor.id
+    policy = data.aws_iam_policy_document.event_processor_cloudwatch_metrics.json
 }
 
 resource "aws_iam_role_policy" "event_processor_kms" {
     name = "event_processor_kms"
-    role = "${aws_iam_role.event_processor.id}"
-    policy = "${data.aws_iam_policy_document.lambda_kms.json}"
+    role = aws_iam_role.event_processor.id
+    policy = data.aws_iam_policy_document.lambda_kms.json
 }
 
 resource "aws_iam_role_policy" "event_processor_sqs" {
     name = "SQS"
-    role = "${aws_iam_role.event_processor.id}"
-    policy = "${data.aws_iam_policy_document.event_processor_sqs.json}"
+    role = aws_iam_role.event_processor.id
+    policy = data.aws_iam_policy_document.event_processor_sqs.json
 }

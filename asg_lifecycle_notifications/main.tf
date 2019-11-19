@@ -40,20 +40,20 @@ locals {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "provision-private" {
-  count                  = "${local.private_hook_count}"
+  count                  = local.private_hook_count
   name                   = "${var.lifecycle_name_prefix}-private"
-  autoscaling_group_name = "${var.asg_name}"
+  autoscaling_group_name = var.asg_name
   default_result         = "ABANDON"
-  heartbeat_timeout      = "${var.private_heartbeat_timeout}"
+  heartbeat_timeout      = var.private_heartbeat_timeout
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 }
 
 resource "aws_autoscaling_lifecycle_hook" "provision-main" {
-  count                  = "${local.main_hook_count}"
+  count                  = local.main_hook_count
   name                   = "${var.lifecycle_name_prefix}-main"
-  autoscaling_group_name = "${var.asg_name}"
+  autoscaling_group_name = var.asg_name
   default_result         = "ABANDON"
-  heartbeat_timeout      = "${var.main_heartbeat_timeout}"
+  heartbeat_timeout      = var.main_heartbeat_timeout
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 }
 

@@ -40,10 +40,10 @@ output "finished_id" {
 
 # Create the certificate with the specified SubjectAltNames
 resource "aws_acm_certificate" "main" {
-  count = "${var.enabled}"
+  count = var.enabled
 
-  domain_name               = "${var.domain_name}"
-  subject_alternative_names = "${var.subject_alternative_names}"
+  domain_name               = var.domain_name
+  subject_alternative_names = var.subject_alternative_names
 
   validation_method         = "DNS"
 
@@ -59,20 +59,20 @@ resource "aws_acm_certificate" "main" {
 
 # Create each validation CNAME
 resource "aws_route53_record" "validation-cnames" {
-  count   = "${(length(var.subject_alternative_names) + 1) * var.enabled}"
-  name    = "${lookup(aws_acm_certificate.main.domain_validation_options[count.index], "resource_record_name")}"
-  type    = "${lookup(aws_acm_certificate.main.domain_validation_options[count.index], "resource_record_type")}"
-  zone_id = "${var.validation_zone_id}"
-  records = ["${lookup(aws_acm_certificate.main.domain_validation_options[count.index], "resource_record_value")}"]
-  ttl     = "${var.validation_cname_ttl}"
+  count   = (length(var.subject_alternative_names) + 1) * var.enabled
+  name    = lookup(aws_acm_certificate.main[count.index].domain_validation_options[count.index], "resource_record_name")
+  type    = lookup(aws_acm_certificate.main[count.index].domain_validation_options[count.index], "resource_record_type")
+  zone_id = var.validation_zone_id
+  records = [lookup(aws_acm_certificate.main[count.index].domain_validation_options[count.index], "resource_record_value")]
+  ttl     = var.validation_cname_ttl
 }
 
 # Synthetic Terraform resource that blocks on validation completion
 # You can depend_on this to wait for the ACM cert to be ready.
 resource "aws_acm_certificate_validation" "main" {
-  count = "${var.enabled}"
+  count = var.enabled
 
-  certificate_arn = "${aws_acm_certificate.main.arn}"
+  certificate_arn = aws_acm_certificate.main[count.index].arn
 
   validation_record_fqdns = [
     "${aws_route53_record.validation-cnames.*.fqdn}",

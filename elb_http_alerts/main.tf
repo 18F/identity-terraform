@@ -26,20 +26,20 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
     alarm_description = "HTTP 5XX errors served by the ELB without the IDP (Managed by Terraform)"
     namespace = "AWS/ApplicationELB"
     metric_name = "HTTPCode_ELB_5XX_Count"
-    dimensions {
+    dimensions = {
       LoadBalancer = "${var.load_balancer_id}"
     }
 
     statistic = "Sum"
     comparison_operator = "GreaterThanOrEqualToThreshold"
-    threshold = "${var.elb_threshold}"
+    threshold = var.elb_threshold
     period = 60
     datapoints_to_alarm = 1
     evaluation_periods = 1
 
     treat_missing_data = "missing"
 
-    alarm_actions = "${var.alarm_actions}"
+    alarm_actions = var.alarm_actions
 }
 
 resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
@@ -47,17 +47,17 @@ resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
     alarm_description = "HTTP 5XX errors served by IDP (Managed by Terraform)"
     namespace = "AWS/ApplicationELB"
     metric_name = "HTTPCode_Target_5XX_Count"
-    dimensions {
+    dimensions = {
       LoadBalancer = "${var.load_balancer_id}"
     }
 
     statistic = "Sum"
     comparison_operator = "GreaterThanOrEqualToThreshold"
-    threshold = "${var.target_threshold}"
+    threshold = var.target_threshold
     period = 300
     evaluation_periods = 1
 
     treat_missing_data = "notBreaching"
 
-    alarm_actions = "${var.alarm_actions}"
+    alarm_actions = var.alarm_actions
 }

@@ -74,24 +74,24 @@ locals {
 # Spin down at 5a, 11a, 5p, 11p PDT
 
 resource "aws_autoscaling_schedule" "spinup" {
-    count = "${var.enabled}"
+    count = var.enabled
 
     scheduled_action_name  = "auto-recycle.spinup"
-    min_size               = "${var.min_size}"
-    max_size               = "${var.max_size}"
-    desired_capacity       = "${var.normal_desired_capacity * var.spinup_mult_factor}"
-    recurrence             = "${var.spinup_recurrence != "" ? var.spinup_recurrence : local.default_spinup_recurrence}"
-    autoscaling_group_name = "${var.asg_name}"
+    min_size               = var.min_size
+    max_size               = var.max_size
+    desired_capacity       = var.normal_desired_capacity * var.spinup_mult_factor
+    recurrence             = var.spinup_recurrence != "" ? var.spinup_recurrence : local.default_spinup_recurrence
+    autoscaling_group_name = var.asg_name
 }
 
 resource "aws_autoscaling_schedule" "spindown" {
-    count = "${var.enabled}"
+    count = var.enabled
 
     scheduled_action_name  = "auto-recycle.spindown"
-    min_size               = "${var.min_size}"
-    max_size               = "${var.max_size}"
-    desired_capacity       = "${var.normal_desired_capacity}"
-    recurrence             = "${var.spindown_recurrence != "" ? var.spindown_recurrence : local.default_spindown_recurrence}"
+    min_size               = var.min_size
+    max_size               = var.max_size
+    desired_capacity       = var.normal_desired_capacity
+    recurrence             = var.spindown_recurrence != "" ? var.spindown_recurrence : local.default_spindown_recurrence
 
-    autoscaling_group_name = "${var.asg_name}"
+    autoscaling_group_name = var.asg_name
 }

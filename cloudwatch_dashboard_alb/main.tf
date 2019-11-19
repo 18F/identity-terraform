@@ -53,8 +53,8 @@ output "dashboard_arn" {
 }
 
 resource "aws_cloudwatch_dashboard" "alb" {
-    count = "${var.enabled}"
-    dashboard_name = "${var.dashboard_name}"
+    count = var.enabled
+    dashboard_name = var.dashboard_name
     dashboard_body = <<EOF
 {
     "widgets": [
