@@ -1,10 +1,8 @@
 data "aws_caller_identity" "current" {}
 
-data "aws_s3_bucket" "ct_log_bucket"
-{
-    bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
+data "aws_s3_bucket" "ct_log_bucket" {
+  bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
 }
-
 
 resource "null_resource" "key_found" {
   triggers = {
@@ -18,15 +16,13 @@ resource "null_resource" "kms_log_found" {
   }
 }
 
-data "aws_kms_key" "application"
-{
-    depends_on = ["null_resource.key_found"]
-    key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
+data "aws_kms_key" "application" {
+  depends_on = ["null_resource.key_found"]
+  key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
-data "aws_s3_bucket" "lambda"
-{
-    bucket = "login-gov.lambda-functions.${data.aws_caller_identity.current.account_id}-${var.region}"
+data "aws_s3_bucket" "lambda" {
+  bucket = "login-gov.lambda-functions.${data.aws_caller_identity.current.account_id}-${var.region}"
 }
 
 locals {
@@ -53,8 +49,7 @@ resource "aws_kms_key" "kms_logging" {
 }
 
 # IAM policy for KMS access by CW Events and SNS
-data "aws_iam_policy_document" "kms"
-{
+data "aws_iam_policy_document" "kms" {
     statement {
         sid = "Enable IAM User Permissions"
         effect = "Allow"
@@ -393,7 +388,7 @@ resource "aws_kinesis_stream" "datastream" {
     name = "${var.env_name}-kms-app-events"
     shard_count = "${var.kinesis_shard_count}"
     retention_period = "${var.kinesis_retention_hours}"
-    encryption_type = "KMS",
+    encryption_type = "KMS"
     kms_key_id="alias/aws/kinesis"
 
     shard_level_metrics = [
