@@ -18,7 +18,7 @@ variable "treat_missing_data" {
 }
 
 variable "alarm_actions" {
-    type = "list"
+    type = list
     description = "A list of ARNs to notify when the VPC rejection alarm fires"
 }
 

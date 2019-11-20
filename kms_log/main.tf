@@ -17,7 +17,7 @@ resource "null_resource" "kms_log_found" {
 }
 
 data "aws_kms_key" "application" {
-  depends_on = ["null_resource.key_found"]
+  depends_on = [null_resource.key_found]
   key_id = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
@@ -475,7 +475,7 @@ resource "aws_cloudwatch_log_destination_policy" "subscription" {
 # create subscription filter 
 # this filter will send the kms.log events to kinesis
 resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
-    depends_on = ["null_resource.kms_log_found"]
+    depends_on = [null_resource.kms_log_found]
     count = var.kmslogging_service_enabled
     name = "${var.env_name}-kms-app-log"
     log_group_name = "${var.env_name}_/srv/idp/shared/log/kms.log"
@@ -681,7 +681,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
     s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
     lifecycle {
-        ignore_changes = ["s3_key", "last_modified"]
+        ignore_changes = [s3_key, last_modified]
     }
 
     function_name = local.ct_processor_lambda_name
@@ -859,7 +859,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
     s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
     lifecycle {
-        ignore_changes = ["s3_key", "last_modified"]
+        ignore_changes = [s3_key, last_modified]
     }
 
     function_name = local.cw_processor_lambda_name
@@ -990,7 +990,7 @@ resource "aws_lambda_function" "event_processor" {
     s3_key = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
     lifecycle {
-        ignore_changes = ["s3_key", "last_modified"]
+        ignore_changes = [s3_key, last_modified]
     }
 
     function_name = local.event_processor_lambda_name

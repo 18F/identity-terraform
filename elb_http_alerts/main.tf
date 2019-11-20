@@ -7,7 +7,7 @@ variable "load_balancer_id" {
 }
 
 variable "alarm_actions" {
-    type = "list"
+    type = list
     description = "A list of ARNs to notify when the ELB alarms fire"
 }
 

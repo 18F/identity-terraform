@@ -10,7 +10,7 @@ variable "root_domain" {
 
 variable "ami_id_map" {
   description = "Mapping from role names to AMI IDs"
-  type = "map"
+  type = map
 }
 
 variable "default_ami_id" {
@@ -31,18 +31,18 @@ variable "user_data" {
 }
 
 variable "security_group_ids" {
-  type = "list"
+  type = list
 }
 
 variable "template_tags" {
   description = "Tags to apply to the launch template"
-  type = "map"
+  type = map
   default = {}
 }
 
 variable "block_device_mappings" {
   description = "EBS or other block devices to map on created instances. https://www.terraform.io/docs/providers/aws/r/launch_template.html#block-devices"
-  type = "list"
+  type = list
   default = []
 }
 
