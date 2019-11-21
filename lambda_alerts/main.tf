@@ -8,7 +8,7 @@ data "aws_lambda_function" "func" {
 }
 
 variable "alarm_actions" {
-    type = "list"
+    type = list
     description = "A list of ARNs to notify when the alarm fires"
 }
 
@@ -41,8 +41,8 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
 
     comparison_operator = "GreaterThanOrEqualToThreshold"
 
-    evaluation_periods = "${var.evaluation_periods}"
-    threshold = "${var.error_rate_threshold}"
+    evaluation_periods = var.evaluation_periods
+    threshold = var.error_rate_threshold
     insufficient_data_actions = []
 
     metric_query {
@@ -59,7 +59,7 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
             dimensions = {
                 FunctionName = "${var.function_name}"
             }
-            period = "${var.period}"
+            period = var.period
             stat = "Sum"
         }
     }
@@ -71,14 +71,14 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
             dimensions = {
                 FunctionName = "${var.function_name}"
             }
-            period = "${var.period}"
+            period = var.period
             stat = "Sum"
         }
     }
 
-    datapoints_to_alarm = "${var.datapoints_to_alarm}"
+    datapoints_to_alarm = var.datapoints_to_alarm
 
-    treat_missing_data = "${var.treat_missing_data}"
+    treat_missing_data = var.treat_missing_data
 
-    alarm_actions = "${var.alarm_actions}"
+    alarm_actions = var.alarm_actions
 }

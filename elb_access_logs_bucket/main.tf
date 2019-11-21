@@ -10,7 +10,7 @@ data "aws_caller_identity" "current" {}
 # For the PR when ELB access logs were added in terraform to see an example of
 # the supported test cases for this ELB to S3 logging configuration.
 variable "elb_account_ids" {
-    type = "map"
+    type = map
     description = "Mapping of region to ELB account ID"
     default = {
         us-east-1 = "127311923021"
@@ -35,7 +35,7 @@ variable "elb_account_ids" {
 resource "aws_s3_bucket" "logs" {
   bucket = "${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
   acl    = "log-delivery-write"
-  force_destroy = "${var.force_destroy}"
+  force_destroy = var.force_destroy
 
   # Allow the ELB account in the current region to put objects.
   policy = <<EOF
@@ -56,7 +56,7 @@ resource "aws_s3_bucket" "logs" {
 }
 EOF
 
-  tags {
+  tags = {
     Environment = "All"
   }
 
@@ -83,36 +83,36 @@ EOF
 
   lifecycle_rule {
     id = "log_aging_ia"
-    enabled = "${var.lifecycle_days_standard_ia > 0 ? true : false}"
+    enabled = var.lifecycle_days_standard_ia > 0 ? true : false
 
     prefix  = "/"
 
     transition {
-      days = "${var.lifecycle_days_standard_ia}"
+      days = var.lifecycle_days_standard_ia
       storage_class = "STANDARD_IA"
     }
   }
 
   lifecycle_rule {
     id = "log_aging_glacier"
-    enabled = "${var.lifecycle_days_glacier > 0 ? true : false}"
+    enabled = var.lifecycle_days_glacier > 0 ? true : false
 
     prefix  = "/"
 
     transition {
-      days = "${var.lifecycle_days_glacier}"
+      days = var.lifecycle_days_glacier
       storage_class = "GLACIER"
     }
   }
 
   lifecycle_rule {
     id = "log_aging_expire"
-    enabled = "${var.lifecycle_days_expire > 0 ? true : false}"
+    enabled = var.lifecycle_days_expire > 0 ? true : false
 
     prefix  = "/"
 
     expiration {
-      days = "${var.lifecycle_days_expire}"
+      days = var.lifecycle_days_expire
     }
   }
 }
