@@ -60,10 +60,10 @@ resource "aws_acm_certificate" "main" {
 # Create each validation CNAME
 resource "aws_route53_record" "validation-cnames" {
   count   = (length(var.subject_alternative_names) + 1) * var.enabled
-  name    = lookup(aws_acm_certificate.main[count.index].domain_validation_options[count.index], "resource_record_name")
-  type    = lookup(aws_acm_certificate.main[count.index].domain_validation_options[count.index], "resource_record_type")
+  name    = aws_acm_certificate.main[0].domain_validation_options[count.index].resource_record_name
+  type    = aws_acm_certificate.main[0].domain_validation_options[count.index].resource_record_type
   zone_id = var.validation_zone_id
-  records = [lookup(aws_acm_certificate.main[count.index].domain_validation_options[count.index], "resource_record_value")]
+  records = [aws_acm_certificate.main[0].domain_validation_options[count.index].resource_record_value]
   ttl     = var.validation_cname_ttl
 }
 
@@ -74,7 +74,5 @@ resource "aws_acm_certificate_validation" "main" {
 
   certificate_arn = aws_acm_certificate.main[count.index].arn
 
-  validation_record_fqdns = [
-    "${aws_route53_record.validation-cnames.*.fqdn}",
-  ]
+  validation_record_fqdns = aws_route53_record.validation-cnames[*].fqdn
 }
