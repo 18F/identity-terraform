@@ -10,7 +10,7 @@ variable "root_domain" {
 
 variable "ami_id_map" {
   description = "Mapping from role names to AMI IDs"
-  type = map
+  type        = map(string)
 }
 
 variable "default_ami_id" {
@@ -31,19 +31,19 @@ variable "user_data" {
 }
 
 variable "security_group_ids" {
-  type = list
+  type = list(string)
 }
 
 variable "template_tags" {
   description = "Tags to apply to the launch template"
-  type = map
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 
 variable "block_device_mappings" {
   description = "EBS or other block devices to map on created instances. https://www.terraform.io/docs/providers/aws/r/launch_template.html#block-devices"
-  type = list
-  default = []
+  type        = list(string)
+  default     = []
 }
 
 # ----
@@ -72,8 +72,8 @@ resource "aws_launch_template" "template" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name = "asg-${var.env}-${var.role}"
-      prefix = "${var.role}"
+      Name   = "asg-${var.env}-${var.role}"
+      prefix = var.role
       domain = "${var.env}.${var.root_domain}"
     }
   }
@@ -81,18 +81,18 @@ resource "aws_launch_template" "template" {
   tag_specifications {
     resource_type = "volume"
     tags = {
-      Name = "asg-${var.env}-${var.role}"
-      prefix = "${var.role}"
+      Name   = "asg-${var.env}-${var.role}"
+      prefix = var.role
       domain = "${var.env}.${var.root_domain}"
     }
   }
 
   tags = merge(
-    map(
-      "prefix", "${var.role}",
-      "domain", "${var.env}.${var.root_domain}"
-    ),
-    var.template_tags
+    {
+      "prefix" = var.role
+      "domain" = "${var.env}.${var.root_domain}"
+    },
+    var.template_tags,
   )
 
   dynamic "block_device_mappings" {
@@ -103,7 +103,7 @@ resource "aws_launch_template" "template" {
       virtual_name = lookup(block_device_mappings.value, "virtual_name", null)
 
       dynamic "ebs" {
-        for_each = flatten(list(lookup(block_device_mappings.value, "ebs", [])))
+        for_each = lookup(block_device_mappings.value, "ebs", [])
         content {
           delete_on_termination = lookup(ebs.value, "delete_on_termination", null)
           encrypted             = lookup(ebs.value, "encrypted", null)
@@ -119,8 +119,10 @@ resource "aws_launch_template" "template" {
 }
 
 output "template_id" {
-  value = "${aws_launch_template.template.id}"
+  value = aws_launch_template.template.id
 }
+
 output "template_name" {
-  value = "${aws_launch_template.template.name}"
+  value = aws_launch_template.template.name
 }
+

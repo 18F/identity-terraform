@@ -1,28 +1,30 @@
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
 variable "region" {
   description = "AWS Region"
 }
 
 variable "enabled" {
-    description = <<EOM
+  description = <<EOM
 Whether to manage the TF remote state bucket and lock table.
 Set this to false if you want to skip this for bootstrapping.
 EOM
-    default = 1
+
+
+  default = 1
 }
 
 variable "state_lock_table" {
   description = "Name of the DynamoDB table to use for state locking with the S3 state backend, e.g. 'terraform_locks'"
-  default = "terraform_locks"
+  default     = "terraform_locks"
 }
-
 
 # Bucket used for storing S3 access logs
 resource "aws_s3_bucket" "s3-logs" {
   bucket = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  region = "${var.region}"
-  acl = "log-delivery-write"
+  region = var.region
+  acl    = "log-delivery-write"
   policy = ""
 
   versioning {
@@ -30,18 +32,18 @@ resource "aws_s3_bucket" "s3-logs" {
   }
 
   lifecycle_rule {
-    id = "expirelogs"
+    id      = "expirelogs"
     enabled = true
 
-    prefix  = "/"
+    prefix = "/"
 
     transition {
-      days = 30
+      days          = 30
       storage_class = "STANDARD_IA"
     }
 
     transition {
-      days = 365
+      days          = 365
       storage_class = "GLACIER"
     }
 
@@ -84,17 +86,18 @@ resource "aws_s3_bucket" "s3-logs" {
 #     terraform import module.main.module.tf-state.aws_s3_bucket.tf-state login-gov.tf-state.<ACCT_ID>-<REGION>
 #
 resource "aws_s3_bucket" "tf-state" {
-  count = "${var.enabled ? 1 : 0}"
+  count = var.enabled ? 1 : 0
+
   bucket = "login-gov.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
-  region = "${var.region}"
-  acl = "private"
+  region = var.region
+  acl    = "private"
   policy = ""
   versioning {
     enabled = true
   }
 
   logging {
-    target_bucket = "${aws_s3_bucket.s3-logs.id}"
+    target_bucket = aws_s3_bucket.s3-logs.id
     target_prefix = "login-gov.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}/"
   }
 
@@ -110,13 +113,14 @@ resource "aws_s3_bucket" "tf-state" {
     prevent_destroy = true
   }
 }
-resource "aws_s3_bucket_public_access_block" "tf-state" {
-    bucket = "${aws_s3_bucket.tf-state.id}"
 
-    block_public_acls       = true
-    block_public_policy     = true
-    ignore_public_acls      = true
-    restrict_public_buckets = true
+resource "aws_s3_bucket_public_access_block" "tf-state" {
+  bucket = aws_s3_bucket.tf-state[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 # This is the terraform state lock file used by terraform including by this
@@ -138,8 +142,9 @@ resource "aws_s3_bucket_public_access_block" "tf-state" {
 #     terraform import module.main.module.tf-state.aws_dynamodb_table.tf-lock-table terraform_locks
 #
 resource "aws_dynamodb_table" "tf-lock-table" {
-  count          = "${var.enabled ? 1 : 0}"
-  name           = "${var.state_lock_table}"
+  count = var.enabled ? 1 : 0
+
+  name           = var.state_lock_table
   read_capacity  = 2
   write_capacity = 1
   hash_key       = "LockID"
@@ -159,5 +164,6 @@ resource "aws_dynamodb_table" "tf-lock-table" {
 }
 
 output "s3_log_bucket" {
-  value = "${aws_s3_bucket.s3-logs.id}"
+  value = aws_s3_bucket.s3-logs.id
 }
+
