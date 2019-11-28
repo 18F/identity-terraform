@@ -86,7 +86,7 @@ resource "aws_s3_bucket" "s3-logs" {
 #     terraform import module.main.module.tf-state.aws_s3_bucket.tf-state login-gov.tf-state.<ACCT_ID>-<REGION>
 #
 resource "aws_s3_bucket" "tf-state" {
-  count = var.enabled ? 1 : 0
+  count = var.enabled == 1 ? 1 : 0
 
   bucket = "login-gov.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
   region = var.region
@@ -142,7 +142,7 @@ resource "aws_s3_bucket_public_access_block" "tf-state" {
 #     terraform import module.main.module.tf-state.aws_dynamodb_table.tf-lock-table terraform_locks
 #
 resource "aws_dynamodb_table" "tf-lock-table" {
-  count = var.enabled ? 1 : 0
+  count = var.enabled == 1 ? 1 : 0
 
   name           = var.state_lock_table
   read_capacity  = 2
