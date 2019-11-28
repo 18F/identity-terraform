@@ -69,7 +69,7 @@ resource "aws_route53_record" "validation-cnames" {
   # If the expression in the following list itself returns a list, remove the
   # brackets to avoid interpretation as a list of lists. If the expression
   # returns a single list item then leave it as-is and remove this TODO comment.
-  records = [aws_acm_certificate.main.0.domain_validation_options[count.index]["resource_record_value"]]
+  records = aws_acm_certificate.main.0.domain_validation_options[count.index]["resource_record_value"]
   ttl     = var.validation_cname_ttl
 }
 
