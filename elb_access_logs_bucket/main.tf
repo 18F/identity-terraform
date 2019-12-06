@@ -1,4 +1,5 @@
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
 # To give ELBs the ability to upload logs to an S3 bucket, we need to create a
 # policy that gives permission to a magical AWS account ID to upload logs to our
@@ -10,32 +11,32 @@ data "aws_caller_identity" "current" {}
 # For the PR when ELB access logs were added in terraform to see an example of
 # the supported test cases for this ELB to S3 logging configuration.
 variable "elb_account_ids" {
-    type = "map"
-    description = "Mapping of region to ELB account ID"
-    default = {
-        us-east-1 = "127311923021"
-        us-east-2 = "033677994240"
-        us-west-1 = "027434742980"
-        us-west-2 = "797873946194"
-        ca-central-1 = "985666609251"
-        eu-west-1 = "156460612806"
-        eu-central-1 = "054676820928"
-        eu-west-2 = "652711504416"
-        ap-northeast-1 = "582318560864"
-        ap-northeast-2 = "600734575887"
-        ap-southeast-1 = "114774131450"
-        ap-southeast-2 = "783225319266"
-        ap-south-1 = "718504428378"
-        sa-east-1 = "507241528517"
-        us-gov-west-1 = "048591011584"
-        cn-north-1 = "638102146993"
-    }
+  type        = map(string)
+  description = "Mapping of region to ELB account ID"
+  default = {
+    us-east-1      = "127311923021"
+    us-east-2      = "033677994240"
+    us-west-1      = "027434742980"
+    us-west-2      = "797873946194"
+    ca-central-1   = "985666609251"
+    eu-west-1      = "156460612806"
+    eu-central-1   = "054676820928"
+    eu-west-2      = "652711504416"
+    ap-northeast-1 = "582318560864"
+    ap-northeast-2 = "600734575887"
+    ap-southeast-1 = "114774131450"
+    ap-southeast-2 = "783225319266"
+    ap-south-1     = "718504428378"
+    sa-east-1      = "507241528517"
+    us-gov-west-1  = "048591011584"
+    cn-north-1     = "638102146993"
+  }
 }
 
 resource "aws_s3_bucket" "logs" {
-  bucket = "${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  acl    = "log-delivery-write"
-  force_destroy = "${var.force_destroy}"
+  bucket        = "${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  acl           = "log-delivery-write"
+  force_destroy = var.force_destroy
 
   # Allow the ELB account in the current region to put objects.
   policy = <<EOF
@@ -47,72 +48,81 @@ resource "aws_s3_bucket" "logs" {
       "Sid": "Stmt1503676946489",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${lookup(var.elb_account_ids, var.region)}:root"
+        "AWS": "arn:aws:iam::${var.elb_account_ids[var.region]}:root"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}/${var.use_prefix_for_permissions ? join("/",list(var.log_prefix,"AWSLogs",data.aws_caller_identity.current.account_id,"*")) : "*"}"
+      "Resource": "arn:aws:s3:::${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}/${var.use_prefix_for_permissions ? join(
+  "/",
+  [
+    var.log_prefix,
+    "AWSLogs",
+    data.aws_caller_identity.current.account_id,
+    "*",
+  ],
+) : "*"}"
     }
   ]
 }
 EOF
 
-  tags {
-    Environment = "All"
-  }
 
-  # In theory we should only put one copy of every file, so I don't think this
-  # will increase space, just give us history in case we accidentally
-  # delete/modify something.
-  versioning {
-    enabled = true
-  }
+tags = {
+  Environment = "All"
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
-      }
-    }
-  }
+# In theory we should only put one copy of every file, so I don't think this
+# will increase space, just give us history in case we accidentally
+# delete/modify something.
+versioning {
+  enabled = true
+}
 
-
-  # Lifecycle rules: configure a sliding window for moving logs from standard
-  # storage to standard Infrequent Access, then to glacier, then deleting them.
-  # The rules will only be enabled if the lifecycle day threshold is set to a
-  # positive number.
-
-  lifecycle_rule {
-    id = "log_aging_ia"
-    enabled = "${var.lifecycle_days_standard_ia > 0 ? true : false}"
-
-    prefix  = "/"
-
-    transition {
-      days = "${var.lifecycle_days_standard_ia}"
-      storage_class = "STANDARD_IA"
-    }
-  }
-
-  lifecycle_rule {
-    id = "log_aging_glacier"
-    enabled = "${var.lifecycle_days_glacier > 0 ? true : false}"
-
-    prefix  = "/"
-
-    transition {
-      days = "${var.lifecycle_days_glacier}"
-      storage_class = "GLACIER"
-    }
-  }
-
-  lifecycle_rule {
-    id = "log_aging_expire"
-    enabled = "${var.lifecycle_days_expire > 0 ? true : false}"
-
-    prefix  = "/"
-
-    expiration {
-      days = "${var.lifecycle_days_expire}"
+server_side_encryption_configuration {
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
     }
   }
 }
+
+# Lifecycle rules: configure a sliding window for moving logs from standard
+# storage to standard Infrequent Access, then to glacier, then deleting them.
+# The rules will only be enabled if the lifecycle day threshold is set to a
+# positive number.
+
+lifecycle_rule {
+  id      = "log_aging_ia"
+  enabled = var.lifecycle_days_standard_ia > 0 ? true : false
+
+  prefix = "/"
+
+  transition {
+    days          = var.lifecycle_days_standard_ia
+    storage_class = "STANDARD_IA"
+  }
+}
+
+lifecycle_rule {
+  id      = "log_aging_glacier"
+  enabled = var.lifecycle_days_glacier > 0 ? true : false
+
+  prefix = "/"
+
+  transition {
+    days          = var.lifecycle_days_glacier
+    storage_class = "GLACIER"
+  }
+}
+
+lifecycle_rule {
+  id      = "log_aging_expire"
+  enabled = var.lifecycle_days_expire > 0 ? true : false
+
+  prefix = "/"
+
+  expiration {
+    days = var.lifecycle_days_expire
+  }
+}
+}
+

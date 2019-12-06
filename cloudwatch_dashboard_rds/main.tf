@@ -1,37 +1,40 @@
 # main RDS dashboard
 
 variable "enabled" {
-    default = 1
+  default = 1
 }
 
 variable "dashboard_name" {
-    description = "Human-visible name of the dashboard"
+  description = "Human-visible name of the dashboard"
 }
 
 variable "region" {
-    description = "AWS Region"
+  description = "AWS Region"
 }
 
 variable "db_instance_identifier" {
-    description = "DB Instance Identifier of the RDS Instance"
+  description = "DB Instance Identifier of the RDS Instance"
 }
 
 variable "iops" {
-    description = "IOPS quota for the instance, if nonzero will be used to create a horizontal annotation on the R/W IOPS widget"
-    default = 0
+  description = "IOPS quota for the instance, if nonzero will be used to create a horizontal annotation on the R/W IOPS widget"
+  default     = 0
 }
 
 variable "vertical_annotations" {
-    description = "Raw JSON array of vertical annotations to add to all widgets"
-    default = "[]"
+  description = "Raw JSON array of vertical annotations to add to all widgets"
+  default     = "[]"
 }
 
 output "dashboard_arn" {
-    value = "${element(concat(aws_cloudwatch_dashboard.main.*.dashboard_arn, list("")), 0)}"
+  value = element(
+    concat(aws_cloudwatch_dashboard.main.*.dashboard_arn, [""]),
+    0,
+  )
 }
 
 locals {
-    iops_annotation_value = <<EOM
+  iops_annotation_value = <<EOM
 {
     "color": "#d62728",
     "label": "IOPS Quota",
@@ -39,13 +42,14 @@ locals {
 }
 EOM
 
-    iops_horizontal_annotations = "${var.iops > 0 ? "[${local.iops_annotation_value}]" : "[]"}"
+  iops_horizontal_annotations = var.iops > 0 ? "[${local.iops_annotation_value}]" : "[]"
 }
 
 resource "aws_cloudwatch_dashboard" "main" {
-    count = "${var.enabled}"
-    dashboard_name = "${var.dashboard_name}"
-    dashboard_body = <<EOF
+  count = var.enabled
+  
+  dashboard_name = var.dashboard_name
+  dashboard_body = <<EOF
 {
     "widgets": [
         {
@@ -279,4 +283,6 @@ resource "aws_cloudwatch_dashboard" "main" {
     ]
 }
 EOF
+
 }
+

@@ -1,61 +1,61 @@
 # main ALB dashboard
 
-variable "enabled" {
-    default = 1
-}
-
 variable "dashboard_name" {
-    description = "Human-visible name of the dashboard"
+  description = "Human-visible name of the dashboard"
 }
 
 variable "alb_arn_suffix" {
-    description = "ARN suffix of the ALB"
+  description = "ARN suffix of the ALB"
 }
 
 variable "target_group_label" {
-    description = "Human label to explain what the target group servers are"
+  description = "Human label to explain what the target group servers are"
 }
 
 variable "target_group_arn_suffix" {
-    description = "ARN suffix of the target group, used for displaying response time"
+  description = "ARN suffix of the target group, used for displaying response time"
 }
 
 variable "asg_name" {
-    description = "Name of the ASG behind the ALB. Used for displaying CPU usage"
+  description = "Name of the ASG behind the ALB. Used for displaying CPU usage"
 }
 
 variable "vertical_annotations" {
-    description = "Raw JSON array of vertical annotations to add to all widgets"
-    default = "[]"
+  description = "Raw JSON array of vertical annotations to add to all widgets"
+  default     = "[]"
 }
 
 variable "region" {
-    description = "AWS region"
-    default = "us-west-2"
+  description = "AWS region"
+  default     = "us-west-2"
 }
 
 variable "response_time_warning_threshold" {
-    description = "Horizontal annotation for warning on response time graph"
-    default = 1
+  description = "Horizontal annotation for warning on response time graph"
+  default     = 1
 }
+
 variable "error_rate_warning_threshold" {
-    description = "Horizontal annotation for warning on error time graph"
-    default = 1
+  description = "Horizontal annotation for warning on error time graph"
+  default     = 1
 }
+
 variable "error_rate_error_threshold" {
-    description = "Horizontal annotation for error on error time graph"
-    default = 5
+  description = "Horizontal annotation for error on error time graph"
+  default     = 5
 }
 
 output "dashboard_arn" {
-    # This hack can go away in TF 0.12
-    value = "${element(concat(aws_cloudwatch_dashboard.alb.*.dashboard_arn, list("")), 0)}"
+  # TODO: use a conditional to replace this after main TF12 rollout
+  value = element(
+    concat(aws_cloudwatch_dashboard.alb.*.dashboard_arn, [""]),
+    0,
+  )
 }
 
 resource "aws_cloudwatch_dashboard" "alb" {
-    count = "${var.enabled}"
-    dashboard_name = "${var.dashboard_name}"
-    dashboard_body = <<EOF
+  dashboard_name = var.dashboard_name
+  dashboard_body = <<EOF
 {
     "widgets": [
         {
@@ -291,4 +291,6 @@ resource "aws_cloudwatch_dashboard" "alb" {
     ]
 }
 EOF
+
 }
+
