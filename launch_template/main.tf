@@ -95,6 +95,9 @@ resource "aws_launch_template" "template" {
     var.template_tags,
   )
 
+  # TF12 syntax requires using a dynamic block in order to set var.block_device_mappings
+  # to the resource's block_device_mappings, hence this complex block-in-block.
+  # This logic is used to pass through block_device_mappings unchanged.
   dynamic "block_device_mappings" {
     for_each = var.block_device_mappings
     content {

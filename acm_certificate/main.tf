@@ -4,6 +4,7 @@ variable "domain_name" {
   description = "The primary name used on the issued TLS certificate"
 }
 
+# TODO: convert to bool
 variable "enabled" {
   default     = 1
   description = "Like count, but for the whole module. 1 for True, 0 for False."
@@ -57,12 +58,12 @@ resource "aws_acm_certificate" "main" {
 
 # Create each validation CNAME
 resource "aws_route53_record" "validation-cnames" {
-  count = length(var.subject_alternative_names) + 1 * var.enabled
+  count = var.enabled == 1 ? length(var.subject_alternative_names) + 1 : 0
 
-  name    = aws_acm_certificate.main.0.domain_validation_options[count.index]["resource_record_name"]
-  type    = aws_acm_certificate.main.0.domain_validation_options[count.index]["resource_record_type"]
+  name    = aws_acm_certificate.main[0].domain_validation_options[count.index]["resource_record_name"]
+  type    = aws_acm_certificate.main[0].domain_validation_options[count.index]["resource_record_type"]
   zone_id = var.validation_zone_id
-  records = [aws_acm_certificate.main.0.domain_validation_options[count.index]["resource_record_value"]]
+  records = [aws_acm_certificate.main[0].domain_validation_options[count.index]["resource_record_value"]]
   ttl     = var.validation_cname_ttl
 }
 

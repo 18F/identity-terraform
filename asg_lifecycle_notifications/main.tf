@@ -16,6 +16,7 @@ variable "lifecycle_name_prefix" {
   default     = "provision"
 }
 
+# TODO: change _enabled vars from int to bool
 variable "main_hook_enabled" {
   description = "Whether to create the $prefix-main lifecycle hook"
   default     = 1
@@ -62,12 +63,9 @@ resource "aws_autoscaling_lifecycle_hook" "provision-main" {
 }
 
 output "lifecycle_hook_names" {
-  value = [
-    concat(
-      aws_autoscaling_lifecycle_hook.provision-private.*.name,
-      aws_autoscaling_lifecycle_hook.provision-main.*.name,
-      [""],
-    ),
-  ]
+  value = concat(
+    aws_autoscaling_lifecycle_hook.provision-private.*.name,
+    aws_autoscaling_lifecycle_hook.provision-main.*.name
+  )
 }
 

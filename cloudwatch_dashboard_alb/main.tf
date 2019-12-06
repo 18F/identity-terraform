@@ -1,9 +1,5 @@
 # main ALB dashboard
 
-variable "enabled" {
-  default = 1
-}
-
 variable "dashboard_name" {
   description = "Human-visible name of the dashboard"
 }
@@ -50,7 +46,7 @@ variable "error_rate_error_threshold" {
 }
 
 output "dashboard_arn" {
-  # This hack can go away in TF 0.12
+  # TODO: use a conditional to replace this after main TF12 rollout
   value = element(
     concat(aws_cloudwatch_dashboard.alb.*.dashboard_arn, [""]),
     0,
@@ -58,8 +54,6 @@ output "dashboard_arn" {
 }
 
 resource "aws_cloudwatch_dashboard" "alb" {
-  count = var.enabled
-
   dashboard_name = var.dashboard_name
   dashboard_body = <<EOF
 {
