@@ -77,7 +77,6 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
   }
 
   datapoints_to_alarm = var.datapoints_to_alarm
-  evaluation_periods  = var.evaluation_periods
 
   treat_missing_data = var.treat_missing_data
 
