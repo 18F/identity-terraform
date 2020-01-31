@@ -1,3 +1,8 @@
+variable "function_enabled" {
+  description = "Whether or not to enable the function"
+  default     = 1
+}
+
 variable "function_name" {
   description = "Name of the lambda function to monitor"
 }
