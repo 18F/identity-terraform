@@ -17,8 +17,10 @@ variable "subject_alternative_names" {
 
 variable "validation_enabled" {
   default     = 1
-  description = "If ACM certificates are provisioned across multiple regions, \
-  only 1 set of records is required"
+  description = <<-EOF
+If ACM certificates are provisioned across multiple regions, only 1 set of 
+records is required
+EOF
 }
 
 variable "validation_zone_id" {
