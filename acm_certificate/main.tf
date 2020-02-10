@@ -15,6 +15,12 @@ variable "subject_alternative_names" {
   description = "A list of additional names to add to the certificate"
 }
 
+variable "validation_enabled" {
+  default     = 1
+  description = "If ACM certificates are provisioned across multiple regions, \
+  only 1 set of records is required"
+}
+
 variable "validation_zone_id" {
   description = "Zone ID used to create the validation CNAMEs"
 }
@@ -58,7 +64,7 @@ resource "aws_acm_certificate" "main" {
 
 # Create each validation CNAME
 resource "aws_route53_record" "validation-cnames" {
-  count = var.enabled == 1 ? length(var.subject_alternative_names) + 1 : 0
+  count = var.validation_enabled == 1 ? length(var.subject_alternative_names) + 1 : 0
 
   name    = aws_acm_certificate.main[0].domain_validation_options[count.index]["resource_record_name"]
   type    = aws_acm_certificate.main[0].domain_validation_options[count.index]["resource_record_type"]
@@ -70,7 +76,7 @@ resource "aws_route53_record" "validation-cnames" {
 # Synthetic Terraform resource that blocks on validation completion
 # You can depend_on this to wait for the ACM cert to be ready.
 resource "aws_acm_certificate_validation" "main" {
-  count = var.enabled
+  count = var.validation_enabled
 
   certificate_arn = aws_acm_certificate.main[0].arn
 
