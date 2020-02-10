@@ -31,6 +31,11 @@ variable "validation_cname_ttl" {
   default = 300
 }
 
+variable "acm_depends_on" {
+  type    = any
+  default = null
+}
+
 # -- Outputs --
 
 output "cert_arn" {
@@ -62,6 +67,7 @@ resource "aws_acm_certificate" "main" {
     # https://github.com/18F/identity-devops/issues/1469
     ignore_changes = [subject_alternative_names]
   }
+  depends_on = [var.acm_depends_on]
 }
 
 # Create each validation CNAME
