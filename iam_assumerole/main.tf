@@ -12,6 +12,10 @@ variable "custom_policy_arns" {
   default     = []
 }
 
+variable "master_assumerole_policy" {
+  description = "HEREDOC; Policy document to attach to the role allowing AssumeRole access from a master account."
+}
+
 variable "policy_description" {
   description = "Description of policy including access provided."
 }
@@ -57,7 +61,7 @@ resource "aws_iam_role" "iam_assumable_role" {
   count = var.enabled ? 1 : 0
 
   name                 = var.role_name
-  assume_role_policy   = data.aws_iam_policy_document.master_account_assumerole.json
+  assume_role_policy   = var.master_assumerole_policy
   path                 = "/"
   max_session_duration = var.role_duration #seconds
 }
