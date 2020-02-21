@@ -8,7 +8,8 @@ variable "enabled" {
 
 variable "custom_policy_arns" {
   description = "The ARNs of any additional IAM policies to attach to the role."
-  type = []
+  type        = list(any)
+  default     = []
 }
 
 variable "policy_description" {
@@ -31,7 +32,8 @@ variable "role_name" {
 
 variable "statement" {
   description = "Statement to add to the IAM policy document."
-  type = {}
+  type        = list(any)
+  default     = []
 }
 
 # -- Resources --
