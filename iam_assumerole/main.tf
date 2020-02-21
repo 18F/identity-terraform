@@ -13,7 +13,7 @@ variable "custom_policy_arns" {
 }
 
 variable "master_assumerole_policy" {
-  description = "HEREDOC; Policy document to attach to the role allowing AssumeRole access from a master account."
+  description = "Policy document to attach to the role allowing AssumeRole access from a master account."
 }
 
 variable "iam_policies" {
@@ -33,12 +33,6 @@ variable "role_duration" {
 
 variable "role_name" {
   description = "Name of the IAM role."
-}
-
-variable "statement" {
-  description = "Statement to add to the IAM policy document."
-  type        = list(any)
-  default     = []
 }
 
 # -- Resources --
