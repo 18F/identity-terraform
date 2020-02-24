@@ -1,3 +1,8 @@
+variable "enabled" {
+  description = "Whether or not to create the Lambda alert monitor."
+  default     = 1
+}
+
 variable "function_name" {
   description = "Name of the lambda function to monitor"
 }
@@ -35,7 +40,7 @@ variable "treat_missing_data" {
   default = "missing"
 }
 
-resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
+resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   alarm_name        = "Lambda error rate: ${var.function_name}"
   alarm_description = "Lambda error rate has exceeded ${var.error_rate_threshold}%"
 
