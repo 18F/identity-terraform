@@ -7,11 +7,6 @@ variable "function_name" {
   description = "Name of the lambda function to monitor"
 }
 
-# make sure that the function exists
-data "aws_lambda_function" "func" {
-  function_name = var.function_name
-}
-
 variable "alarm_actions" {
   type        = list(string)
   description = "A list of ARNs to notify when the alarm fires"
@@ -42,7 +37,7 @@ variable "treat_missing_data" {
 
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   count = var.enabled
-  
+
   alarm_name        = "Lambda error rate: ${var.function_name}"
   alarm_description = "Lambda error rate has exceeded ${var.error_rate_threshold}%"
 
