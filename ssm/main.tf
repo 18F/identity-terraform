@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "ssm" {
     ]
 
     resources = [
-      "arn:aws:logs:${vars.region}:${data.aws_caller_identity.current.account_id}:log-group:aws/ssm/${env_name}/*",
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:aws/ssm/${var.env_name}/*",
     ]
   }
 }
@@ -67,14 +67,14 @@ resource "aws_iam_role" "ec2_ssm_instance_profile_role" {
   count              = var.enabled
   name               = "${var.env_name}_ec2_ssm_role"
   path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.assume_role[0].json
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy" "ec2_ssm_instance_profile_policy" {
   count              = var.enabled
   name               = "${var.env_name}_ec2_ssm_policy"
   role               = aws_iam_role.ec2_ssm_instance_profile_role[0].id
-  policy             = data.aws_iam_policy_document.assume_role[0].json
+  policy             = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_instance_profile" "ec2_ssm_instance_profile" {
