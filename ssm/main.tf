@@ -74,7 +74,7 @@ resource "aws_iam_role_policy" "ec2_ssm_instance_profile_policy" {
   count              = var.enabled
   name               = "${var.env_name}_ec2_ssm_policy"
   role               = aws_iam_role.ec2_ssm_instance_profile_role[0].id
-  policy             = data.aws_iam_policy_document.assume_role.json
+  policy             = data.aws_iam_policy_document.ssm.json
 }
 
 resource "aws_iam_instance_profile" "ec2_ssm_instance_profile" {
