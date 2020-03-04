@@ -57,3 +57,8 @@ resource "aws_iam_policy" "ec2_ssm_policy" {
   description = "Allow SSM session management"
   policy      = data.aws_iam_policy_document.ssm.json
 }
+
+# -- Outputs --
+output "ssm_iam_policy_arn" {
+  value = aws_iam_policy.ec2_ssm_policy.arn
+}
