@@ -58,6 +58,11 @@ resource "aws_iam_policy" "ec2_ssm_policy" {
   policy      = data.aws_iam_policy_document.ssm.json
 }
 
+resource "aws_cloudwatch_log_group" "ssm" {
+  count = var.enabled
+  name  = "aws/ssm/${var.env_name}"
+}
+
 # -- Outputs --
 output "ssm_iam_policy_arn" {
   value = aws_iam_policy.ec2_ssm_policy[0].arn
