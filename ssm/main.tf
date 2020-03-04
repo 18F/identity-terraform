@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "ssm" {
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:aws/ssm/${var.env_name}/*",
+      "*",
     ]
   }
 }
@@ -56,11 +56,6 @@ resource "aws_iam_policy" "ec2_ssm_policy" {
   path        = "/"
   description = "Allow SSM session management"
   policy      = data.aws_iam_policy_document.ssm.json
-}
-
-resource "aws_cloudwatch_log_group" "ssm" {
-  count = var.enabled
-  name  = "aws/ssm/${var.env_name}"
 }
 
 # -- Outputs --
