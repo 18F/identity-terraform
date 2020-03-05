@@ -60,5 +60,5 @@ resource "aws_iam_policy" "ec2_ssm_policy" {
 
 # -- Outputs --
 output "ssm_iam_policy_arn" {
-  value = aws_iam_policy.ec2_ssm_policy[0].arn
+  value = var.enabled ? aws_iam_policy.ec2_ssm_policy[0].arn : null
 }
