@@ -2,8 +2,8 @@
 
 variable "enabled" {
   description = "Whether or not to create the role/policy/attachment resources."
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "custom_policy_arns" {
@@ -27,8 +27,8 @@ variable "iam_policies" {
 
 variable "role_duration" {
   description = "Value for the max_session_duration for the role, in seconds."
-  type = number
-  default = 43200
+  type        = number
+  default     = 43200
 }
 
 variable "role_name" {
