@@ -18,7 +18,11 @@ resource "null_resource" "kms_log_found" {
 }
 
 data "aws_kms_key" "application" {
-  depends_on = [null_resource.key_found]
+  # hack to prevent data source from being read on every apply
+  # https://github.com/hashicorp/terraform/issues/11806#issuecomment-577082293
+  metadata {
+    name      = "app_key${replace(null_resource.key_found.id, "/.*/", "")}"
+  }
   key_id     = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
