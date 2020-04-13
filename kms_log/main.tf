@@ -1,14 +1,81 @@
 data "aws_caller_identity" "current" {
 }
 
-data "aws_s3_bucket" "ct_log_bucket" {
-  bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
+data "aws_iam_policy_document" "kms" {
+  # Allow root users in
+  statement {
+    actions = [
+      "kms:*",
+    ]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    resources = [
+      "*",
+    ]
+  }
+
+  # allow key admins in
+  statement {
+    actions = [
+      "kms:Create*",
+      "kms:Describe*",
+      "kms:Enable*",
+      "kms:List*",
+      "kms:Put*",
+      "kms:Update*",
+      "kms:Revoke*",
+      "kms:Disable*",
+      "kms:Get*",
+      "kms:Delete*",
+      "kms:ScheduleKeyDeletion",
+      "kms:CancelKeyDeletion",
+    ]
+    principals {
+      type        = "AWS"
+      identifiers = var.power_users
+    }
+    resources = [
+      "*",
+    ]
+  }
+
+  # allow the app role to use KMS
+  statement {
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey",
+    ]
+    principals {
+      type = "AWS"
+      identifiers = concat(
+        [aws_iam_role.idp.arn],
+        var.db_restore_role_arns
+      )
+    }
+    resources = [
+      "*",
+    ]
+  }
 }
 
-resource "null_resource" "key_found" {
-  triggers = {
-    key_name = "alias/${var.env_name}-login-dot-gov-keymaker"
-  }
+resource "aws_kms_key" "login-dot-gov-keymaker" {
+  enable_key_rotation = true
+  description         = "${var.env_name}-login-dot-gov-keymaker"
+  policy              = data.aws_iam_policy_document.kms.json
+}
+
+resource "aws_kms_alias" "login-dot-gov-keymaker-alias" {
+  name          = "alias/${var.env_name}-login-dot-gov-keymaker"
+  target_key_id = aws_kms_key.login-dot-gov-keymaker.key_id
+}
+
+data "aws_s3_bucket" "ct_log_bucket" {
+  bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
 }
 
 resource "null_resource" "kms_log_found" {
@@ -18,11 +85,6 @@ resource "null_resource" "kms_log_found" {
 }
 
 data "aws_kms_key" "application" {
-  # hack to prevent data source from being read on every apply
-  # https://github.com/hashicorp/terraform/issues/11806#issuecomment-577082293
-  metadata = {
-    name   = "app_key${replace(null_resource.key_found.id, "/.*/", "")}"
-  }
   key_id   = "alias/${var.env_name}-login-dot-gov-keymaker"
 }
 
