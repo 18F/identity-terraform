@@ -1,6 +1,10 @@
 data "aws_caller_identity" "current" {
 }
 
+data "aws_s3_bucket" "ct_log_bucket" {
+  bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
+}
+
 data "aws_iam_policy_document" "kms" {
   # Allow root users in
   statement {
@@ -9,39 +13,16 @@ data "aws_iam_policy_document" "kms" {
     ]
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
     }
     resources = [
       "*",
     ]
   }
 
-  # allow key admins in
-  statement {
-    actions = [
-      "kms:Create*",
-      "kms:Describe*",
-      "kms:Enable*",
-      "kms:List*",
-      "kms:Put*",
-      "kms:Update*",
-      "kms:Revoke*",
-      "kms:Disable*",
-      "kms:Get*",
-      "kms:Delete*",
-      "kms:ScheduleKeyDeletion",
-      "kms:CancelKeyDeletion",
-    ]
-    principals {
-      type        = "AWS"
-      identifiers = var.power_users
-    }
-    resources = [
-      "*",
-    ]
-  }
-
-  # allow the app role to use KMS
+  # allow an EC2 instance role to use KMS
   statement {
     actions = [
       "kms:Encrypt",
@@ -53,13 +34,31 @@ data "aws_iam_policy_document" "kms" {
     principals {
       type = "AWS"
       identifiers = concat(
-        [aws_iam_role.idp.arn],
-        var.db_restore_role_arns
+        var.ec2_kms_arns
       )
     }
     resources = [
       "*",
     ]
+  }
+
+  # Allow CloudWatch Events and SNS Access
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      "*",
+    ]
+    principals {
+      type = "Service"
+      identifiers = [
+        "events.amazonaws.com",
+        "sns.amazonaws.com",
+      ]
+    }
   }
 }
 
@@ -74,10 +73,6 @@ resource "aws_kms_alias" "login-dot-gov-keymaker-alias" {
   target_key_id = aws_kms_key.login-dot-gov-keymaker.key_id
 }
 
-data "aws_s3_bucket" "ct_log_bucket" {
-  bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
-}
-
 resource "null_resource" "kms_log_found" {
   triggers = {
     kms_log = "${var.env_name}_/srv/idp/shared/log/kms.log"
@@ -85,7 +80,7 @@ resource "null_resource" "kms_log_found" {
 }
 
 data "aws_kms_key" "application" {
-  key_id   = "alias/${var.env_name}-login-dot-gov-keymaker"
+  key_id   = aws_kms_key.login-dot-gov-keymaker.key_id
 }
 
 data "aws_s3_bucket" "lambda" {
@@ -112,45 +107,6 @@ resource "aws_kms_key" "kms_logging" {
   tags = {
     Name        = "${var.env_name} KMS Logging Key"
     environment = var.env_name
-  }
-}
-
-# IAM policy for KMS access by CW Events and SNS
-data "aws_iam_policy_document" "kms" {
-  statement {
-    sid    = "Enable IAM User Permissions"
-    effect = "Allow"
-    actions = [
-      "kms:*",
-    ]
-    resources = [
-      "*",
-    ]
-    principals {
-      type = "AWS"
-      identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-      ]
-    }
-  }
-
-  statement {
-    sid    = "Allow CloudWatch Events and SNS Access"
-    effect = "Allow"
-    actions = [
-      "kms:GenerateDataKey",
-      "kms:Decrypt",
-    ]
-    resources = [
-      "*",
-    ]
-    principals {
-      type = "Service"
-      identifiers = [
-        "events.amazonaws.com",
-        "sns.amazonaws.com",
-      ]
-    }
   }
 }
 
