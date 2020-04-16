@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "kms" {
       "kms:DescribeKey",
     ]
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = concat(
         var.ec2_kms_arns
       )
@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "kms" {
       "*",
     ]
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = [
         "events.amazonaws.com",
         "sns.amazonaws.com",
@@ -80,7 +80,7 @@ resource "null_resource" "kms_log_found" {
 }
 
 data "aws_kms_key" "application" {
-  key_id   = aws_kms_key.login-dot-gov-keymaker.key_id
+  key_id = aws_kms_key.login-dot-gov-keymaker.key_id
 }
 
 data "aws_s3_bucket" "lambda" {

@@ -74,6 +74,6 @@ variable "kmslog_lambda_debug" {
 }
 
 variable "ec2_kms_arns" {
-  default = []
+  default     = []
   description = "ARN(s) of EC2 roles permitted access to KMS"
 }
