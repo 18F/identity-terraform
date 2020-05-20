@@ -5,8 +5,9 @@ variable "account_numbers" {
   type = list(any)
 }
 
-variable "role_type" {
-  description = "Type/name of the Assumable role. Should correspond to an actual role name in the account(s) listed."
+variable "role_types" {
+  description = "Type/name of the Assumable role(s). Should correspond to actual role name(s) in the account(s) listed."
+  type = list(any)
 }
 
 variable "account_type" {
@@ -16,19 +17,23 @@ variable "account_type" {
 # -- Resources --
 
 resource "aws_iam_policy" "role_type_policy" {
-  name        = join("", [title(var.account_type), "Assume", title(var.role_type)]))
+  for_each = var.role_type
+
+  name        = join("", [title(var.account_type), "Assume", title(each.key)]))
   path        = "/"
-  description = "Policy to allow user to assume ${var.role_type} role in ${var.account_type}."
-  policy      = data.aws_iam_policy_document.role_type_policy.json
+  description = "Policy to allow user to assume ${each.key} role in ${var.account_type}."
+  policy      = "data.aws_iam_policy_document.role_type_policy.${each.key}.json"
 }
 
 data "aws_iam_policy_document" "role_type_policy" {
+  for_each = var.role_type
+
   statement {
-    sid    = join("", [title(var.account_type), "Assume", title(var.role_type)]))
+    sid    = join("", [title(var.account_type), "Assume", title(each.key)]))
     effect = "Allow"
     actions = [
       "sts:AssumeRole",
     ]
-    resources = formatlist("arn:aws:iam::%s:role/${var.role_type}",var.account_numbers)
+    resources = formatlist("arn:aws:iam::%s:role/${each.key}",var.account_numbers)
   }
 }
