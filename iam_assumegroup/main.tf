@@ -22,8 +22,8 @@ resource "aws_iam_group" "iam_group" {
   name = var.group_name
 }
 
-resource "aws_iam_group_membership" "keymasters_members" {
-  name = "keymasters_members"
+resource "aws_iam_group_membership" "iam_group_members" {
+  name = "${var.group_name}_members"
   users = var.group_members
   group = var.group_name
 }
