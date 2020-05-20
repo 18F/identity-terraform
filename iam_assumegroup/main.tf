@@ -16,6 +16,11 @@ variable "group_name" {
   description = "Name of the IAM group."
 }
 
+variable "module_depends_on" {
+  type    = any
+  default = null
+}
+
 # -- Resources --
 
 resource "aws_iam_group" "iam_group" {
@@ -29,8 +34,9 @@ resource "aws_iam_group_membership" "iam_group_members" {
 }
 
 resource "aws_iam_group_policy_attachment" "iam_group_policies" {
-  for_each = var.assume_role_policy_arns
-
+  depends_on = [var.module_depends_on]
+  for_each = toset(var.assume_role_policy_arns)
+  
   group = var.group_name
   policy_arn = each.key
 }

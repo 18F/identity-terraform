@@ -16,24 +16,30 @@ variable "account_type" {
 
 # -- Resources --
 
-resource "aws_iam_policy" "role_type_policy" {
-  for_each = var.role_type
-
-  name        = join("", [title(var.account_type), "Assume", title(each.key)]))
-  path        = "/"
-  description = "Policy to allow user to assume ${each.key} role in ${var.account_type}."
-  policy      = "data.aws_iam_policy_document.role_type_policy.${each.key}.json"
-}
-
 data "aws_iam_policy_document" "role_type_policy" {
-  for_each = var.role_type
+  for_each = toset(var.role_types)
 
   statement {
-    sid    = join("", [title(var.account_type), "Assume", title(each.key)]))
+    sid    = join("", [title(var.account_type), "Assume", title(each.key)])
     effect = "Allow"
     actions = [
       "sts:AssumeRole",
     ]
     resources = formatlist("arn:aws:iam::%s:role/${each.key}",var.account_numbers)
   }
+}
+
+resource "aws_iam_policy" "role_type_policy" {
+  for_each = toset(var.role_types)
+
+  name        = join("", [title(var.account_type), "Assume", title(each.key)])
+  path        = "/"
+  description = "Policy to allow user to assume ${each.key} role in ${var.account_type}."
+  policy      = data.aws_iam_policy_document.role_type_policy[each.key].json
+}
+
+output "role_arns" {
+  value = zipmap(
+      sort(var.role_types),
+      sort(values(aws_iam_policy.role_type_policy)[*]["arn"]))
 }
