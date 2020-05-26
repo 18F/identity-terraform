@@ -1,67 +1,53 @@
 # `iam_assumerole`
 
-This Terraform module is designed to create all of the IAM resources necessary for cross-account AssumeRole access, via:
+This Terraform module creates IAM policies, and associated policy documents, allowing groups/users in a 'master' AWS account to assume roles in other accounts.
 
-- a role that can be assumed by any IAM user in a 'master' account with access to assume that role (via user/group privileges)
-- one or more policy documents dictating access via `statement{}` blocks
-- one or more policies created from the policy document(s)
-- one or more attachments of the role to the policy(ies)
-- (optionally) additional attachment(s) if there are other IAM policies that should be attached to the assumable role
+## Account Type
 
-Because Policy Documents have a size limit, it is often necessary to break policies up with multiple documents. Creating multiple policies and documents is possible using a `list(object)` variable in Terraform, which allows each object in the list to contain:
+The "account type" concept allows for more granular control of permissions for IAM groups across multiple categories -- or "types" -- of AWS accounts. As an example:
 
-1. the policy name
-2. the policy description
-3. the policy document statement(s)
+An organization has the following accounts:
+
+1. Dev / Infrastructure
+2. Dev / S3 Buckets
+3. Prod / Infrastructure
+4. Prod / S3 Buckets
+5. Master
+
+Each account has the same list of roles, e.g.: FullAdmin, PowerUser, ReadOnly, SOCAdmin.
+
+1. 3 AWS accounts for development
+2. 2 accounts for production
+3. 1 account for 'master'
+
+A module can be added to the Terraform configuration for each "type" of account, which will create all necessary IAM policies (and documents) to allow AssumeRole access for each Role to all accounts within that "type".
 
 ## Example
 
 ```hcl
-locals {
-  custom_policy_arns = [
-    aws_iam_policy.rds_delete_prevent.arn,
-    aws_iam_policy.region_restriction.arn,
+module "assume_roles_prod" {
+  source = "github.com/18F/identity-terraform//iam_masterassume?ref=master"
+
+  role_list = [
+    "FullAdministrator",
+    "PowerUser",
+    "ReadOnly",
+    "BillingReadOnly",
+    "ReportsReadOnly",
+    "KMSAdministrator",
+    "SOCAdministrator",
   ]
-  master_assumerole_policy = data.aws_iam_policy_document.master_account_assumerole.json
-}
-
-module "billing-assumerole" {
-  source = "github.com/18F/identity-terraform//iam_assumerole?ref=master"
-
-  role_name                = "BillingReadOnly"
-  enabled                  = var.iam_billing_enabled
-  master_assumerole_policy = local.master_assumerole_policy
-  custom_policy_arns       = local.custom_policy_arns
-
-  iam_policies = [
-    {
-      policy_name        = "BillingReadOnly"
-      policy_description = "Policy for reporting group read-only access to Billing ui"
-      policy_document    = [
-        {
-          sid    = "BillingReadOnly"
-          effect = "Allow"
-          actions = [
-            "aws-portal:ViewBilling",
-          ]
-          resources = [
-            "*",
-          ]
-        },
-      ]
-    },
+  account_type = "Prod"
+  account_numbers = [
+    "111111111111",
+    "222222222222"
   ]
 }
+
 ```
 
 ## Variables
 
-- `enabled` - **bool**: Whether or not to create the role + policy + attachments. Used when declaring a role via a Terraform template which is NOT used across all accounts. Defaults to _true_.
-- `role_name` - **string**: Name of the IAM role to be created.
-- `role_duration` - **number**: Value of the `max_session_duration` for the role, in seconds. Defaults to _43200_ (12 hours).
-- `master_assumerole_policy` - **object**: JSON object of the policy document to attach to the role allowing AssumeRole access from a master account. Pass in using `data.aws_iam_policy_document.<DATA_SOURCE_NAME>.json` as shown in the example above.
-- `custom_policy_arns` - **list**: ARNs of any additional IAM policies to attach to the role.
-- `iam_policies` - **list(object)**: List of objects, each of which contains:
-   - `policy_name` - **string**: Name of the IAM policy to be created.
-   - `policy_description` - **string**: Description of the IAM policy.
-   - `policy_document` - **list(object)**: List of Statements included in the policy document. Each _object_ in the list should include the contents of a Statement, i.e. the `sid`, `effect`, `actions`, and `resources`.
+- `account_type`: The "type", aka "category", of AWS account(s) that this module will create policies for.
+- `account_numbers`: A list of AWS account number(s) within the `account_type` category.
+- `role_list`: A list of the roles available to be assumed from within the account(s).
