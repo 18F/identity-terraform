@@ -1,45 +1,49 @@
 # -- Variables --
 
+variable "account_type" {
+  description = "Type of account."
+}
+
 variable "account_numbers" {
   description = "List of AWS account numbers where this policy can access the specified Assumable role"
   type = list(any)
 }
 
-variable "role_types" {
+variable "role_list" {
   description = "Type/name of the Assumable role(s). Should correspond to actual role name(s) in the account(s) listed."
   type = list(any)
 }
 
-variable "account_type" {
-  description = "Type/name that the listed account(s) fall under (e.g. prod, dev, etc.)"
+locals {
+  role_arn_map = { for role in var.role_list : role => [
+    for pair in setproduct(var.account_numbers, [role]) :
+      join("",["arn:aws:iam::",pair[0],":role/",pair[1]])
+    ]
+  }
 }
 
 # -- Resources --
 
-data "aws_iam_policy_document" "role_type_policy" {
-  for_each = toset(var.role_types)
+data "aws_iam_policy_document" "role_policy_doc" {
+  for_each = local.role_arn_map
 
   statement {
-    sid    = join("", [title(var.account_type), "Assume", title(each.key)])
-    effect = "Allow"
-    actions = [
-      "sts:AssumeRole",
-    ]
-    resources = formatlist("arn:aws:iam::%s:role/${each.key}",var.account_numbers)
+      sid       = join("", [var.account_type, "Assume", each.key])
+      effect    = "Allow"
+      actions   = [
+        "sts:AssumeRole"
+      ]
+      resources = [
+        for arn in each.value : "${arn}"
+      ]
   }
 }
 
-resource "aws_iam_policy" "role_type_policy" {
-  for_each = toset(var.role_types)
+resource "aws_iam_policy" "account_role_policy" {
+  count = length(var.role_list)
 
-  name        = join("", [title(var.account_type), "Assume", title(each.key)])
+  name        = join("", [var.account_type, "Assume", var.role_list[count.index]])
   path        = "/"
-  description = "Policy to allow user to assume ${each.key} role in ${var.account_type}."
-  policy      = data.aws_iam_policy_document.role_type_policy[each.key].json
-}
-
-output "role_arns" {
-  value = zipmap(
-      sort(var.role_types),
-      sort(values(aws_iam_policy.role_type_policy)[*]["arn"]))
+  description = "Policy to allow user to assume ${var.role_list[count.index]} role in ${var.account_type} account(s)."
+  policy = data.aws_iam_policy_document.role_policy_doc[var.role_list[count.index]].json
 }
