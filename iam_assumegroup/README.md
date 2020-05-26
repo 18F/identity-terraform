@@ -1,67 +1,73 @@
 # `iam_assumerole`
 
-This Terraform module is designed to create all of the IAM resources necessary for cross-account AssumeRole access, via:
+This Terraform module can be used to build all necessary resources for a policy-managed IAM Group, via:
 
-- a role that can be assumed by any IAM user in a 'master' account with access to assume that role (via user/group privileges)
-- one or more policy documents dictating access via `statement{}` blocks
-- one or more policies created from the policy document(s)
-- one or more attachments of the role to the policy(ies)
-- (optionally) additional attachment(s) if there are other IAM policies that should be attached to the assumable role
+- an IAM Group resource, made up of a list of the users in the group + a custom name
+- ARN(s) for one or more Group Policies, built from a map of account types + roles per account type
 
-Because Policy Documents have a size limit, it is often necessary to break policies up with multiple documents. Creating multiple policies and documents is possible using a `list(object)` variable in Terraform, which allows each object in the list to contain:
+If Terraform is dependent upon the ARNs to be calculated outside of this module, it will be stuck in a circular dependency loop. This is why the policy ARNs are created from the input variables.
 
-1. the policy name
-2. the policy description
-3. the policy document statement(s)
+## Account Type
+
+The "account type" concept allows for more granular control of permissions for IAM groups across multiple categories -- or "types" -- of AWS accounts. As an example:
+
+An organization has the following accounts:
+
+1. Dev / Infrastructure
+2. Dev / S3 Buckets
+3. Prod / Infrastructure
+4. Prod / S3 Buckets
+5. Master
+
+Each account has the same list of roles, e.g.: FullAdmin, PowerUser, ReadOnly, SOCAdmin.
+
+Each IAM group within **Master**, created by this template, can have account-category-specific access to specific roles, e.g.:
+
+- Developers: FullAdmin / ReadOnly / PowerUser in Dev accounts, PowerUser / ReadOnly in Prod accounts, ReadOnly in Master account
+- DevOps: FullAdmin in Dev accounts, FullAdmin in Prod accounts, FullAdmin in Master account
+- SOC Leads: SOCAdmin in Dev accounts, SOCAdmin in Prod accounts, FullAdmin in Master account
 
 ## Example
 
 ```hcl
-locals {
-  custom_policy_arns = [
-    aws_iam_policy.rds_delete_prevent.arn,
-    aws_iam_policy.region_restriction.arn,
+module "devops_group" {
+  source = "github.com/18F/identity-terraform//iam_assumegroup?ref=master"
+  
+  group_name = "devops-team"
+  group_members = [
+    aws_iam_user.wayne.name,
+    aws_iam_user.daryl.name,
+    aws_iam_user.katie.name,
+    aws_iam_user.daniel.name,
   ]
-  master_assumerole_policy = data.aws_iam_policy_document.master_account_assumerole.json
-}
-
-module "billing-assumerole" {
-  source = "github.com/18F/identity-terraform//iam_assumerole?ref=master"
-
-  role_name                = "BillingReadOnly"
-  enabled                  = var.iam_billing_enabled
-  master_assumerole_policy = local.master_assumerole_policy
-  custom_policy_arns       = local.custom_policy_arns
-
-  iam_policies = [
+  iam_group_roles = [
     {
-      policy_name        = "BillingReadOnly"
-      policy_description = "Policy for reporting group read-only access to Billing ui"
-      policy_document    = [
-        {
-          sid    = "BillingReadOnly"
-          effect = "Allow"
-          actions = [
-            "aws-portal:ViewBilling",
-          ]
-          resources = [
-            "*",
-          ]
-        },
+      role_name = "FullAdministrator",
+      account_types = [ 
+        "Prod", "Sandbox", "Master"
       ]
     },
+    {
+      role_name = "ReadOnly",
+      account_types = [ 
+        "Prod", "Sandbox"
+      ]
+    },
+    {
+      role_name = "KMSAdmin",
+      account_types = [ 
+        "Sandbox"
+      ]
+    }
   ]
+  master_account_id = var.master_account_id
 }
+
 ```
 
 ## Variables
 
-- `enabled` - **bool**: Whether or not to create the role + policy + attachments. Used when declaring a role via a Terraform template which is NOT used across all accounts. Defaults to _true_.
-- `role_name` - **string**: Name of the IAM role to be created.
-- `role_duration` - **number**: Value of the `max_session_duration` for the role, in seconds. Defaults to _43200_ (12 hours).
-- `master_assumerole_policy` - **object**: JSON object of the policy document to attach to the role allowing AssumeRole access from a master account. Pass in using `data.aws_iam_policy_document.<DATA_SOURCE_NAME>.json` as shown in the example above.
-- `custom_policy_arns` - **list**: ARNs of any additional IAM policies to attach to the role.
-- `iam_policies` - **list(object)**: List of objects, each of which contains:
-   - `policy_name` - **string**: Name of the IAM policy to be created.
-   - `policy_description` - **string**: Description of the IAM policy.
-   - `policy_document` - **list(object)**: List of Statements included in the policy document. Each _object_ in the list should include the contents of a Statement, i.e. the `sid`, `effect`, `actions`, and `resources`.
+`group_name` - Name of the group to be created.
+`master_account_id` - AWS account ID for the 'master' account, where this group and all IAM users live.
+`group_members` - List of AWS IAM users to be added to the group.
+`iam_group_roles` - Map of roles / account types the group has access to, where each key:value pair is `role_name`:`account_types` (string:list).
