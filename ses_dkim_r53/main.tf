@@ -57,8 +57,8 @@ resource "aws_route53_record" "primary_verification_record" {
 resource "aws_route53_record" "primary_ses_dkim" {
   count   = 3
   zone_id = var.zone_id
-  name    = "${var.manual_dkim_tokens != "" ? var.manual_dkim_tokens[count.index] : element(aws_ses_domain_dkim.primary.dkim_tokens, count.index)}._domainkey.${var.domain}"
+  name    = "${length(var.manual_dkim_tokens) > 0 ? var.manual_dkim_tokens[count.index] : element(aws_ses_domain_dkim.primary.dkim_tokens, count.index)}._domainkey.${var.domain}"
   type    = "CNAME"
   ttl     = var.ttl_dkim_records
-  records = ["${var.manual_dkim_tokens != "" ? var.manual_dkim_tokens[count.index] : element(aws_ses_domain_dkim.primary.dkim_tokens, count.index)}.dkim.amazonses.com"]
+  records = ["${length(var.manual_dkim_tokens) > 0 ? var.manual_dkim_tokens[count.index] : element(aws_ses_domain_dkim.primary.dkim_tokens, count.index)}.dkim.amazonses.com"]
 }
