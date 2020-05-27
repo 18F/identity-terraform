@@ -24,6 +24,15 @@ variable "ttl_dkim_records" {
   default     = "1800"
 }
 
+variable "create_token" {
+  description = <<EOM
+Whether or not to create a primary_verification_record in Route53.
+Set to FALSE if this TXT record has been created with multiple entries.
+EOM
+  type        = bool
+  default     = true
+}
+
 # -- Resources --
 
 resource "aws_ses_domain_identity" "primary" {
@@ -35,6 +44,7 @@ resource "aws_ses_domain_dkim" "primary" {
 }
 
 resource "aws_route53_record" "primary_verification_record" {
+  count   = var.create_token ? 1 : 0
   zone_id = var.zone_id
   name    = "_amazonses.${var.domain}"
   type    = "TXT"
