@@ -51,7 +51,7 @@ resource "aws_route53_record" "primary_verification_record" {
   name    = "_amazonses.${var.domain}"
   type    = "TXT"
   ttl     = var.ttl_verification_record
-  records = ["${var.manual_verification_token != "" ? var.manual_verification_token : aws_ses_domain_identity.example.verification_token}"]
+  records = ["${var.manual_verification_token != "" ? var.manual_verification_token : aws_ses_domain_identity.primary.verification_token}"]
 }
 
 resource "aws_route53_record" "primary_ses_dkim" {
