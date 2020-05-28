@@ -1,12 +1,8 @@
 # -- Variables --
 
-variable "account_type" {
-  description = "Type of account."
-}
-
-variable "account_numbers" {
-  description = "List of AWS account numbers where this policy can access the specified Assumable role"
-  type = list(any)
+variable "aws_account_types" {
+  description = "Mapping of account types to lists of AWS account numbers."
+  type = map(list(string))
 }
 
 variable "role_list" {
@@ -15,9 +11,12 @@ variable "role_list" {
 }
 
 locals {
-  role_arn_map = { for role in var.role_list : role => [
-    for pair in setproduct(var.account_numbers, [role]) :
-      join("",["arn:aws:iam::",pair[0],":role/",pair[1]])
+  # Build an enumerated map of "ACCOUNT_TYPEAssumeROLE" elements
+  # to build policy documents and policies from.
+  role_expansion = {
+    for rolepair in setproduct(keys(var.aws_account_types), var.role_list) : join("", [rolepair[0], "Assume", rolepair[1]]) => [
+      for pair in setproduct(var.aws_account_types[rolepair[0]], [rolepair[1]]) :
+        join("",["arn:aws:iam::",pair[0],":role/",pair[1]])
     ]
   }
 }
@@ -25,10 +24,10 @@ locals {
 # -- Resources --
 
 data "aws_iam_policy_document" "role_policy_doc" {
-  for_each = local.role_arn_map
+  for_each = local.role_expansion
 
   statement {
-      sid       = join("", [var.account_type, "Assume", each.key])
+      sid       = each.key
       effect    = "Allow"
       actions   = [
         "sts:AssumeRole"
@@ -40,10 +39,10 @@ data "aws_iam_policy_document" "role_policy_doc" {
 }
 
 resource "aws_iam_policy" "account_role_policy" {
-  count = length(var.role_list)
+  for_each = local.role_expansion
 
-  name        = join("", [var.account_type, "Assume", var.role_list[count.index]])
+  name        = each.key
   path        = "/"
-  description = "Policy to allow user to assume ${var.role_list[count.index]} role in ${var.account_type} account(s)."
-  policy = data.aws_iam_policy_document.role_policy_doc[var.role_list[count.index]].json
+  description = "Policy to allow user to assume ${split("Assume", each.key)[1]} role in ${split("Assume", each.key)[0]} account(s)."
+  policy = data.aws_iam_policy_document.role_policy_doc[each.key].json
 }
