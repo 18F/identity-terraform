@@ -45,7 +45,7 @@ resource "aws_iam_group_membership" "iam_group_members" {
 
 resource "aws_iam_group_policy_attachment" "iam_group_policies" {
   for_each = {
-    for role_name in local.account_roles: lower(role_name) => role_name
+    for role_name in local.account_roles: role_name => role_name
   }
   
   group = var.group_name
