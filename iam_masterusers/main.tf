@@ -1,3 +1,5 @@
+# -- Variables --
+
 variable "user_map" {
   description = "Map of users to group memberships."
   type        = map(list(string))

@@ -1,4 +1,4 @@
-# `iam_assumerole`
+# `iam_masterassume`
 
 This Terraform module creates IAM policies, and associated policy documents, allowing groups/users in a 'master' AWS account to assume roles in other accounts.
 

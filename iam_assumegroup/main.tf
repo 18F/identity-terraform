@@ -1,53 +1,40 @@
-variable "group_name" {
-  description = "Name of the IAM group."
-}
+# -- Variables --
 
 variable "master_account_id" {
   description = "AWS account ID for the master account."
 }
 
-variable "group_members" {
-  description = "AWS usernames of members within the group."
-  type        = list(any)
-  default     = []
-}
-
-variable "iam_group_roles" {
-  description = "Roles map for IAM group, along with account types per role to grant access to."
-  type = list(object({
-    role_name  = string
-    account_types = list(any)
-  }))
+variable "group_role_map" {
+  description = "Roles map for IAM groups, along with account types per role to grant access to."
+  type = map(list(map(list(string))))
 }
 
 locals {
-  account_roles = flatten(
-    [
-      for role in var.iam_group_roles : [
-        for pair in setproduct([role.role_name],role.account_types) :
-          join("Assume",[pair[1],pair[0]]
-        )
-      ]
-    ]
-  )
+  group_account_map = [
+    for line in flatten([
+      for item, access in
+      {
+        for group, perms in var.group_role_map : group => flatten([
+          for perm in perms: flatten([
+            for pair in setproduct(keys(perm), flatten([values(perm)])): join("", [pair[1], "Assume", pair[0]])
+          ])
+        ])
+      }: formatlist("%s %s", item, access)
+    ]): split(" ", line)
+  ]
 }
+
 # -- Resources --
 
 resource "aws_iam_group" "iam_group" {
-  name = var.group_name
-}
+  for_each = var.group_role_map
 
-resource "aws_iam_group_membership" "iam_group_members" {
-  name = "${var.group_name}_members"
-  users = var.group_members
-  group = var.group_name
+  name = each.key
 }
 
 resource "aws_iam_group_policy_attachment" "iam_group_policies" {
-  for_each = {
-    for role_name in local.account_roles: role_name => role_name
-  }
+  count = length(local.group_account_map)
   
-  group = var.group_name
-  policy_arn = "arn:aws:iam::${var.master_account_id}:policy/${each.value}"
+  group = element(local.group_account_map[count.index],0)
+  policy_arn = "arn:aws:iam::${var.master_account_id}:policy/${element(local.group_account_map[count.index],1)}"
 }
