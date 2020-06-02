@@ -3,10 +3,6 @@
 This Terraform module can be used to create one or more IAM groups, along with attached group policies.
 The design is calculated from a map of the groups, and per-"Account Type" access levels, supplied as input.
 
-If Terraform is dependent upon the ARNs to be calculated outside of this module,
-it will be stuck in a circular dependency loop.
-Thus, the policy ARNs are created from the input map.
-
 ## Account Type
 
 The "account type" concept allows for more granular control of permissions for IAM groups
@@ -70,3 +66,7 @@ module "devops_group" {
   ]
 }
 ```
+`policy_depends_on` - If Terraform is dependent upon the policy ARNs to be _calculated_ outside of this module,
+it will be stuck in a circular dependency loop. Thus, the policy ARNs are created from the input map.
+However, `policy_depends_on` can be used to wait for those policies to ACTUALLY exist
+before attempting to create the policy attachments.

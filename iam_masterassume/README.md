@@ -51,3 +51,8 @@ module "assume_roles_prod" {
 - `account_type`: The "type", aka "category", of AWS account(s) that this module will create policies for.
 - `account_numbers`: A list of AWS account number(s) within the `account_type` category.
 - `role_list`: A list of the roles available to be assumed from within the account(s).
+
+## Outputs
+
+- `policy_arns`: A list of the ARNs of the newly-created policies. Reference this output in order to depend on policy creation being complete.
+

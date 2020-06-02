@@ -46,3 +46,10 @@ resource "aws_iam_policy" "account_role_policy" {
   description = "Policy to allow user to assume ${split("Assume", each.key)[1]} role in ${split("Assume", each.key)[0]} account(s)."
   policy = data.aws_iam_policy_document.role_policy_doc[each.key].json
 }
+
+# -- Outputs --
+
+output "policy_arns" {
+  description = "Reference this output in order to depend on policy creation being complete."
+  value       = values(aws_iam_policy.account_role_policy)[*]["arn"]
+}
