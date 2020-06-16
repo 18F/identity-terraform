@@ -70,3 +70,8 @@ module "devops_group" {
 it will be stuck in a circular dependency loop. Thus, the policy ARNs are created from the input map.
 However, `policy_depends_on` can be used to wait for those policies to ACTUALLY exist
 before attempting to create the policy attachments.
+
+## Outputs
+
+- `group_names`: A list of the names of the newly-created groups. Reference this output in order to depend on group creation being complete.
+

@@ -14,6 +14,16 @@ EOM
   default     = true
 }
 
+variable "group_depends_on" {
+  description = <<EOM
+(Optional) Will force each given aws_iam_group_membership to verify that
+the specified value (i.e. another resource, such as the respective
+group) exists before it is created.
+EOM
+  type    = any
+  default = null
+}
+
 # -- Resources --
 
 resource "aws_iam_user" "master_user" {
@@ -29,6 +39,10 @@ resource "aws_iam_group_membership" "master_group" {
   name = "${each.key}-group"
   group = each.key
   users = each.value
+  depends_on = [
+    aws_iam_user.master_user,
+    var.group_depends_on
+  ]
 }
 
 resource "aws_iam_policy" "manage_your_account" {
@@ -55,6 +69,7 @@ data "aws_iam_policy_document" "manage_your_account" {
     actions = [
       "iam:ListAccountAliases",
       "iam:ListUsers",
+      "iam:ListAttachedGroupPolicies",
       "iam:ListVirtualMFADevices",
       "iam:GetAccountPasswordPolicy",
       "iam:GetAccountSummary",

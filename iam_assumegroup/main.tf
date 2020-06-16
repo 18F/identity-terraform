@@ -49,3 +49,9 @@ resource "aws_iam_policy_attachment" "group_policy" {
   depends_on = [var.policy_depends_on]
 }
 
+# -- Outputs --
+
+output "group_names" {
+  description = "Reference this output in order to depend on group creation being complete."
+  value       = values(aws_iam_group.iam_group)[*]["name"]
+}
