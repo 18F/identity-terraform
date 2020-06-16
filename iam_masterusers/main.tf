@@ -44,7 +44,7 @@ resource "aws_iam_policy" "manage_your_account" {
 }
 
 resource "aws_iam_user_policy_attachment" "manage_your_account" {
-  for_each = var.user_map
+  for_each = aws_iam_user.master_user
   
   user       = each.key
   policy_arn = aws_iam_policy.manage_your_account.arn
