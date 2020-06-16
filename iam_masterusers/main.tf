@@ -5,15 +5,6 @@ variable "user_map" {
   type        = map(list(string))
 }
 
-variable "allow_self_management" {
-  description = <<EOM
-Whether or not to create the 'ManageYourAccount' IAM policy and
-attach it to all users in var.user_map in this account.
-EOM
-  type        = bool
-  default     = true
-}
-
 variable "group_depends_on" {
   description = <<EOM
 (Optional) Will force each given aws_iam_group_membership to verify that
@@ -36,9 +27,9 @@ resource "aws_iam_user" "master_user" {
 resource "aws_iam_group_membership" "master_group" {
   for_each = transpose(var.user_map)
 
-  name = "${each.key}-group"
-  group = each.key
-  users = each.value
+  name       = "${each.key}-group"
+  group      = each.key
+  users      = each.value
   depends_on = [
     aws_iam_user.master_user,
     var.group_depends_on
@@ -46,20 +37,17 @@ resource "aws_iam_group_membership" "master_group" {
 }
 
 resource "aws_iam_policy" "manage_your_account" {
-  count = var.allow_self_management ? 1 : 0
-
   name        = "ManageYourAccount"
   path        = "/"
   description = "Policy for account self management"
   policy      = data.aws_iam_policy_document.manage_your_account.json
 }
 
-resource "aws_iam_policy_attachment" "manage_your_account" {
-  count = var.allow_self_management ? 1 : 0
-
-  name = "ManageYourAccount"
-  users = keys(var.user_map)
-  policy_arn = aws_iam_policy.manage_your_account[0].arn
+resource "aws_iam_user_policy_attachment" "manage_your_account" {
+  for_each = var.user_map
+  
+  user       = each.key
+  policy_arn = aws_iam_policy.manage_your_account.arn
 }
 
 data "aws_iam_policy_document" "manage_your_account" {
