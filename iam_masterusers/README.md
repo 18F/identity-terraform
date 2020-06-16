@@ -32,4 +32,5 @@ module "our_cool_master_users" {
 `user_map` - Map with user name as key and a list of group memberships as the value.
 `allow_self_management` - Whether or not to create the 'ManageYourAccount' IAM policy
 and attach it to all users in var.user_map in this account.
-
+`group_depends_on` - Can be used to wait for the groups in `user_map` to ACTUALLY exist
+before attempting to create the group memberships.
