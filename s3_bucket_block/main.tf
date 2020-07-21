@@ -2,42 +2,23 @@
 variable "bucket_prefix" {
   description = "First substring in S3 bucket name of $bucket_prefix.$bucket_name.$account_id-$region"
   type        = string
-  default     = "login-gov"
 }
 
 variable "bucket_data" {
   description = "Map of bucket names and their lifecycle rule blocks."
-  type        = list(any)
-  default     = [
-    {
-    name = "s3-email",
-    acl    = "private",
-    policy = "",
-    lifecycle_rules = [
-      {
-        id      = "expireinbound"
-        enabled = true
-        prefix = "/inbound/"
-    
-        transition = {
-          days          = 30
-          storage_class = "STANDARD_IA"
-        }
-    
-        expiration = {
-          days = 365
-        }
-      }
-    ],
-    public_access_block = true
-  },
-]
+  type        = any
+  default     = {}
 }
 
 variable "log_bucket" {
   description = "Substring for the name of the bucket used for S3 logging."
   type        = string
   default     = "s3-logs"
+}
+
+variable "region" {
+  default     = "us-west-2"
+  description = "AWS Region"
 }
 
 # -- Data Sources --
@@ -86,26 +67,42 @@ resource "aws_s3_bucket" "s3-logs" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  for_each = var.bucket_list
+  for_each = var.bucket_data
 
-  bucket = "${var.bucket_prefix}.${each.value.name}.${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket = "${var.bucket_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}"
   region = var.region
-  acl    = each.value.acl
-  policy = each.value.policy
+  acl    = lookup(each.value, "acl", "private")
+  policy = lookup(each.value, "policy", "")
+  force_destroy = lookup(each.value, "force_destroy", true)
 
   logging {
     target_bucket = aws_s3_bucket.s3-logs.id
-    target_prefix = "${var.bucket_prefix}.${each.value.name}.${data.aws_caller_identity.current.account_id}-${var.region}/"
+    target_prefix = "${var.bucket_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}/"
+  }
+
+  versioning {
+    enabled = true
   }
 
   dynamic "lifecycle_rule" {
-    for_each = each.value.lifecycle_rules
+    for_each = can(each.value.lifecycle_rules) ? each.value.lifecycle_rules : []
     content {
       id      = lifecycle_rule.value["id"]
       enabled = lifecycle_rule.value["enabled"]
       prefix = lifecycle_rule.value["prefix"]
-      transition = lifecycle_rule.value["transition"]
-      expiration = lifecycle_rule.value["expiration"]
+      dynamic "transition" {
+        for_each = lifecycle_rule.value["transitions"]
+        content {
+          days = transition.value["days"]
+          storage_class = transition.value["storage_class"]
+        }
+      }
+      dynamic "expiration" {
+        for_each = can(lifecycle_rule.value["expiration_days"]) ? [lifecycle_rule.value["expiration_days"]] : []
+        content {
+          days = expiration.value
+        }
+      }
     }
   }
 
@@ -116,10 +113,20 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "block" {
-  for_each = compact([ for bucket in var.bucket_data : bucket.public_access_block ? bucket.name : ""])
+  for_each = toset(
+    compact(
+      [ for bucket, data in var.bucket_data :
+        lookup(data, "public_access_block", false) ? bucket : ""
+      ]
+    )
+  )
   
   bucket                  = aws_s3_bucket.bucket[each.key].id
   block_public_acls       = true
@@ -129,3 +136,6 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 # -- Outputs --
+output "s3_log_bucket" {
+  value = aws_s3_bucket.s3-logs.id
+}
