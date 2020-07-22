@@ -136,6 +136,12 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 # -- Outputs --
-output "s3_log_bucket" {
-  value = aws_s3_bucket.s3-logs.id
+output "log_bucket" {
+  description = "ID of the log bucket."
+  value       = aws_s3_bucket.s3-logs.id
+}
+
+output "buckets" {
+  description = "IDs of the buckets created from bucket_data."
+  value       = values(aws_s3_bucket.bucket)[*]["id"]
 }
