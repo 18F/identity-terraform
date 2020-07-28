@@ -120,7 +120,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
   for_each = toset(
     compact(
       [ for bucket, data in var.bucket_data :
-        lookup(data, "public_access_block", false) ? bucket : ""
+        lookup(data, "public_access_block", true) ? bucket : ""
       ]
     )
   )

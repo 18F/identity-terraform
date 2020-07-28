@@ -20,7 +20,7 @@ The following additional settings can be configured via key-value pairs in the m
 - `policy` (defaults to `""`)
 - `force_destroy` (defaults to `true`)
 - `lifecycle_rules` (list, defaults to `[]` and does not create any lifecycle rules unless provided)
-- `public_access_block` (defaults to `false`; if set to true, the module will also create an `aws_s3_bucket_public_access_block` resource for the accordant bucket)
+- `public_access_block` (defaults to `true`; creates an `aws_s3_bucket_public_access_block` resource for the accordant bucket)
 
 ## Example
 
