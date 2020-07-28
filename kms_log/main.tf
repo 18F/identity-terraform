@@ -1,10 +1,6 @@
 data "aws_caller_identity" "current" {
 }
 
-data "aws_s3_bucket" "ct_log_bucket" {
-  bucket = "login-gov-cloudtrail-${data.aws_caller_identity.current.account_id}"
-}
-
 data "aws_iam_policy_document" "kms" {
   # Allow root users in
   statement {

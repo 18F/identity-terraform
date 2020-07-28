@@ -5,7 +5,7 @@ variable "bucket_prefix" {
 }
 
 variable "bucket_data" {
-  description = "Map of bucket names and their lifecycle rule blocks."
+  description = "Map of bucket names and their configuration blocks."
   type        = any
   default     = {}
 }
@@ -114,9 +114,6 @@ resource "aws_s3_bucket" "bucket" {
     }
   }
 
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_s3_bucket_public_access_block" "block" {
@@ -142,6 +139,8 @@ output "log_bucket" {
 }
 
 output "buckets" {
-  description = "IDs of the buckets created from bucket_data."
-  value       = values(aws_s3_bucket.bucket)[*]["id"]
+  description = "Map of the bucket names:ids created from bucket_data."
+  value       = zipmap(
+      sort(keys(var.bucket_data)),
+      sort(values(aws_s3_bucket.bucket)[*]["id"]))
 }
