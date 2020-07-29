@@ -58,25 +58,10 @@ data "aws_iam_policy_document" "kms" {
   }
 }
 
-resource "aws_kms_key" "login-dot-gov-keymaker" {
-  enable_key_rotation = true
-  description         = "${var.env_name}-login-dot-gov-keymaker"
-  policy              = data.aws_iam_policy_document.kms.json
-}
-
-resource "aws_kms_alias" "login-dot-gov-keymaker-alias" {
-  name          = "alias/${var.env_name}-login-dot-gov-keymaker"
-  target_key_id = aws_kms_key.login-dot-gov-keymaker.key_id
-}
-
 resource "null_resource" "kms_log_found" {
   triggers = {
     kms_log = "${var.env_name}_/srv/idp/shared/log/kms.log"
   }
-}
-
-data "aws_kms_key" "application" {
-  key_id = aws_kms_key.login-dot-gov-keymaker.key_id
 }
 
 data "aws_s3_bucket" "lambda" {
@@ -175,46 +160,39 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
 # this filter will only capture events where the
 # encryption context is set and has the values of
 # password-digest or pii-encryption
-# this filter also is only capturing events for a single 
-# kms key
 resource "aws_cloudwatch_event_rule" "decrypt" {
   count = var.kmslogging_service_enabled
 
   name        = local.decryption_event_rule_name
   description = "Capture decryption events"
 
-  event_pattern = <<PATTERN
-{
-    "source": [
-        "aws.kms"
+  event_pattern = jsonencode(
+  {
+    source = [
+      "aws.kms"
     ],
-    "detail-type": [
-        "AWS API Call via CloudTrail"
+    detail-type = [
+      "AWS API Call via CloudTrail"
     ],
-    "detail": {
-        "eventSource": [
-            "kms.amazonaws.com"
-        ],
-        "requestParameters": {
-            "encryptionContext": {
-                "context": [
-                    "password-digest",
-                    "pii-encryption"
-                ]
-            }
-        },
-        "resources": {
-            "ARN": [
-                "${data.aws_kms_key.application.arn}"
-            ]
-        },
-        "eventName": [
-            "Decrypt"
-        ]
+    detail = {
+      eventSource = [
+        "kms.amazonaws.com"
+      ],
+      requestParameters = {
+        encryptionContext = {
+          context = [
+            "password-digest",
+            "pii-encryption"
+          ]
+        }
+      },
+      resources = { 
+        ARN = var.keymaker_key_ids,
+      },
+      eventName = [ "Decrypt" ]
     }
-}
-PATTERN
-
+    }
+  )
 }
 
 # sets the receiver of the cloudwatch events
