@@ -124,6 +124,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
       ]
     )
   )
+  depends_on = [aws_s3_bucket.bucket]
   
   bucket                  = aws_s3_bucket.bucket[each.key].id
   block_public_acls       = true
