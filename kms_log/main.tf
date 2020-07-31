@@ -80,7 +80,7 @@ data "aws_kms_key" "application" {
 }
 
 data "aws_s3_bucket" "lambda" {
-  bucket = "login-gov.lambda-functions.${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket = "login-gov.lambda-functions.${data.aws_caller_identity.current.account_id}-${var.module_region}"
 }
 
 locals {
@@ -165,7 +165,7 @@ data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
       test     = "StringLike"
       variable = "aws:SourceArn"
       values = [
-        "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.decryption_event_rule_name}",
+        "arn:aws:events:${var.module_region}:${data.aws_caller_identity.current.account_id}:rule/${local.decryption_event_rule_name}",
       ]
     }
   }
@@ -435,7 +435,7 @@ data "aws_iam_policy_document" "assume_role" {
 
     principals {
       type        = "Service"
-      identifiers = ["logs.${var.region}.amazonaws.com"]
+      identifiers = ["logs.${var.module_region}.amazonaws.com"]
     }
   }
 }
@@ -456,7 +456,7 @@ data "aws_iam_policy_document" "cloudwatch_access" {
 
 # kinesis role 
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
-  name               = local.kinesis_stream_name
+  name               = "${local.kinesis_stream_name}-${var.module_region}"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
@@ -527,7 +527,7 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                     [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${aws_sqs_queue.dead_letter.name}", { "stat": "Sum", "period": 86400 } ]
                 ],
                 "view": "singleValue",
-                "region": "us-west-2",
+                "region": "${var.module_region}",
                 "title": "Dead Letter Day",
                 "period": 300
             }
@@ -544,7 +544,7 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                 "metrics": [
                     [ "AWS/Lambda", "IteratorAge", "FunctionName", "${local.cw_processor_lambda_name}" ]
                 ],
-                "region": "us-west-2",
+                "region": "${var.module_region}",
                 "title": "Cloudwatch Kinesis queue age"
             }
         },
@@ -560,7 +560,7 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                 "metrics": [
                     [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${aws_sqs_queue.kms_ct_events.name}" ]
                 ],
-                "region": "us-west-2",
+                "region": "${var.module_region}",
                 "title": "CloudTrail SQS queue depth"
             }
         },
@@ -578,7 +578,7 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
                     [ ".", "NumberOfMessagesDeleted", ".", "." ]
                 ],
-                "region": "us-west-2",
+                "region": "${var.module_region}",
                 "title": "CloudWatch events queue"
             }
         },
@@ -595,7 +595,7 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                     [ "AWS/Kinesis", "PutRecord.Success", "StreamName", "${aws_kinesis_stream.datastream.name}" ],
                     [ ".", "GetRecords.Success", ".", "." ]
                 ],
-                "region": "us-west-2",
+                "region": "${var.module_region}",
                 "title": "Kinesis"
             }
         },
@@ -613,7 +613,7 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                 ],
                 "view": "timeSeries",
                 "stacked": false,
-                "region": "us-west-2",
+                "region": "${var.module_region}",
                 "period": 300,
                 "title": "DynamoDB Latency"
             }
@@ -631,7 +631,7 @@ resource "aws_cloudwatch_dashboard" "kms_log" {
                     [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${aws_dynamodb_table.kms_events.name}" ],
                     [ ".", "ConsumedWriteCapacityUnits", ".", "." ]
                 ],
-                "region": "us-west-2",
+                "region": "${var.module_region}",
                 "title": "DynamoDB Capacity"
             }
         }
@@ -758,7 +758,7 @@ data "aws_iam_policy_document" "ctprocessor_cloudwatch" {
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:logs:${var.module_region}:${data.aws_caller_identity.current.account_id}:*",
     ]
   }
   statement {
@@ -770,7 +770,7 @@ data "aws_iam_policy_document" "ctprocessor_cloudwatch" {
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.ct_processor_lambda_name}:*",
+      "arn:aws:logs:${var.module_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.ct_processor_lambda_name}:*",
     ]
   }
 }
@@ -853,7 +853,7 @@ data "aws_iam_policy_document" "assume-role" {
 }
 
 resource "aws_iam_role" "cloudtrail_processor" {
-  name               = "${local.ct_processor_lambda_name}-execution"
+  name               = "${local.ct_processor_lambda_name}-execution-${var.module_region}"
   assume_role_policy = data.aws_iam_policy_document.assume-role.json
 }
 
@@ -932,7 +932,7 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
 }
 
 resource "aws_iam_role" "cloudwatch_processor" {
-  name               = "${local.cw_processor_lambda_name}-execution"
+  name               = "${local.cw_processor_lambda_name}-execution-${var.module_region}"
   assume_role_policy = data.aws_iam_policy_document.assume-role.json
 }
 
@@ -945,7 +945,7 @@ data "aws_iam_policy_document" "cwprocessor_cloudwatch" {
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:logs:${var.module_region}:${data.aws_caller_identity.current.account_id}:*",
     ]
   }
   statement {
@@ -957,7 +957,7 @@ data "aws_iam_policy_document" "cwprocessor_cloudwatch" {
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.cw_processor_lambda_name}:*",
+      "arn:aws:logs:${var.module_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.cw_processor_lambda_name}:*",
     ]
   }
 }
@@ -1065,7 +1065,7 @@ resource "aws_lambda_event_source_mapping" "event_processor" {
 }
 
 resource "aws_iam_role" "event_processor" {
-  name               = "${local.event_processor_lambda_name}-execution"
+  name               = "${local.event_processor_lambda_name}-execution-${var.module_region}"
   assume_role_policy = data.aws_iam_policy_document.assume-role.json
 }
 
@@ -1078,7 +1078,7 @@ data "aws_iam_policy_document" "event_processor_cloudwatch" {
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:logs:${var.module_region}:${data.aws_caller_identity.current.account_id}:*",
     ]
   }
   statement {
@@ -1090,7 +1090,7 @@ data "aws_iam_policy_document" "event_processor_cloudwatch" {
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.event_processor_lambda_name}:*",
+      "arn:aws:logs:${var.module_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.event_processor_lambda_name}:*",
     ]
   }
 }

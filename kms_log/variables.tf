@@ -2,7 +2,7 @@ variable "env_name" {
   description = "Environment name"
 }
 
-variable "region" {
+variable "module_region" {
   default     = "us-west-2"
   description = "AWS Region"
 }
