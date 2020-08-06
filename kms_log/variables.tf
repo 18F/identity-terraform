@@ -1,8 +1,3 @@
-variable "keymaker_key_ids" {
-  description = "List of login-dot-gov-keymaker Key ID(s)."
-  default = []
-}
-
 variable "env_name" {
   description = "Environment name"
 }

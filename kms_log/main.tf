@@ -58,6 +58,28 @@ data "aws_iam_policy_document" "kms" {
   }
 }
 
+# iam policy for sqs that allows cloudwatch events to 
+# deliver events to the queue
+data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
+  statement {
+    sid     = "Allow SNS Messages"
+    effect  = "Allow"
+    actions = ["sqs:SendMessage"]
+    principals {
+      type        = "Service"
+      identifiers = ["sns.amazonaws.com"]
+    }
+    resources = [aws_sqs_queue.kms_ct_events.arn]
+    #condition {
+    #  test     = "StringLike"
+    #  variable = "aws:SourceArn"
+    #  values = [
+    #    "arn:aws:sns:*:${data.aws_caller_identity.current.account_id}:${var.env_name}-decryption-events-*",
+    #  ]
+    #}
+  }
+}
+
 resource "null_resource" "kms_log_found" {
   triggers = {
     kms_log = "${var.env_name}_/srv/idp/shared/log/kms.log"
@@ -72,7 +94,6 @@ locals {
   kms_alias                   = "alias/${var.env_name}-kms-logging"
   dynamodb_table_name         = "${var.env_name}-kms-logging"
   kinesis_stream_name         = "${var.env_name}-kms-app-events"
-  decryption_event_rule_name  = "${var.env_name}-decryption-events"
   kmslog_event_rule_name      = "${var.env_name}-unmatched-kmslog"
   dashboard_name              = "${var.env_name}-kms-logging"
   ct_processor_lambda_name    = "${var.env_name}-cloudtrail-kms"
@@ -132,77 +153,6 @@ POLICY
 resource "aws_sqs_queue_policy" "default" {
   queue_url = aws_sqs_queue.kms_ct_events.id
   policy    = data.aws_iam_policy_document.sqs_kms_ct_events_policy.json
-}
-
-# iam policy for sqs that allows cloudwatch events to 
-# deliver events to the queue
-data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
-  statement {
-    sid     = "Allow CloudWatch Events"
-    effect  = "Allow"
-    actions = ["sqs:SendMessage"]
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-    resources = [aws_sqs_queue.kms_ct_events.arn]
-    condition {
-      test     = "StringLike"
-      variable = "aws:SourceArn"
-      values = [
-        "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/${local.decryption_event_rule_name}",
-      ]
-    }
-  }
-}
-
-# cloudwatch event rule to capture cloudtrail kms decryption events
-# this filter will only capture events where the
-# encryption context is set and has the values of
-# password-digest or pii-encryption
-resource "aws_cloudwatch_event_rule" "decrypt" {
-  count = var.kmslogging_service_enabled
-
-  name        = local.decryption_event_rule_name
-  description = "Capture decryption events"
-
-  event_pattern = jsonencode(
-  {
-    source = [
-      "aws.kms"
-    ],
-    detail-type = [
-      "AWS API Call via CloudTrail"
-    ],
-    detail = {
-      eventSource = [
-        "kms.amazonaws.com"
-      ],
-      requestParameters = {
-        encryptionContext = {
-          context = [
-            "password-digest",
-            "pii-encryption"
-          ]
-        }
-      },
-      resources = { 
-        ARN = var.keymaker_key_ids,
-      },
-      eventName = [ "Decrypt" ]
-    }
-    }
-  )
-}
-
-# sets the receiver of the cloudwatch events
-# to the sqs queue
-resource "aws_cloudwatch_event_target" "sqs" {
-  count = var.kmslogging_service_enabled
-
-  rule      = aws_cloudwatch_event_rule.decrypt[0].name
-  target_id = "${var.env_name}-sqs"
-  arn       = aws_sqs_queue.kms_ct_events.arn
 }
 
 # event rule for custom events
@@ -286,8 +236,8 @@ resource "aws_sns_topic" "kms_logging_events" {
   kms_master_key_id = local.kms_alias
 }
 
-# queue to receive events from the logging events
-# sns topic for delivery of metrics to cloudwatch
+# queue to receive events from the logging events sns topic
+# for delivery of metrics to cloudwatch
 resource "aws_sqs_queue" "kms_cloudwatch_events" {
   name                              = "${var.env_name}-kms-cw-events"
   delay_seconds                     = 5
