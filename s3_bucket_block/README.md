@@ -4,7 +4,7 @@ This Terraform module is designed to create an S3 bucket, or a set of buckets, f
 
 - Bucket naming scheme
 - Versioning enabled
-- Logging enabled (an S3 'log' bucket is also created)
+- Logging enabled
 - KMS SSE
 
 ## Dynamic Settings
@@ -28,6 +28,7 @@ The following additional settings can be configured via key-value pairs in the m
 module "s3_shared" {
     source = "github.com/18F/identity-terraform//s3_bucket_block?ref=master"
     
+    log_bucket = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
     bucket_prefix = "login-gov"
     bucket_data = {
         "shared-data" = {
@@ -59,7 +60,7 @@ module "s3_shared" {
 
 `bucket_prefix` - First substring in S3 bucket name of `$bucket_prefix.$bucket_name.$account_id-$region`
 `bucket_data` - Map of bucket names and their configuration blocks.
-`log_bucket` - Substring for the name of the bucket used for S3 logging.
+`log_bucket` - Full name of the bucket used for S3 logging.
 `region` - AWS Region
 
 ## Outputs
