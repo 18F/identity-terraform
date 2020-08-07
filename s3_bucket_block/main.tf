@@ -11,7 +11,7 @@ variable "bucket_data" {
 }
 
 variable "log_bucket" {
-  description = "Substring for the name of the bucket used for S3 logging."
+  description = "Name of the bucket used for S3 logging."
   type        = string
   default     = "s3-logs"
 }
@@ -26,46 +26,6 @@ data "aws_caller_identity" "current" {
 }
 
 # -- Resources --
-resource "aws_s3_bucket" "s3-logs" {
-  bucket = "${var.bucket_prefix}.${var.log_bucket}.${data.aws_caller_identity.current.account_id}-${var.region}"
-  region = var.region
-  acl    = "log-delivery-write"
-
-  versioning {
-    enabled = true
-  }
-
-  lifecycle_rule {
-    id      = "expirelogs"
-    enabled = true
-
-    prefix = "/"
-
-    transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
-    }
-
-    transition {
-      days          = 365
-      storage_class = "GLACIER"
-    }
-
-    expiration {
-      # 5 years
-      days = 1825
-    }
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
-      }
-    }
-  }
-}
-
 resource "aws_s3_bucket" "bucket" {
   for_each = var.bucket_data
 
@@ -76,7 +36,7 @@ resource "aws_s3_bucket" "bucket" {
   force_destroy = lookup(each.value, "force_destroy", true)
 
   logging {
-    target_bucket = aws_s3_bucket.s3-logs.id
+    target_bucket = var.log_bucket
     target_prefix = "${var.bucket_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}/"
   }
 
@@ -134,11 +94,6 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 # -- Outputs --
-output "log_bucket" {
-  description = "ID of the log bucket."
-  value       = aws_s3_bucket.s3-logs.id
-}
-
 output "buckets" {
   description = "Map of the bucket names:ids created from bucket_data."
   value       = zipmap(
