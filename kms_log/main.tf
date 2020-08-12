@@ -157,8 +157,6 @@ resource "aws_sqs_queue_policy" "default" {
 
 # event rule for custom events
 resource "aws_cloudwatch_event_rule" "unmatched" {
-  count = var.kmslogging_service_enabled
-
   name        = local.kmslog_event_rule_name
   description = "Capture Unmatched KMS Log Events"
 
@@ -172,9 +170,7 @@ PATTERN
 }
 
 resource "aws_cloudwatch_event_target" "unmatched" {
-  count = var.kmslogging_service_enabled
-
-  rule      = aws_cloudwatch_event_rule.unmatched[0].name
+  rule      = aws_cloudwatch_event_rule.unmatched.name
   target_id = "${var.env_name}-slack"
   arn       = var.sns_topic_dead_letter_arn
 }
@@ -430,7 +426,6 @@ resource "aws_cloudwatch_log_destination_policy" "subscription" {
 # this filter will send the kms.log events to kinesis
 resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
   depends_on = [null_resource.kms_log_found]
-  count      = var.kmslogging_service_enabled
 
   name            = "${var.env_name}-kms-app-log"
   log_group_name  = "${var.env_name}_/srv/idp/shared/log/kms.log"
@@ -634,8 +629,6 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
 
 #lambda functions
 resource "aws_lambda_function" "cloudtrail_processor" {
-  count = var.kmslogging_service_enabled
-
   s3_bucket = data.aws_s3_bucket.lambda.id
   s3_key    = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
@@ -671,10 +664,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
-  count = var.kmslogging_service_enabled
-
   event_source_arn = aws_sqs_queue.kms_ct_events.arn
-  function_name    = aws_lambda_function.cloudtrail_processor[0].arn
+  function_name    = aws_lambda_function.cloudtrail_processor.arn
 }
 
 data "aws_iam_policy_document" "ctprocessor_cloudwatch" {
@@ -816,8 +807,6 @@ resource "aws_iam_role_policy" "ctprocessor_sqs" {
 }
 
 resource "aws_lambda_function" "cloudwatch_processor" {
-  count = var.kmslogging_service_enabled
-
   s3_bucket = data.aws_s3_bucket.lambda.id
   s3_key    = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
@@ -852,10 +841,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
-  count = var.kmslogging_service_enabled
-
   event_source_arn  = aws_kinesis_stream.datastream.arn
-  function_name     = aws_lambda_function.cloudwatch_processor[0].arn
+  function_name     = aws_lambda_function.cloudwatch_processor.arn
   starting_position = "LATEST"
 }
 
@@ -952,8 +939,6 @@ resource "aws_iam_role_policy" "cwprocessor_kinesis" {
 
 # lambda for creating cloudwatch metrics and events
 resource "aws_lambda_function" "event_processor" {
-  count = var.kmslogging_service_enabled
-
   s3_bucket = data.aws_s3_bucket.lambda.id
   s3_key    = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
@@ -986,10 +971,8 @@ resource "aws_lambda_function" "event_processor" {
 }
 
 resource "aws_lambda_event_source_mapping" "event_processor" {
-  count = var.kmslogging_service_enabled
-
   event_source_arn = aws_sqs_queue.kms_cloudwatch_events.arn
-  function_name    = aws_lambda_function.event_processor[0].arn
+  function_name    = aws_lambda_function.event_processor.arn
 }
 
 resource "aws_iam_role" "event_processor" {
