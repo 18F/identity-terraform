@@ -12,7 +12,6 @@ module "kms_keymaker_uw2" {
 
   env_name                   = "testing"
   ec2_kms_arns               = local.kms_arns
-  kmslogging_service_enabled = 1
   sqs_queue_arn = module.kms_logging.kms-ct-events-queue
 }
 ```
@@ -22,4 +21,3 @@ module "kms_keymaker_uw2" {
 `ec2_kms_arns` - ARN(s) of EC2 roles permitted access to KMS
 `env_name` - Environment name
 `sqs_queue_arn` - ARN of the SQS queue used as the CloudWatch event target.
-`kmslogging_service_enabled` - Enable KMS Logging service. If disabled the CloudWatch rule will not be created.

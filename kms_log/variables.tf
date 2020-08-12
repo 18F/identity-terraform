@@ -7,11 +7,6 @@ variable "region" {
   description = "AWS Region"
 }
 
-variable "kmslogging_service_enabled" {
-  default     = 0
-  description = "Enable KMS Logging service.  If disabled the CloudWatch rule will not be created."
-}
-
 variable "kinesis_shard_count" {
   default     = 1
   description = "Number of shards to allocate to Kinesis data stream"
