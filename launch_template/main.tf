@@ -46,6 +46,12 @@ variable "block_device_mappings" {
   default     = []
 }
 
+variable "use_spot_instances" {
+  description = "Use spot instances - Only suitable if one or more terminated instances are acceptable"
+  type        = number
+  default     = 0
+}
+
 # ----
 
 resource "aws_launch_template" "template" {
@@ -60,6 +66,19 @@ resource "aws_launch_template" "template" {
   instance_initiated_shutdown_behavior = var.instance_initiated_shutdown_behavior
 
   instance_type = var.instance_type
+
+  dynamic "instance_market_options" {
+    for_each = var.use_spot_instances == 1 ? [1] : []
+
+    content {
+      market_type = "spot"
+
+      # ASG will take care of replacing terminated instances
+      spot_options {
+        spot_instance_type = "one-time"
+      }
+    }
+  }
 
   user_data = var.user_data
 
