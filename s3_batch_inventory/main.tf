@@ -27,7 +27,7 @@ data "aws_caller_identity" "current" {
 
 data "aws_iam_policy_document" "inventory_bucket_policy" {
   statement {
-    sid     = replace(statement.value, "/[.-]/", "")
+    sid     = "AllowInventoryBucketAccess"
     actions = [
       "s3:PutObject"
     ]
@@ -36,12 +36,12 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
       identifiers = ["s3.amazonaws.com"]
     }
     resources = [
-      "${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/"
+      "arn:aws:s3:::${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/*"
     ]
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values   = var.bucket_list
+      values   = formatlist("arn:aws:s3:::%s", var.bucket_list)
     }
     condition {
       test     = "StringEquals"
@@ -58,11 +58,11 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
 
 # -- Resources --
 
-resource "aws_s3_bucket" "inventory_bucket" {
-  bucket = "${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
-  region = var.region
+resource "aws_s3_bucket" "inventory" {
+  bucket        = "${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
+  region        = var.region
   force_destroy = true
-  policy = data.aws_iam_policy_document.inventory_bucket_policy
+  policy        = data.aws_iam_policy_document.inventory_bucket_policy.json
 
   logging {
     target_bucket = var.log_bucket
@@ -70,7 +70,7 @@ resource "aws_s3_bucket" "inventory_bucket" {
   }
 
   versioning {
-    enabled = true
+    enabled = false
   }
 
   server_side_encryption_configuration {
@@ -82,11 +82,20 @@ resource "aws_s3_bucket" "inventory_bucket" {
   }
 }
 
-resource "aws_s3_bucket_inventory" "daily_inventory" {
+resource "aws_s3_bucket_public_access_block" "inventory" {
+  bucket = aws_s3_bucket.inventory.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_inventory" "daily" {
   for_each = toset(var.bucket_list)
 
-  bucket = each.key
-  name = "FullBucketDailyInventory"
+  bucket                   = each.key
+  name                     = "FullBucketDailyInventory"
   included_object_versions = "All"
 
   schedule {
