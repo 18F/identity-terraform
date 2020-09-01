@@ -11,7 +11,7 @@ variable "bucket_list" {
 }
 
 variable "log_bucket" {
-  description = "Name of the bucket used for S3 logging. Leave blank to create a log bucket with this module."
+  description = "Name of the bucket used for S3 logging."
   type        = string
   default     = ""
 }
@@ -58,53 +58,6 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
 }
 
 # -- Resources --
-resource "aws_s3_bucket" "s3_logs" {
-  count = var.log_bucket == "" ? 1 : 0
-
-  bucket = "${var.bucket_prefix}.s3-inv-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  region = var.region
-  acl    = "log-delivery-write"
-  policy = ""
-
-  versioning {
-    enabled = true
-  }
-
-  lifecycle_rule {
-    id      = "expirelogs"
-    enabled = true
-
-    prefix = "/"
-
-    transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
-    }
-
-    transition {
-      days          = 365
-      storage_class = "GLACIER"
-    }
-
-    expiration {
-      # 5 years
-      days = 1825
-    }
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
-      }
-    }
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
 resource "aws_s3_bucket" "inventory" {
   bucket        = "${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
   region        = var.region
@@ -112,7 +65,7 @@ resource "aws_s3_bucket" "inventory" {
   policy        = data.aws_iam_policy_document.inventory_bucket_policy.json
 
   logging {
-    target_bucket = var.log_bucket == "" ? aws_s3_bucket.s3_logs[0].id : var.log_bucket
+    target_bucket = var.log_bucket
     target_prefix = "${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/"
   }
 
