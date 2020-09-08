@@ -50,16 +50,9 @@ variable "slack_icon" {
   description = "Displayed icon used by Slack for the message."
 }
 
-variable "sns_topic_name" {
-  description = "SNS topic name. Letters, numbers, and hyphens ONLY."
+variable "slack_topic_arn" {
+  description = "ARN of the SNS topic for the Lambda to subscribe to."
   type        = string
-  default     = "slack-events"
-}
-
-variable "sns_topic_display_name" {
-  description = "SNS topic display name"
-  type        = string
-  default     = "SlackSNS"
 }
 
 # -- Locals --
@@ -131,11 +124,6 @@ data "archive_file" "lambda_function" {
 
 # -- Resources --
 
-resource "aws_sns_topic" "sns_slack" {
-  name = var.sns_topic_name
-  display_name = var.sns_topic_display_name
-}
-
 resource "aws_cloudwatch_log_group" "slack_lambda" {
   name              = "/aws/lambda/slack_lambda/${var.lambda_name}"
   retention_in_days = 365
@@ -169,12 +157,11 @@ resource "aws_lambda_permission" "allow_sns_trigger" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.slack_lambda.arn
   principal     = "sns.amazonaws.com"
-  source_arn    = aws_sns_topic.sns_slack.arn
+  source_arn    = var.slack_topic_arn
 }
 
 resource "aws_sns_topic_subscription" "sns_to_lambda" {
-  topic_arn = aws_sns_topic.sns_slack.arn
+  topic_arn = var.slack_topic_arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.lambda.arn
 }
-
