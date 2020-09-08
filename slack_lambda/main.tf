@@ -15,7 +15,7 @@ variable "lambda_description" {
 variable "lambda_timeout" {
   description = "Timeout for Lambda function"
   type = number
-  default     = 90
+  default     = 120
 }
 
 variable "lambda_memory" {
@@ -30,9 +30,9 @@ variable "lambda_runtime" {
   default = "python3.6"
 }
 
-variable "slack_webhook" {
+variable "slack_webhook_url" {
   type = string
-  description = "Custom string at the end of your Slack Webhook URI."
+  description = "Slack Webhook URL."
 }
 
 variable "slack_channel" {
@@ -64,7 +64,7 @@ locals {
     import json
     http = urllib3.PoolManager()
     def lambda_handler(event, context):
-        url = "https://hooks.slack.com/services/${var.slack_webhook}"
+        url = "${var.slack_webhook_url}"
         msg = {
             "channel": "#${var.slack_channel}",
             "username": "${var.slack_username}",
@@ -107,7 +107,7 @@ data "aws_iam_policy_document" "lambda_policy" {
       "logs:PutLogEvents"
     ]
     resources = [
-      aws_cloudwatch_log_group.lambda.arn
+      aws_cloudwatch_log_group.slack_lambda.arn
     ]
   }
 }
@@ -130,7 +130,7 @@ resource "aws_cloudwatch_log_group" "slack_lambda" {
 }
 
 resource "aws_lambda_function" "slack_lambda" {
-  filename         = data.archive_file.lambda_function
+  filename         = data.archive_file.lambda_function.output_path
   function_name    = var.lambda_name
   description      = var.lambda_description
   role             = aws_iam_role.slack_lambda.arn
@@ -138,7 +138,21 @@ resource "aws_lambda_function" "slack_lambda" {
   runtime          = "python3.6"
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory
-  source_code_hash = filebase64sha256("${data.archive_file.lambda_function}")
+  source_code_hash = data.archive_file.lambda_function.output_base64sha256
+  publish          = true
+
+  # as a result of local.slack_lambda_code being used as a generator for the
+  # lambda_function.zip file, the last_modified and source_code_hash values
+  # will change every single time plan/apply is run. this is a hacky workaround
+  # to not rely upon external files for lambda_function.zip or lambda.py, and
+  # to continue using local.slack_lambda_code instead.
+  #lifecycle {
+  #  ignore_changes = [
+  #    source_code_hash,
+  #    last_modified,
+  #  ]
+  #}
+
 }
 
 resource "aws_iam_role" "slack_lambda" {
@@ -163,5 +177,5 @@ resource "aws_lambda_permission" "allow_sns_trigger" {
 resource "aws_sns_topic_subscription" "sns_to_lambda" {
   topic_arn = var.slack_topic_arn
   protocol  = "lambda"
-  endpoint  = aws_lambda_function.lambda.arn
+  endpoint  = aws_lambda_function.slack_lambda.arn
 }
