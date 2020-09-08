@@ -3,51 +3,51 @@
 variable "lambda_name" {
   description = "Name of the Lambda function"
   type        = string
-  default = "SnsToSlack"
+  default     = "SnsToSlack"
 }
 
 variable "lambda_description" {
   description = "Lambda description"
-  type = string
-  default = "Sends a message sent to an SNS topic to Slack."
+  type        = string
+  default     = "Sends a message sent to an SNS topic to Slack."
 }
 
 variable "lambda_timeout" {
   description = "Timeout for Lambda function"
-  type = number
+  type        = number
   default     = 120
 }
 
 variable "lambda_memory" {
   description = "Memory allocated to Lambda function, 128MB to 3,008MB in 64MB increments"
-  type = number
+  type        = number
   default     = 128
 }
 
 variable "lambda_runtime" {
   description = "Lambda runtime"
-  type = string
-  default = "python3.6"
+  type        = string
+  default     = "python3.6"
 }
 
 variable "slack_webhook_url" {
-  type = string
   description = "Slack Webhook URL."
+  type        = string
 }
 
 variable "slack_channel" {
-  type = string
   description = "Name of the Slack channel to send messages to. DO NOT include the # sign."
+  type        = string
 }
 
 variable "slack_username" {
-  type = string
   description = "Displayed username of the posted message."
+  type        = string
 }
 
 variable "slack_icon" {
-  type = string
   description = "Displayed icon used by Slack for the message."
+  type        = string
 }
 
 variable "slack_topic_arn" {
@@ -118,7 +118,7 @@ data "archive_file" "lambda_function" {
 
   source {
     content  = local.slack_lambda_code
-    filename = "lambda.py"
+    filename = "lambda_function.py"
   }
 }
 
@@ -146,13 +146,14 @@ resource "aws_lambda_function" "slack_lambda" {
   # will change every single time plan/apply is run. this is a hacky workaround
   # to not rely upon external files for lambda_function.zip or lambda.py, and
   # to continue using local.slack_lambda_code instead.
-  #lifecycle {
-  #  ignore_changes = [
-  #    source_code_hash,
-  #    last_modified,
-  #  ]
-  #}
 
+  ######## COMMENT THIS BLOCK OUT IF YOU'VE UPDATED YOUR SLACK WEBHOOK #######
+  lifecycle {
+    ignore_changes = [
+      source_code_hash,
+      last_modified,
+    ]
+  }
 }
 
 resource "aws_iam_role" "slack_lambda" {

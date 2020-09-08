@@ -1,69 +1,51 @@
-# `s3_bucket_block`
+# `slack_lambda`
 
-This Terraform module is designed to create an S3 bucket, or a set of buckets, from a map variable containing various bucket configurations. It provides consistency for the following, in all buckets provided:
+This Terraform module is designed to create a Lambda function, containing Python code, which will send a message to a Slack channel any time a message is published to a specified SNS topic. It will create all necessary resources for this, including:
 
-- Bucket naming scheme
-- Versioning enabled
-- Logging enabled
+- Lambda function + IAM role/policy
+- CloudWatch log group
+- SNS execution permission for the Lambda
+- SNS topic subscription
 - KMS SSE
 
-## Dynamic Settings
+***NOTE:*** The SNS topic you're publishing to must already exist, and you must provide its ARN for the variable `slack_topic_arn` in order for the module to build correctly.
 
-By default, only the bucket's name is needed within the provided `bucket_data` map variable. This is built from:
-- `var.bucket_prefix`
-- `each.key` (in the `bucket_data` map variable)
-- `data.aws_caller_identity.current.account_id`
-- `var.region`
+## Caveat -- Read This First!
 
-The following additional settings can be configured via key-value pairs in the map:
-- `acl` (defaults to `private`)
-- `policy` (defaults to `""`)
-- `force_destroy` (defaults to `true`)
-- `lifecycle_rules` (list, defaults to `[]` and does not create any lifecycle rules unless provided)
-- `public_access_block` (defaults to `true`; creates an `aws_s3_bucket_public_access_block` resource for the accordant bucket)
+Due to the way Terraform's `archive_file` function renders the `zip` file each time it runs, it updates the `last_modified` and `source_code_hash` attributes for the Lambda function each time it runs -- even though the underlying code has not changed. This is true even with using a `local_file` resource, as it regenerates the file each time. As a result, an `ignore_changes` lifecycle block is included in the `aws_lambda_function` resource, which will make it skip checking the above attributes each time it runs.
+
+If you make any changes to any of the variables used in the actual code, you'll need to comment out the `lifecycle` block in your local clone, run `apply`, and then uncomment it again.
 
 ## Example
 
 ```hcl
-module "s3_shared" {
-    source = "github.com/18F/identity-terraform//s3_bucket_block?ref=master"
-    
-    log_bucket = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-    bucket_prefix = "login-gov"
-    bucket_data = {
-        "shared-data" = {
-            policy = data.aws_iam_policy_document.shared.json
-        },
-        "lambda-functions" = {
-            policy          = data.aws_iam_policy_document.lambda-functions.json
-            lifecycle_rules = [
-                {
-                    id          = "inactive"
-                    enabled     = true
-                    prefix      = "/"
-                    transitions = [
-                        {
-                            days          = 180
-                            storage_class = "STANDARD_IA"
-                        }
-                    ]
-                }
-            ],
-            force_destroy = false
-        }, 
-        "waf-logs" = {},
-    }
+resource "aws_sns_topic" "slack_otherevents" {
+  name = "slack-otherevents"
 }
+
+module "slack_login_otherevents" {
+  source = "github.com/18F/identity-terraform//slack_lambda?ref=master"
+  
+  lambda_name        = "snstoslack_login_otherevents"
+  lambda_description = "Sends messages to #login-otherevents Slack channel via SNS subscription."
+  slack_webhook_url  = data.aws_s3_bucket_object.slack_webhook.body
+  slack_channel      = "login-otherevents"
+  slack_username     = var.slack_username
+  slack_icon         = var.slack_icon
+  slack_topic_arn    = aws_sns_topic.slack_otherevents.arn
+}
+
 ```
 
 ## Variables
 
-`bucket_prefix` - First substring in S3 bucket name of `$bucket_prefix.$bucket_name.$account_id-$region`
-`bucket_data` - Map of bucket names and their configuration blocks.
-`log_bucket` - Full name of the bucket used for S3 logging.
-`region` - AWS Region
-
-## Outputs
-
-`buckets` - A map of the format `var.bucket_data.each.key` => `aws_s3_bucket.bucket[*]["id"]` allowing one to obtain the full bucket name from the shorter key reference.
-
+`lambda_name` - Name of the Lambda function.
+`lambda_description` - Description for the Lambda function.
+`lambda_timeout` - Timeout value for the Lambda function.
+`lambda_memory` - Memory allocated to Lambda function, 128MB to 3,008MB in 64MB increments.
+`lambda_runtime` - Lambda runtime (offered as a variable, but should be set to `python3.6` to function properly)
+`slack_webhook_url` - Slack Webhook URL.
+`slack_channel` - Name of the Slack channel to send messages to. *DO NOT include the # sign.*
+`slack_username` - Displayed username of the posted message.
+`slack_icon` - Displayed icon used by Slack for the message.
+`slack_topic_arn` - ARN of the SNS topic for the Lambda to subscribe to.
