@@ -13,6 +13,11 @@ variable "normal_desired_capacity" {
   description = ""
 }
 
+variable "override_spindown_capacity" {
+  description = "Set a specific number of instances for spindown instead of normal_desired_capacity"
+  default = -1
+}
+
 variable "max_size" {
   default = -1
 }
@@ -89,7 +94,7 @@ resource "aws_autoscaling_schedule" "spindown" {
   scheduled_action_name = "auto-recycle.spindown"
   min_size              = var.min_size
   max_size              = var.max_size
-  desired_capacity      = var.normal_desired_capacity
+  desired_capacity      = var.override_spindown_capacity == -1 ? var.normal_desired_capacity : var.override_spindown_capacity
   recurrence            = var.spindown_recurrence != "" ? var.spindown_recurrence : local.default_spindown_recurrence
 
   autoscaling_group_name = var.asg_name
