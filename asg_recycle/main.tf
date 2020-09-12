@@ -43,10 +43,10 @@ variable "use_daily_business_hours_schedule" {
 
 # This block defines the actual default spinup/spindown schedule.
 # If use_daily_business_hours_schedule is enabled, from Mon-Fri spin up at 1700
-# UTC and spin down at 1800 UTC. Otherwise recycle every 6 hours every day by default.
+# UTC and spin down at 1730 UTC. Otherwise recycle every 6 hours every day by default.
 locals {
   default_spinup_recurrence   = var.use_daily_business_hours_schedule == 1 ? "0 17 * * 1-5" : "0 5,11,17,23 * * *"
-  default_spindown_recurrence = var.use_daily_business_hours_schedule == 1 ? "0 18 * * 1-5" : "0 6,12,18,0 * * *"
+  default_spindown_recurrence = var.use_daily_business_hours_schedule == 1 ? "30 17 * * 1-5" : "30 5,11,17,23 * * *"
 }
 
 # Default schedule unless spinup_recurrence / spindown_recurrence are overridden:
