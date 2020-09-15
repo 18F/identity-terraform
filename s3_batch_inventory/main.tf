@@ -22,6 +22,12 @@ variable "region" {
   default     = "us-west-2"  
 }
 
+variable "sse_algorithm" {
+  description = "SSE algorithm to use to encrypt reports."
+  type        = string
+  default     = "aws:kms"
+}
+
 # -- Data Sources --
 data "aws_caller_identity" "current" {
 }
@@ -76,7 +82,7 @@ resource "aws_s3_bucket" "inventory" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
+        sse_algorithm = var.sse_algorithm
       }
     }
   }
