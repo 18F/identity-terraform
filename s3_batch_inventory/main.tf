@@ -25,7 +25,7 @@ variable "region" {
 variable "sse_algorithm" {
   description = "SSE algorithm to use to encrypt reports."
   type        = string
-  default     = "AES256"
+  default     = "aws:kms"
 }
 
 # -- Data Sources --
