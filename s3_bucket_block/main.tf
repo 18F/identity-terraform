@@ -21,6 +21,29 @@ variable "region" {
   description = "AWS Region"
 }
 
+variable "inventory_bucket_arn" {
+  description = "ARN of the S3 bucket used for collecting the S3 Inventory reports."
+  type        = string
+}
+
+variable "optional_fields" {
+  description = "List of optional data fields to collect in S3 Inventory reports."
+  type = list(string)
+  default = [
+    "Size",
+    "LastModifiedDate",
+    "StorageClass",
+    "ETag",
+    "IsMultipartUploaded",
+    "ReplicationStatus",
+    "EncryptionStatus",
+    "ObjectLockRetainUntilDate",
+    "ObjectLockMode",
+    "ObjectLockLegalHoldStatus",
+    "IntelligentTieringAccessTier",
+  ]
+}
+
 # -- Data Sources --
 data "aws_caller_identity" "current" {
 }
@@ -91,6 +114,28 @@ resource "aws_s3_bucket_public_access_block" "block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_inventory" "daily" {
+  for_each = var.bucket_data
+  depends_on = [aws_s3_bucket.bucket]
+
+  bucket                   = aws_s3_bucket.bucket[each.key].id
+  name                     = "FullBucketDailyInventory"
+  included_object_versions = "All"
+
+  schedule {
+    frequency = "Daily"
+  }
+
+  destination {
+    bucket {
+      format     = "Parquet"
+      bucket_arn = var.inventory_bucket_arn
+    }
+  }
+
+  optional_fields = var.optional_fields
 }
 
 # -- Outputs --

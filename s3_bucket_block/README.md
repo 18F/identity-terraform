@@ -7,6 +7,8 @@ This Terraform module is designed to create an S3 bucket, or a set of buckets, f
 - Logging enabled
 - KMS SSE
 
+A public access block and S3 Inventory configuration is also applied to each bucket in the provided list.
+
 ## Dynamic Settings
 
 By default, only the bucket's name is needed within the provided `bucket_data` map variable. This is built from:
@@ -62,8 +64,9 @@ module "s3_shared" {
 `bucket_data` - Map of bucket names and their configuration blocks.
 `log_bucket` - Full name of the bucket used for S3 logging.
 `region` - AWS Region
+`inventory_bucket_arn` - ARN of the S3 bucket used for collecting the S3 Inventory reports.
+`optional_fields` - List of optional data fields to collect in S3 Inventory reports. Defaults to the full list of possible fields.
 
 ## Outputs
 
 `buckets` - A map of the format `var.bucket_data.each.key` => `aws_s3_bucket.bucket[*]["id"]` allowing one to obtain the full bucket name from the shorter key reference.
-
