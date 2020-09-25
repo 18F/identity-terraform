@@ -212,8 +212,11 @@ module "s3_config" {
   region               = var.region
   inventory_bucket_arn = aws_s3_bucket.inventory.arn
 }
-
+# -- Outputs --
 output "s3_log_bucket" {
   value = aws_s3_bucket.s3-logs.id
 }
 
+output "inventory_bucket_arn" {
+  value = aws_s3_bucket.inventory.arn
+}
