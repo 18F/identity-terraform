@@ -4,10 +4,9 @@ variable "bucket_name_prefix" {
   type        = string
 }
 
-variable "log_bucket" {
-  description = "Name of the bucket used for S3 logging."
+variable "bucket_name" {
+  description = "Main/second substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
   type        = string
-  default     = "s3-logs"
 }
 
 variable "region" {
@@ -36,12 +35,6 @@ variable "optional_fields" {
     "ObjectLockLegalHoldStatus",
     "IntelligentTieringAccessTier",
   ]
-}
-
-variable "sse_algorithm" {
-  description = "SSE algorithm to use to encrypt Inventory reports."
-  type        = string
-  default     = "aws:kms"
 }
 
 locals {
