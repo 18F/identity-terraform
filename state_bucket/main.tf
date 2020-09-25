@@ -1,4 +1,9 @@
 # -- Variables --
+variable "bucket_name_prefix" {
+  description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
+  type        = string
+}
+
 variable "region" {
   description = "AWS Region"
 }
