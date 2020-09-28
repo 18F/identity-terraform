@@ -1,72 +1,30 @@
-# `s3_bucket_block`
+# `s3_config`
 
-This Terraform module is designed to create an S3 bucket, or a set of buckets, from a map variable containing various bucket configurations. It provides consistency for the following, in all buckets provided:
+This module is used to add a public access block and S3 Inventory configuration to the provided bucket name. It can be configured to use either:
 
-- Bucket naming scheme
-- Versioning enabled
-- Logging enabled
-- KMS SSE
+- a templatized bucket name, using the `PREFIX.NAME.ACCOUNTID-REGION` schema, or
+- a manually-set bucket name, using the `bucket_name_override` variable
 
-A public access block and S3 Inventory configuration is also applied to each bucket in the provided list.
-
-## Dynamic Settings
-
-By default, only the bucket's name is needed within the provided `bucket_data` map variable. This is built from:
-- `var.bucket_name_prefix`
-- `each.key` (in the `bucket_data` map variable)
-- `data.aws_caller_identity.current.account_id`
-- `var.region`
-
-The following additional settings can be configured via key-value pairs in the map:
-- `acl` (defaults to `private`)
-- `policy` (defaults to `""`)
-- `force_destroy` (defaults to `true`)
-- `lifecycle_rules` (list, defaults to `[]` and does not create any lifecycle rules unless provided)
-- `public_access_block` (defaults to `true`; creates an `aws_s3_bucket_public_access_block` resource for the accordant bucket)
+To work properly, an S3 bucket for collecting Inventory reports must already exist; its ARN is required for the `inventory_bucket_arn` variable.
 
 ## Example
 
 ```hcl
-module "s3_shared" {
-    source = "github.com/18F/identity-terraform//s3_bucket_block?ref=master"
-    
-    log_bucket         = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-    bucket_name_prefix = "login-gov"
-    bucket_data        = {
-        "shared-data"      = {
-            policy = data.aws_iam_policy_document.shared.json
-        },
-        "lambda-functions" = {
-            policy          = data.aws_iam_policy_document.lambda-functions.json
-            lifecycle_rules = [
-                {
-                    id          = "inactive"
-                    enabled     = true
-                    prefix      = "/"
-                    transitions = [
-                        {
-                            days          = 180
-                            storage_class = "STANDARD_IA"
-                        }
-                    ]
-                }
-            ],
-            force_destroy = false
-        }, 
-        "waf-logs" = {},
-    }
+module "secrets_bucket_config" {
+  source = "github.com/18F/identity-terraform//s3_config?ref=master"
+
+  bucket_name_prefix   = var.bucket_name_prefix
+  bucket_name          = var.secrets_bucket_type
+  region               = var.region
+  inventory_bucket_arn = local.inventory_bucket_arn
 }
 ```
 
 ## Variables
 
 `bucket_name_prefix` - First substring in S3 bucket name of `$bucket_name_prefix.$bucket_name.$account_id-$region`
-`bucket_data` - Map of bucket names and their configuration blocks.
-`log_bucket` - Full name of the bucket used for S3 logging.
+`bucket_name` - Main/second substring in S3 bucket name of `$bucket_name_prefix.$bucket_name.$account_id-$region`
+`bucket_name_override` - Set this to override the normal bucket naming schema. If left blank, `bucket_name_prefix` and `bucket_name` *must* be set.
 `region` - AWS Region
 `inventory_bucket_arn` - ARN of the S3 bucket used for collecting the S3 Inventory reports.
 `optional_fields` - List of optional data fields to collect in S3 Inventory reports. Defaults to the full list of possible fields.
-
-## Outputs
-
-`buckets` - A map of the format `var.bucket_data.each.key` => `aws_s3_bucket.bucket[*]["id"]` allowing one to obtain the full bucket name from the shorter key reference.
