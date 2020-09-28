@@ -121,3 +121,9 @@ resource "aws_s3_bucket_inventory" "daily" {
     "EncryptionStatus",
   ]
 }
+
+# -- Outputs --
+
+output "inventory_bucket" {
+  value = aws_s3_bucket.inventory.id
+}
