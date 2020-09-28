@@ -1,6 +1,6 @@
 # -- Variables --
-variable "bucket_prefix" {
-  description = "First substring in S3 bucket name of $bucket_prefix.$bucket_name.$account_id-$region"
+variable "bucket_name_prefix" {
+  description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
   type        = string
 }
 
@@ -29,7 +29,7 @@ data "aws_caller_identity" "current" {
 resource "aws_s3_bucket" "bucket" {
   for_each = var.bucket_data
 
-  bucket = "${var.bucket_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}"
   region = var.region
   acl    = lookup(each.value, "acl", "private")
   policy = lookup(each.value, "policy", "")
@@ -37,7 +37,7 @@ resource "aws_s3_bucket" "bucket" {
 
   logging {
     target_bucket = var.log_bucket
-    target_prefix = "${var.bucket_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}/"
+    target_prefix = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}/"
   }
 
   versioning {
@@ -69,7 +69,7 @@ resource "aws_s3_bucket" "bucket" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
+        sse_algorithm = var.sse_algorithm
       }
     }
   }
@@ -91,6 +91,28 @@ resource "aws_s3_bucket_public_access_block" "block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_inventory" "daily" {
+  for_each = var.bucket_data
+  depends_on = [aws_s3_bucket.bucket]
+
+  bucket                   = aws_s3_bucket.bucket[each.key].id
+  name                     = "FullBucketDailyInventory"
+  included_object_versions = "All"
+
+  schedule {
+    frequency = "Daily"
+  }
+
+  destination {
+    bucket {
+      format     = "Parquet"
+      bucket_arn = var.inventory_bucket_arn
+    }
+  }
+
+  optional_fields = var.optional_fields
 }
 
 # -- Outputs --

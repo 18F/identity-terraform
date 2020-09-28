@@ -1,17 +1,18 @@
-data "aws_caller_identity" "current" {
+# -- Variables --
+variable "bucket_name_prefix" {
+  description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
+  type        = string
 }
 
 variable "region" {
   description = "AWS Region"
 }
 
-variable "enabled" {
+variable "remote_state_enabled" {
   description = <<EOM
 Whether to manage the TF remote state bucket and lock table.
 Set this to false if you want to skip this for bootstrapping.
 EOM
-
-
   default = 1
 }
 
@@ -20,9 +21,55 @@ variable "state_lock_table" {
   default     = "terraform_locks"
 }
 
+variable "sse_algorithm" {
+  description = "SSE algorithm to use to encrypt reports in S3 Inventory bucket."
+  type        = string
+  default     = "aws:kms"
+}
+
+# -- Data Sources --
+data "aws_caller_identity" "current" {
+}
+
+data "aws_iam_policy_document" "inventory_bucket_policy" {
+  statement {
+    sid     = "AllowInventoryBucketAccess"
+    actions = [
+      "s3:PutObject"
+    ]
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
+    }
+    resources = [
+      "arn:aws:s3:::${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+  }
+}
+
+# -- Locals --
+
+locals {
+  log_bucket       = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
+  inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
+}
+
+# -- Resources --
+
 # Bucket used for storing S3 access logs
 resource "aws_s3_bucket" "s3-logs" {
-  bucket = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket = local.log_bucket
   region = var.region
   acl    = "log-delivery-write"
   policy = ""
@@ -66,29 +113,10 @@ resource "aws_s3_bucket" "s3-logs" {
   }
 }
 
-# This is the terraform state bucket used by terraform including by this
-# terraform file itself. Obviously this is a circular dependency, so there is a
-# major chicken/egg bootstrapping problem.
-#
-# However, it's very important to ensure that the state bucket itself is
-# configured with the right settings, so it's worth the pain of managing it.
-#
-# The bin/configure_state_bucket.sh script should create this bucket
-# automatically as part of running ./deploy, but you can also create the bucket
-# manually.
-#
-# Then import the existing bucket into the terraform-common terraform state using the deploy wrapper:
-#
-#     bin/tf-deploy terraform-common/global import module.main.module.tf-state.aws_s3_bucket.tf-state login-gov.tf-state.<ACCT_ID>-<REGION>
-#
-# Under the hood this is running:
-#
-#     terraform import module.main.module.tf-state.aws_s3_bucket.tf-state login-gov.tf-state.<ACCT_ID>-<REGION>
-#
 resource "aws_s3_bucket" "tf-state" {
-  count = var.enabled == 1 ? 1 : 0
+  count = var.remote_state_enabled
 
-  bucket = "login-gov.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket = local.state_bucket
   region = var.region
   acl    = "private"
   policy = ""
@@ -98,7 +126,7 @@ resource "aws_s3_bucket" "tf-state" {
 
   logging {
     target_bucket = aws_s3_bucket.s3-logs.id
-    target_prefix = "login-gov.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}/"
+    target_prefix = "${local.state_bucket}/"
   }
 
   server_side_encryption_configuration {
@@ -114,35 +142,8 @@ resource "aws_s3_bucket" "tf-state" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "tf-state" {
-  bucket = aws_s3_bucket.tf-state[0].id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# This is the terraform state lock file used by terraform including by this
-# terraform file itself. Obviously this is a circular dependency like the AWS
-# S3 bucket, so there is a major chicken/egg bootstrapping problem.
-#
-# The bin/configure_state_bucket.sh script should create this table
-# automatically as part of running ./deploy, but you can also create this table
-# manually.
-#
-# Then import the existing table into the terraform-common terraform state
-# using the deploy wrapper (with terraform_locks as the table name in this
-# example):
-#
-#     ./deploy terraform-common/global import module.main.module.tf-state.aws_dynamodb_table.tf-lock-table terraform_locks
-#
-# Under the hood this is running:
-#
-#     terraform import module.main.module.tf-state.aws_dynamodb_table.tf-lock-table terraform_locks
-#
 resource "aws_dynamodb_table" "tf-lock-table" {
-  count = var.enabled == 1 ? 1 : 0
+  count = var.remote_state_enabled
 
   name           = var.state_lock_table
   read_capacity  = 2
@@ -163,7 +164,56 @@ resource "aws_dynamodb_table" "tf-lock-table" {
   }
 }
 
+# bucket to collect S3 Inventory reports
+resource "aws_s3_bucket" "inventory" {
+  bucket        = local.inventory_bucket
+  region        = var.region
+  force_destroy = true
+  policy        = data.aws_iam_policy_document.inventory_bucket_policy.json
+
+  logging {
+    target_bucket = aws_s3_bucket.s3-logs.id
+    target_prefix = "${local.inventory_bucket}/"
+  }
+
+  versioning {
+    enabled = true
+  }
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = var.sse_algorithm
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "inventory" {
+  bucket = aws_s3_bucket.inventory.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+
+module "s3_config" {
+  for_each = var.remote_state_enabled == 1 ? toset(["s3-logs", "tf-state"]) : toset(["s3-logs"])
+  source = "github.com/18F/identity-terraform//s3_config?ref=36ecdc74c3436585568fab7abddb3336cec35d93"
+
+  bucket_name_prefix   = var.bucket_name_prefix
+  bucket_name          = each.key
+  region               = var.region
+  inventory_bucket_arn = aws_s3_bucket.inventory.arn
+}
+
+# -- Outputs --
 output "s3_log_bucket" {
   value = aws_s3_bucket.s3-logs.id
 }
 
+output "inventory_bucket_arn" {
+  value = aws_s3_bucket.inventory.arn
+}
