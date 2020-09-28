@@ -8,18 +8,18 @@ variable "bucket_name_prefix" {
 variable "bucket_name" {
   description = "Main/second substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
   type        = string
-  default = ""
+  default     = ""
 }
 
 variable "bucket_name_override" {
   description = "Set this to override the normal bucket naming schema."
   type        = string
-  default = ""
+  default     = ""
 }
 
 variable "region" {
   description = "AWS Region"
-  type = string
+  type        = string
   default     = "us-west-2"
 }
 

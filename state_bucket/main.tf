@@ -42,13 +42,8 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
       identifiers = ["s3.amazonaws.com"]
     }
     resources = [
-      "arn:aws:s3:::${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/*"
+      "arn:aws:s3:::${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/*"
     ]
-    condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
-      values   = formatlist("arn:aws:s3:::%s", var.bucket_list)
-    }
     condition {
       test     = "StringEquals"
       variable = "aws:SourceAccount"
@@ -65,8 +60,9 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
 # -- Locals --
 
 locals {
-  log_bucket   = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  state_bucket = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
+  log_bucket       = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
+  inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
 }
 
 # -- Resources --
@@ -170,14 +166,14 @@ resource "aws_dynamodb_table" "tf-lock-table" {
 
 # bucket to collect S3 Inventory reports
 resource "aws_s3_bucket" "inventory" {
-  bucket        = "${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket        = local.inventory_bucket
   region        = var.region
   force_destroy = true
   policy        = data.aws_iam_policy_document.inventory_bucket_policy.json
 
   logging {
-    target_bucket = var.log_bucket
-    target_prefix = "${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/"
+    target_bucket = aws_s3_bucket.s3-logs.id
+    target_prefix = "${local.inventory_bucket}/"
   }
 
   versioning {
@@ -204,7 +200,7 @@ resource "aws_s3_bucket_public_access_block" "inventory" {
 
 
 module "s3_config" {
-  for_each = toset(["s3-logs", "tf-state"])
+  for_each = var.remote_state_enabled == 1 ? toset(["s3-logs", "tf-state"]) : toset(["s3-logs"])
   source = "github.com/18F/identity-terraform//s3_config?ref=36ecdc74c3436585568fab7abddb3336cec35d93"
 
   bucket_name_prefix   = var.bucket_name_prefix
@@ -212,6 +208,7 @@ module "s3_config" {
   region               = var.region
   inventory_bucket_arn = aws_s3_bucket.inventory.arn
 }
+
 # -- Outputs --
 output "s3_log_bucket" {
   value = aws_s3_bucket.s3-logs.id
