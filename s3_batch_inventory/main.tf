@@ -46,11 +46,6 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
       "arn:aws:s3:::${var.bucket_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/*"
     ]
     condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
-      values   = formatlist("arn:aws:s3:::%s", var.bucket_list)
-    }
-    condition {
       test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
