@@ -28,3 +28,4 @@ module "secrets_bucket_config" {
 `region` - AWS Region
 `inventory_bucket_arn` - ARN of the S3 bucket used for collecting the S3 Inventory reports.
 `optional_fields` - List of optional data fields to collect in S3 Inventory reports. Defaults to the full list of possible fields.
+`block_public_access` - Whether or not to enable the public access block for this bucket. Defaults to ***true***.
