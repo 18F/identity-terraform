@@ -157,7 +157,7 @@ resource "aws_lambda_function" "slack_lambda" {
 }
 
 resource "aws_iam_role" "slack_lambda" {
-  name               = var.lambda_name
+  name_prefix        = var.lambda_name
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
