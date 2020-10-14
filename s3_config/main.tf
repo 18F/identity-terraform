@@ -46,6 +46,12 @@ variable "optional_fields" {
   ]
 }
 
+variable "block_public_access" {
+  description = "Whether or not to enable the public access block for this bucket."
+  type        = bool
+  default     = true
+}
+
 locals {
   bucket_fullname = var.bucket_name_override != "" ? var.bucket_name_override : join(".",
     [
@@ -63,10 +69,10 @@ data "aws_caller_identity" "current" {
 # -- Resources --
 resource "aws_s3_bucket_public_access_block" "public_block" {
   bucket                  = local.bucket_fullname
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = var.block_public_access
+  block_public_policy     = var.block_public_access
+  ignore_public_acls      = var.block_public_access
+  restrict_public_buckets = var.block_public_access
 }
 
 resource "aws_s3_bucket_inventory" "daily" {
