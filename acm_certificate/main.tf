@@ -44,7 +44,7 @@ resource "aws_acm_certificate" "main" {
 
 # Create each validation CNAME
 resource "aws_route53_record" "validation-cnames" {
-  count = length(var.subject_alternative_names)
+  count = length(var.subject_alternative_names) + 1
 
   name    = aws_acm_certificate.main.domain_validation_options[count.index]["resource_record_name"]
   type    = aws_acm_certificate.main.domain_validation_options[count.index]["resource_record_type"]
