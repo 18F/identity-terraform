@@ -369,11 +369,11 @@ resource "aws_config_config_rule" "ec2_managedinstance_association_compliance_st
   name = "fedramp-ec2-managedinstance-association-compliance-status-check"
   source {
     owner             = "AWS"
-    source_identifier = "AWS::SSM::AssociationCompliance"
+    source_identifier = "EC2_MANAGEDINSTANCE_ASSOCIATION_COMPLIANCE_STATUS_CHECK"
   }
   scope {
     compliance_resource_types = [
-      "EC2_MANAGEDINSTANCE_ASSOCIATION_COMPLIANCE_STATUS_CHECK"
+      "AWS::SSM::AssociationCompliance"
     ]
   }
 }
@@ -487,11 +487,11 @@ resource "aws_config_config_rule" "elb_cross_zone_load_balancing_enabled" {
   name = "fedramp-elb-cross-zone-load-balancing-enabled"
   source {
     owner             = "AWS"
-    source_identifier = "AWS::ElasticLoadBalancing::LoadBalancer"
+    source_identifier = "ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED"
   }
   scope {
     compliance_resource_types = [
-      "ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED"
+      "AWS::ElasticLoadBalancing::LoadBalancer"
     ]
   }
 }
@@ -1097,11 +1097,11 @@ resource "aws_config_config_rule" "s3_bucket_server_side_encryption_enabled" {
   name = "fedramp-s3-bucket-server-side-encryption-enabled"
   source {
     owner             = "AWS"
-    source_identifier = "AWS::S3::Bucket"
+    source_identifier = "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED"
   }
   scope {
     compliance_resource_types = [
-      "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED"
+      "AWS::S3::Bucket"
     ]
   }
 }
