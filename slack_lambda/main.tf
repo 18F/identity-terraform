@@ -1,4 +1,6 @@
 # -- Variables --
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 variable "lambda_name" {
   description = "Name of the Lambda function"
@@ -102,13 +104,23 @@ data "aws_iam_policy_document" "lambda_policy" {
     sid    = "AllowWritesToCloudWatchLogs"
     effect = "Allow"
     actions = [
-      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
     resources = [
       aws_cloudwatch_log_group.slack_lambda.arn
     ]
+  }
+  statement {
+    sid     = "AllowCreateLogGroup"
+    effect  = "Allow"
+    actions = [
+      "logs:CreateLogGroup"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+
   }
 }
 
