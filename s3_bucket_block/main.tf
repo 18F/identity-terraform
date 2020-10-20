@@ -30,7 +30,6 @@ resource "aws_s3_bucket" "bucket" {
   for_each = var.bucket_data
 
   bucket = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}"
-  region = var.region
   acl    = lookup(each.value, "acl", "private")
   policy = lookup(each.value, "policy", "")
   force_destroy = lookup(each.value, "force_destroy", true)

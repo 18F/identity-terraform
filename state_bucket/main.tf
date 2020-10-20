@@ -70,7 +70,6 @@ locals {
 # Bucket used for storing S3 access logs
 resource "aws_s3_bucket" "s3-logs" {
   bucket = local.log_bucket
-  region = var.region
   acl    = "log-delivery-write"
   policy = ""
 
@@ -117,7 +116,6 @@ resource "aws_s3_bucket" "tf-state" {
   count = var.remote_state_enabled
 
   bucket = local.state_bucket
-  region = var.region
   acl    = "private"
   policy = ""
   versioning {
@@ -167,7 +165,6 @@ resource "aws_dynamodb_table" "tf-lock-table" {
 # bucket to collect S3 Inventory reports
 resource "aws_s3_bucket" "inventory" {
   bucket        = local.inventory_bucket
-  region        = var.region
   force_destroy = true
   policy        = data.aws_iam_policy_document.inventory_bucket_policy.json
 
