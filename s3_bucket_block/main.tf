@@ -26,6 +26,12 @@ variable "inventory_bucket_arn" {
   type        = string
 }
 
+variable "sse_algorithm" {
+  description = "SSE algorithm to use to encrypt reports in S3 Inventory bucket."
+  type        = string
+  default     = "aws:kms"
+}
+
 # -- Data Sources --
 data "aws_caller_identity" "current" {
 }
