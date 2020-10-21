@@ -21,6 +21,11 @@ variable "region" {
   description = "AWS Region"
 }
 
+variable "inventory_bucket_arn" {
+  description = "ARN of the S3 bucket used for collecting the S3 Inventory reports."
+  type        = string
+}
+
 # -- Data Sources --
 data "aws_caller_identity" "current" {
 }
