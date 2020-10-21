@@ -80,43 +80,16 @@ resource "aws_s3_bucket" "bucket" {
 
 }
 
-resource "aws_s3_bucket_public_access_block" "block" {
-  for_each = toset(
-    compact(
-      [ for bucket, data in var.bucket_data :
-        lookup(data, "public_access_block", true) ? bucket : ""
-      ]
-    )
-  )
-  depends_on = [aws_s3_bucket.bucket]
-  
-  bucket                  = aws_s3_bucket.bucket[each.key].id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-resource "aws_s3_bucket_inventory" "daily" {
+module "bucket_config" {
   for_each = var.bucket_data
   depends_on = [aws_s3_bucket.bucket]
+  source = "github.com/18F/identity-terraform//s3_config?ref=5634690023ecb3e02180b4dbd49801e369bdbe57"
 
-  bucket                   = aws_s3_bucket.bucket[each.key].id
-  name                     = "FullBucketDailyInventory"
-  included_object_versions = "All"
-
-  schedule {
-    frequency = "Daily"
-  }
-
-  destination {
-    bucket {
-      format     = "Parquet"
-      bucket_arn = var.inventory_bucket_arn
-    }
-  }
-
-  optional_fields = var.optional_fields
+  bucket_name_prefix   = var.bucket_name_prefix
+  bucket_name          = each.key
+  region               = var.region
+  inventory_bucket_arn = var.inventory_bucket_arn
+  block_public_access  = lookup(each.value, "public_access_block")
 }
 
 # -- Outputs --
