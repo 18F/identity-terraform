@@ -95,7 +95,7 @@ module "bucket_config" {
   bucket_name          = each.key
   region               = var.region
   inventory_bucket_arn = var.inventory_bucket_arn
-  block_public_access  = lookup(each.value, "public_access_block")
+  block_public_access  = lookup(each.value, "public_access_block", true)
 }
 
 # -- Outputs --
