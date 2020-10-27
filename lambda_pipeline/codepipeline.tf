@@ -3,7 +3,7 @@ resource "aws_codepipeline" "lambda" {
   role_arn = aws_iam_role.codepipeline_service.arn
 
   artifact_store {
-    location = var.project_source_s3_bucket
+    location = var.project_template_s3_bucket
     type     = "S3"
   }
 
@@ -20,8 +20,8 @@ resource "aws_codepipeline" "lambda" {
 
       configuration = {
         PollForSourceChanges = "false"
-        S3Bucket             = var.project_source_s3_bucket
-        S3ObjectKey          = var.project_source_object_key
+        S3Bucket             = var.project_template_s3_bucket
+        S3ObjectKey          = var.project_template_object_key
       }
     }
   }
@@ -66,10 +66,10 @@ resource "aws_cloudwatch_event_rule" "codepipeline" {
     ],
     "requestParameters": {
       "bucketName": [
-        "${var.project_source_s3_bucket}"
+        "${var.project_template_s3_bucket}"
       ],
       "key": [
-        "${var.project_source_object_key}"
+        "${var.project_template_object_key}"
       ]
     }
   }

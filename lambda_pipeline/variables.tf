@@ -24,13 +24,21 @@ variable "project_description" {
   type        = string
 }
 
-variable "project_source_s3_bucket" {
-  description = "Project source S3 bucket"
+# bucket that the SAM/Cloudformation template reside
+variable "project_template_s3_bucket" {
+  description = "Project template S3 bucket"
   type        = string
 }
 
-variable "project_source_object_key" {
-  description = "Project source object key"
+# key to the SAM/Cloudformation template
+variable "project_template_object_key" {
+  description = "Project template object key"
+  type        = string
+}
+
+# bucket that the layers and function reside
+variable "project_artifacts_s3_bucket" {
+  description = "Project artifacts S3 bucket"
   type        = string
 }
 

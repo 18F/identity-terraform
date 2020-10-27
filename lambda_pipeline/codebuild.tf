@@ -17,7 +17,7 @@ resource "aws_codebuild_project" "lambda" {
   }
   source {
     type     = "S3"
-    location = "${var.project_source_s3_bucket}/${var.project_source_object_key}"
+    location = "${var.project_template_s3_bucket}/${var.project_template_object_key}"
   }
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
@@ -172,11 +172,14 @@ data "aws_iam_policy_document" "codebuild_s3" {
       "s3:GetObjectVersion"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:::${var.project_source_s3_bucket}",
-      "arn:${data.aws_partition.current.partition}:s3:::${var.project_source_s3_bucket}/*"
+      "arn:${data.aws_partition.current.partition}:s3:::${var.project_template_s3_bucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::${var.project_template_s3_bucket}/*",
+      "arn:${data.aws_partition.current.partition}:s3:::${var.project_artifacts_s3_bucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::${var.project_artifacts_s3_bucket}/*",
     ]
   }
   statement {
+    sid    = "S3Bucket"
     effect = "Allow"
     actions = [
       "s3:ListBucket",
@@ -184,7 +187,8 @@ data "aws_iam_policy_document" "codebuild_s3" {
       "s3:GetBucketLocation"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:::${var.project_source_s3_bucket}"
+      "arn:${data.aws_partition.current.partition}:s3:::${var.project_template_s3_bucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::${var.project_artifacts_s3_bucket}",
     ]
   }
 }
