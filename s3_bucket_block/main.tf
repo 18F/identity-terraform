@@ -88,8 +88,7 @@ resource "aws_s3_bucket" "bucket" {
 
 module "bucket_config" {
   for_each = var.bucket_data
-  depends_on = [aws_s3_bucket.bucket]
-  source = "github.com/18F/identity-terraform//s3_config?ref=5634690023ecb3e02180b4dbd49801e369bdbe57"
+  source = "github.com/18F/identity-terraform//s3_config?ref=897cd9f749ead05a97b0f904a5dedfe83d9a9566"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = each.key
@@ -102,6 +101,6 @@ module "bucket_config" {
 output "buckets" {
   description = "Map of the bucket names:ids created from bucket_data."
   value       = zipmap(
-      sort(keys(var.bucket_data)),
+      sort(keys(aws_s3_bucket.bucket)[*]),
       sort(values(aws_s3_bucket.bucket)[*]["id"]))
 }
