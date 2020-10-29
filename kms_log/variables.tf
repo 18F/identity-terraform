@@ -54,7 +54,7 @@ variable "sns_topic_dead_letter_arn" {
 }
 
 variable "lambda_identity_lambda_functions_gitrev" {
-  default     = "40a8d2e68705313599e972a1cf50fd5a897ecc45"
+  default     = "1815de9b0893548876138e7086391e210cc85813"
   description = "Initial gitrev of identity-lambda-functions to deploy (updated outside of terraform)"
 }
 
@@ -71,4 +71,8 @@ variable "kmslog_lambda_debug" {
 variable "ec2_kms_arns" {
   default     = []
   description = "ARN(s) of EC2 roles permitted access to KMS"
+}
+
+variable "alarm_sns_topic_arn" {
+  description = "SNS Topic ARN for alarms"
 }
