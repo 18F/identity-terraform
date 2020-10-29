@@ -579,7 +579,7 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
   alarm_description  = "This alarm notifies when messages are on dead letter queue"
   treat_missing_data = "ignore"
   alarm_actions = [
-    var.sns_topic_dead_letter_arn,
+    var.alarm_sns_topic_arn,
   ]
 }
 
@@ -600,7 +600,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudwatch_lambda_backlog" {
   alarm_description  = "Kinesis backlog for ${var.env_name}-cloudwatch-kms"
   treat_missing_data = "ignore"
   alarm_actions = [
-    aws_sns_topic.kms_logging_events.arn,
+    var.alarm_sns_topic_arn,
   ]
 }
 
@@ -623,7 +623,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
   alarm_description  = "Kinesis backlog for ${var.env_name}-cloudtrail-kms"
   treat_missing_data = "ignore"
   alarm_actions = [
-    aws_sns_topic.kms_logging_events.arn,
+    var.alarm_sns_topic_arn,
   ]
 }
 
