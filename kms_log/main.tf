@@ -663,6 +663,16 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   }
 }
 
+module "ct-processor-github-alerts" {
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=897cd9f749ead05a97b0f904a5dedfe83d9a9566"
+  
+  enabled              = 1
+  function_name        = local.ct_processor_lambda_name
+  alarm_actions        = [var.alarm_sns_topic_arn]
+  error_rate_threshold = 5 # percent
+  datapoints_to_alarm  = 5
+}
+
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
   event_source_arn = aws_sqs_queue.kms_ct_events.arn
   function_name    = aws_lambda_function.cloudtrail_processor.arn
@@ -838,6 +848,16 @@ resource "aws_lambda_function" "cloudwatch_processor" {
     source_repo = "https://github.com/18F/identity-lambda-functions"
     environment = var.env_name
   }
+}
+
+module "cw-processor-github-alerts" {
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=897cd9f749ead05a97b0f904a5dedfe83d9a9566"
+  
+  enabled              = 1
+  function_name        = local.cw_processor_lambda_name
+  alarm_actions        = [var.alarm_sns_topic_arn]
+  error_rate_threshold = 5 # percent
+  datapoints_to_alarm  = 5
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
