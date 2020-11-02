@@ -671,6 +671,7 @@ module "ct-processor-github-alerts" {
   alarm_actions        = [var.alarm_sns_topic_arn]
   error_rate_threshold = 5 # percent
   datapoints_to_alarm  = 5
+  evaluation_periods   = 5
 }
 
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
@@ -858,6 +859,7 @@ module "cw-processor-github-alerts" {
   alarm_actions        = [var.alarm_sns_topic_arn]
   error_rate_threshold = 5 # percent
   datapoints_to_alarm  = 5
+  evaluation_periods   = 5
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
