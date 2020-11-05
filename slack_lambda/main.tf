@@ -64,14 +64,18 @@ locals {
     #!/usr/bin/python3.6
     import urllib3
     import json
+    import os
+    slackChannel = os.environ['slack_channel']
+    slackUsername = os.environ['slack_username']
+    slackIcon = os.environ['slack_icon']
     http = urllib3.PoolManager()
     def lambda_handler(event, context):
         url = "${var.slack_webhook_url}"
         msg = {
-            "channel": "#${var.slack_channel}",
-            "username": "${var.slack_username}",
+            "channel": slackChannel,
+            "username": slackUsername,
             "text": event['Records'][0]['Sns']['Message'],
-            "icon_emoji": "${var.slack_icon}"
+            "icon_emoji": slackIcon
         }
         
         encoded_msg = json.dumps(msg).encode('utf-8')
@@ -165,6 +169,13 @@ resource "aws_lambda_function" "slack_lambda" {
       source_code_hash,
       last_modified,
     ]
+  }
+  environment {
+    variables = {
+      slack_channel = var.slack_channel,
+      slack_username = var.slack_username,
+      slack_icon = var.slack_icon
+    }
   }
 }
 
