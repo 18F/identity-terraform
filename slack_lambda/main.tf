@@ -157,19 +157,6 @@ resource "aws_lambda_function" "slack_lambda" {
   source_code_hash = data.archive_file.lambda_function.output_base64sha256
   publish          = true
 
-  # as a result of local.slack_lambda_code being used as a generator for the
-  # lambda_function.zip file, the last_modified and source_code_hash values
-  # will change every single time plan/apply is run. this is a hacky workaround
-  # to not rely upon external files for lambda_function.zip or lambda.py, and
-  # to continue using local.slack_lambda_code instead.
-
-  ######## COMMENT THIS BLOCK OUT IF YOU'VE UPDATED YOUR SLACK WEBHOOK #######
-  lifecycle {
-    ignore_changes = [
-      source_code_hash,
-      last_modified,
-    ]
-  }
   environment {
     variables = {
       slack_channel = var.slack_channel,

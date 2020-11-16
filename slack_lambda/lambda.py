@@ -1,16 +1,20 @@
 #!/usr/bin/python3.6
 import urllib3
 import json
+import os
+slackChannel = os.environ['slack_channel']
+slackUsername = os.environ['slack_username']
+slackIcon = os.environ['slack_icon']
 http = urllib3.PoolManager()
 def lambda_handler(event, context):
-    url = "${slack_webhook_url}"
+    url = "https://hooks.slack.com/services/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"
     msg = {
-        "channel": "#${slack_channel}",
-        "username": "${slack_username}",
+        "channel": slackChannel,
+        "username": slackUsername,
         "text": event['Records'][0]['Sns']['Message'],
-        "icon_emoji": "${slack_icon}"
+        "icon_emoji": slackIcon
     }
-    
+        
     encoded_msg = json.dumps(msg).encode('utf-8')
     resp = http.request('POST',url, body=encoded_msg)
     print({
