@@ -7,7 +7,7 @@ slackUsername = os.environ['slack_username']
 slackIcon = os.environ['slack_icon']
 http = urllib3.PoolManager()
 def lambda_handler(event, context):
-    url = "https://hooks.slack.com/services/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"
+    url = ""
     msg = {
         "channel": slackChannel,
         "username": slackUsername,
