@@ -71,18 +71,16 @@ locals {
     slackUsername = os.environ['slack_username']
     slackIcon = os.environ['slack_icon']
     slackUrlParam = os.environ['slack_webhook_url_parameter']
+    parameter = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)
     http = urllib3.PoolManager()
     def lambda_handler(event, context):
-        parameter = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)
-        webhook_url = parameter['Parameter']['Value']
-        url = webhook_url
+        url = parameter['Parameter']['Value']
         msg = {
             "channel": slackChannel,
             "username": slackUsername,
             "text": event['Records'][0]['Sns']['Message'],
             "icon_emoji": slackIcon
         }
-        
         encoded_msg = json.dumps(msg).encode('utf-8')
         resp = http.request('POST',url, body=encoded_msg)
         print({
