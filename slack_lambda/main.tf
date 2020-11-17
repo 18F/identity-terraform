@@ -29,11 +29,11 @@ variable "lambda_memory" {
 variable "lambda_runtime" {
   description = "Lambda runtime"
   type        = string
-  default     = "python3.6"
+  default     = "python3.8"
 }
 
-variable "slack_webhook_url" {
-  description = "Slack Webhook URL."
+variable "slack_webhook_url_parameter" {
+  description = "Slack Webhook URL SSM Parameter."
   type        = string
 }
 
@@ -61,16 +61,21 @@ variable "slack_topic_arn" {
 
 locals {
   slack_lambda_code = <<-EOT
-    #!/usr/bin/python3.6
+    #!/usr/bin/python3.8
+    import boto3
     import urllib3
     import json
     import os
+    ssm = boto3.client('ssm')
     slackChannel = os.environ['slack_channel']
     slackUsername = os.environ['slack_username']
     slackIcon = os.environ['slack_icon']
+    slackUrlParam = os.environ['slack_webhook_url_parameter']
     http = urllib3.PoolManager()
     def lambda_handler(event, context):
-        url = "${var.slack_webhook_url}"
+        parameter = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)
+        webhook_url = parameter['Parameter']['Value']
+        url = webhook_url
         msg = {
             "channel": slackChannel,
             "username": slackUsername,
@@ -157,21 +162,9 @@ resource "aws_lambda_function" "slack_lambda" {
   source_code_hash = data.archive_file.lambda_function.output_base64sha256
   publish          = true
 
-  # as a result of local.slack_lambda_code being used as a generator for the
-  # lambda_function.zip file, the last_modified and source_code_hash values
-  # will change every single time plan/apply is run. this is a hacky workaround
-  # to not rely upon external files for lambda_function.zip or lambda.py, and
-  # to continue using local.slack_lambda_code instead.
-
-  ######## COMMENT THIS BLOCK OUT IF YOU'VE UPDATED YOUR SLACK WEBHOOK #######
-  lifecycle {
-    ignore_changes = [
-      source_code_hash,
-      last_modified,
-    ]
-  }
   environment {
     variables = {
+      slack_url_parameter = var.slack_webhook_url_parameter
       slack_channel = var.slack_channel,
       slack_username = var.slack_username,
       slack_icon = var.slack_icon
