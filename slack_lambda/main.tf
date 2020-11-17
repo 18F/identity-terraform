@@ -117,19 +117,19 @@ data "aws_iam_policy_document" "lambda_policy" {
       "logs:PutLogEvents"
     ]
     resources = [
-      aws_cloudwatch_log_group.slack_lambda.arn
+      "${aws_cloudwatch_log_group.slack_lambda.arn}:*"
     ]
   }
   statement {
-    sid     = "AllowCreateLogGroup"
-    effect  = "Allow"
+    sid    = "SSM"
+    effect = "Allow"
     actions = [
-      "logs:CreateLogGroup"
+      "ssm:DescribeParameters",
+      "ssm:GetParameter"
     ]
     resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url_parameter}"
     ]
-
   }
 }
 
@@ -146,7 +146,7 @@ data "archive_file" "lambda_function" {
 # -- Resources --
 
 resource "aws_cloudwatch_log_group" "slack_lambda" {
-  name              = "/aws/lambda/slack_lambda/${var.lambda_name}"
+  name              = "/aws/lambda/${var.lambda_name}"
   retention_in_days = 365
 }
 
@@ -165,9 +165,9 @@ resource "aws_lambda_function" "slack_lambda" {
   environment {
     variables = {
       slack_url_parameter = var.slack_webhook_url_parameter
-      slack_channel = var.slack_channel,
-      slack_username = var.slack_username,
-      slack_icon = var.slack_icon
+      slack_channel       = var.slack_channel,
+      slack_username      = var.slack_username,
+      slack_icon          = var.slack_icon
     }
   }
 }
