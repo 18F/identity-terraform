@@ -162,10 +162,10 @@ resource "aws_lambda_function" "slack_lambda" {
 
   environment {
     variables = {
-      slack_url_parameter = var.slack_webhook_url_parameter
-      slack_channel       = var.slack_channel,
-      slack_username      = var.slack_username,
-      slack_icon          = var.slack_icon
+      slack_webhook_url_parameter = var.slack_webhook_url_parameter
+      slack_channel               = var.slack_channel,
+      slack_username              = var.slack_username,
+      slack_icon                  = var.slack_icon
     }
   }
 }
