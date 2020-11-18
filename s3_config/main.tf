@@ -76,6 +76,7 @@ resource "aws_s3_bucket_public_access_block" "public_block" {
 }
 
 resource "aws_s3_bucket_inventory" "daily" {
+  depends_on = [aws_s3_bucket_public_access_block.public_block]
   bucket                   = local.bucket_fullname
   name                     = "FullBucketDailyInventory"
   included_object_versions = "All"
