@@ -199,6 +199,7 @@ resource "aws_s3_bucket_public_access_block" "inventory" {
 module "s3_config" {
   for_each = var.remote_state_enabled == 1 ? toset(["s3-logs", "tf-state"]) : toset(["s3-logs"])
   source = "github.com/18F/identity-terraform//s3_config?ref=cad9776e886147179d563a9b058b92b3dfbf3957"
+  depends_on = [aws_s3_bucket.s3-logs]
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = each.key
