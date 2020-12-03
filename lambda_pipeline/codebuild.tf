@@ -426,7 +426,8 @@ data "aws_iam_policy_document" "codebuild_ssm" {
       "ssm:DeleteParameter"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.env}/*"
+      "arn:${data.aws_partition.current.partition}:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.env}/*",
+      "arn:${data.aws_partition.current.partition}:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/account/*"
     ]
   }
 }
