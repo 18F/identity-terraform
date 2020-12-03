@@ -415,7 +415,7 @@ data "aws_iam_policy_document" "codebuild_lambda" {
 
 data "aws_iam_policy_document" "codebuild_ssm" {
   statement {
-    sid    = "iam"
+    sid    = "ssm"
     effect = "Allow"
     actions = [
       "ssm:PutParameter",
