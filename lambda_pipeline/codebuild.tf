@@ -122,6 +122,18 @@ resource "aws_iam_role_policy" "codebuild_ssm" {
   policy = data.aws_iam_policy_document.codebuild_ssm.json
 }
 
+resource "aws_iam_role_policy" "codebuild_ssm_account" {
+  name   = "ssm_account"
+  role   = aws_iam_role.codebuild_service.id
+  policy = data.aws_iam_policy_document.codebuild_ssm_account.json
+}
+
+resource "aws_iam_role_policy" "codebuild_cloudwatch" {
+  name   = "cloudwatch"
+  role   = aws_iam_role.codebuild_service.id
+  policy = data.aws_iam_policy_document.codebuild_cloudwatch.json
+}
+
 data "aws_iam_policy_document" "codebuild_base" {
   statement {
     sid    = "base"
@@ -426,8 +438,43 @@ data "aws_iam_policy_document" "codebuild_ssm" {
       "ssm:DeleteParameter"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.env}/*",
+      "arn:${data.aws_partition.current.partition}:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.env}/**"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "codebuild_ssm_account" {
+  statement {
+    sid    = "ssmaccount"
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameters",
+      "ssm:GetParameter"
+    ]
+    resources = [
       "arn:${data.aws_partition.current.partition}:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/account/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "codebuild_cloudwatch" {
+  statement {
+    sid    = "cloudwatch"
+    effect = "Allow"
+    actions = [
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:DeleteAlarms",
+      "cloudwatch:PutCompositeAlarm",
+      "cloudwatch:PutInsightRule",
+      "cloudwatch:EnableAlarmActions",
+      "cloudwatch:DeleteInsightRules",
+      "cloudwatch:DisableAlarmActions",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:DescribeAlarmsForMetric",
+      "cloudwatch:DescribeInsightRules"
+    ]
+    resources = [
+      "*"
     ]
   }
 }
