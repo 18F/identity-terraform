@@ -52,3 +52,8 @@ variable "vpc_arn" {
   description = "VPC arn for functions that require vpc access"
   type        = string
 }
+
+variable "pipeline_failure_notification_arn" {
+  description = "SNS topic arn for pipeline failure notification"
+  type        = string
+}
