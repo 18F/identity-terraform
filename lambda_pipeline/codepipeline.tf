@@ -263,3 +263,32 @@ data "aws_iam_policy_document" "codepipeline_base" {
     ]
   }
 }
+
+resource "aws_cloudwatch_event_rule" "lambda_pipeline_failed" {
+  name_prefix   = "${var.env}-${var.project_name}-pipeline-failed"
+  description   = "CodePipeline execution failed"
+  event_pattern = <<EOF
+{
+    "source": [
+        "aws.codepipeline"
+    ],
+    "detail-type": [
+      "CodePipeline Stage Execution State Change"
+    ],
+    "detail": {
+      "state": [
+        "FAILED"
+      ],
+      "pipeline": [
+        "${aws_codepipeline.lambda.id}"
+      ]
+    }
+}
+EOF
+}
+
+resource "aws_cloudwatch_event_target" "sns_slack" {
+  rule      = aws_cloudwatch_event_rule.lambda_pipeline_failed.name
+  target_id = "SendToSlack"
+  arn       = var.pipeline_failure_notification_arn
+}
