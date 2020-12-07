@@ -265,7 +265,7 @@ data "aws_iam_policy_document" "codepipeline_base" {
 }
 
 resource "aws_cloudwatch_event_rule" "lambda_pipeline_failed" {
-  name_prefix   = "${var.env}-${var.project_name}-pipeline-failed"
+  name          = "${var.env}-${var.project_name}-pipeline-failed"
   description   = "CodePipeline execution failed"
   event_pattern = <<EOF
 {
