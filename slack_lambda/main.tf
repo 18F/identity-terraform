@@ -158,7 +158,7 @@ resource "aws_lambda_function" "slack_lambda" {
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory
   source_code_hash = data.archive_file.lambda_function.output_base64sha256
-  publish          = true
+  publish          = false
 
   environment {
     variables = {
