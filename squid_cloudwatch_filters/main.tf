@@ -69,3 +69,20 @@ resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
   alarm_actions = var.alarm_actions
 }
 
+resource "aws_cloudwatch_metric_alarm" "squid_total_requests" {
+  alarm_name        = "${var.env_name}-squid-total-requests"
+  alarm_description = "(Managed by Terraform) Alarm when the Squid access log total requests fall below threshold"
+  namespace         = var.metric_namespace
+  metric_name       = "${var.env_name}/TotalRequests"
+
+  statistic           = "Sum"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  threshold           = 2
+  period              = 60
+  datapoints_to_alarm = 1
+  evaluation_periods  = 5
+
+  treat_missing_data = var.treat_missing_data
+
+  alarm_actions = var.alarm_actions
+}
