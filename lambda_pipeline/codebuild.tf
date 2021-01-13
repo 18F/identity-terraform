@@ -347,6 +347,7 @@ data "aws_iam_policy_document" "codebuild_lambda" {
       "lambda:CreateAlias"
     ]
     resources = [
+      "arn:aws:lambda:${var.region}:580247275435:layer:LambdaInsightsExtension:*", #insights layer from AWS
       "arn:${data.aws_partition.current.partition}:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:${var.env}*",
       "arn:${data.aws_partition.current.partition}:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:layer:${var.env}*:*",
       "arn:${data.aws_partition.current.partition}:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:event-source-mapping:*"
