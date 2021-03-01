@@ -35,6 +35,22 @@ data "aws_iam_policy_document" "role_policy_doc" {
       resources = [
         for arn in each.value : "${arn}"
       ]
+      condition {
+      test     = "StringEquals"
+      variable = "sts:RoleSessionName"
+
+      values = [
+        "$${aws:username}",
+      ]
+    }
+    condition {
+      test     = "Bool"
+      variable = "aws:MultiFactorAuthPresent"
+
+      values = [
+        "true",
+      ]
+    }
   }
 }
 
