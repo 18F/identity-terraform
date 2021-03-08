@@ -75,10 +75,17 @@ locals {
     http = urllib3.PoolManager()
     def lambda_handler(event, context):
         url = parameter['Parameter']['Value']
+        eventmsg = event['Records'][0]['Sns']['Message']
+        try:
+          data = json.loads(eventmsg)
+          if data['detailType'] == 'CodePipeline Pipeline Execution State Change':
+            msgtext = 'auto-terraform:  ' + data['detail']['pipeline'] + ' pipeline ' + data['detail']['state'] + ' with execution ID ' + data['detail']['execution-id']
+        except:
+          msgtext = eventmsg
         msg = {
             "channel": slackChannel,
             "username": slackUsername,
-            "text": event['Records'][0]['Sns']['Message'],
+            "text": msgtext,
             "icon_emoji": slackIcon
         }
         encoded_msg = json.dumps(msg).encode('utf-8')
