@@ -82,6 +82,11 @@ resource "aws_launch_template" "template" {
 
   user_data = var.user_data
 
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens = "required"
+  }
+
   monitoring {
     enabled = true
   }
