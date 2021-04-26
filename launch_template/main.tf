@@ -84,7 +84,7 @@ resource "aws_launch_template" "template" {
 
   metadata_options {
     http_endpoint = "enabled"
-    http_tokens = "required"
+    http_tokens = "optional"
   }
 
   monitoring {
