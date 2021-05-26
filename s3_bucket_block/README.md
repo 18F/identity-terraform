@@ -30,7 +30,7 @@ The following additional settings can be configured via key-value pairs in the m
 module "s3_shared" {
     source = "github.com/18F/identity-terraform//s3_bucket_block?ref=master"
     
-    log_bucket         = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+    log_bucket         = "login-gov.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
     bucket_name_prefix = "login-gov"
     bucket_data        = {
         "shared-data"      = {

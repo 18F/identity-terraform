@@ -60,15 +60,55 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
 # -- Locals --
 
 locals {
-  log_bucket       = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  log_bucket       = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
   state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
   inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
 }
 
 # -- Resources --
 
+# Deprecated bucket 
+# Delete this block
 # Bucket used for storing S3 access logs
 resource "aws_s3_bucket" "s3-logs" {
+  bucket = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  acl    = "log-delivery-write"
+  policy = ""
+
+  versioning {
+    enabled = false
+  }
+
+  lifecycle_rule {
+    id      = "expirelogs"
+    enabled = true
+
+    prefix = "/"
+
+    expiration {
+      days = 1
+    }
+    noncurrent_version_expiration {
+      days = 1
+    }
+  }
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "aws:kms"
+      }
+    }
+  }
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# Bucket used for storing S3 access logs
+# do not enable logging on this bucket
+resource "aws_s3_bucket" "s3-access-logs" {
   bucket = local.log_bucket
   acl    = "log-delivery-write"
   policy = ""
@@ -84,17 +124,16 @@ resource "aws_s3_bucket" "s3-logs" {
     prefix = "/"
 
     transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
+      storage_class = "INTELLIGENT_TIERING"
     }
-
-    transition {
-      days          = 365
-      storage_class = "GLACIER"
+    noncurrent_version_transition {
+      storage_class = "INTELLIGENT_TIERING"
     }
-
     expiration {
       # 5 years
+      days = 1825
+    }
+    noncurrent_version_expiration {
       days = 1825
     }
   }
@@ -102,7 +141,7 @@ resource "aws_s3_bucket" "s3-logs" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
+        sse_algorithm = "AES256"
       }
     }
   }
@@ -123,7 +162,7 @@ resource "aws_s3_bucket" "tf-state" {
   }
 
   logging {
-    target_bucket = aws_s3_bucket.s3-logs.id
+    target_bucket = aws_s3_bucket.s3-access-logs.id
     target_prefix = "${local.state_bucket}/"
   }
 
@@ -169,7 +208,7 @@ resource "aws_s3_bucket" "inventory" {
   policy        = data.aws_iam_policy_document.inventory_bucket_policy.json
 
   logging {
-    target_bucket = aws_s3_bucket.s3-logs.id
+    target_bucket = aws_s3_bucket.s3-access-logs.id
     target_prefix = "${local.inventory_bucket}/"
   }
 
@@ -197,9 +236,9 @@ resource "aws_s3_bucket_public_access_block" "inventory" {
 
 
 module "s3_config" {
-  for_each = var.remote_state_enabled == 1 ? toset(["s3-logs", "tf-state"]) : toset(["s3-logs"])
+  for_each = var.remote_state_enabled == 1 ? toset(["s3-access-logs", "tf-state"]) : toset(["s3-access-logs"])
   source = "github.com/18F/identity-terraform//s3_config?ref=cad9776e886147179d563a9b058b92b3dfbf3957"
-  depends_on = [aws_s3_bucket.s3-logs]
+  depends_on = [aws_s3_bucket.s3-access-logs]
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = each.key
@@ -210,6 +249,10 @@ module "s3_config" {
 # -- Outputs --
 output "s3_log_bucket" {
   value = aws_s3_bucket.s3-logs.id
+}
+
+output "s3_access_log_bucket" {
+  value = aws_s3_bucket.s3-access-logs.id
 }
 
 output "inventory_bucket_arn" {

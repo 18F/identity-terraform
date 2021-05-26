@@ -14,7 +14,7 @@ This Terraform module is designed to add S3 Inventory configurations to all S3 b
 module "s3_inventory_uw2" {
   source = "github.com/18F/identity-terraform//s3_batch_inventory?ref=master"
 
-  log_bucket   = "login-gov.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  log_bucket   = "login-gov.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
   bucket_prefix = "login-gov"
   bucket_list   = var.bucket_list_uw2
 }
