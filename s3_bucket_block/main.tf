@@ -13,7 +13,7 @@ variable "bucket_data" {
 variable "log_bucket" {
   description = "Name of the bucket used for S3 logging."
   type        = string
-  default     = "s3-logs"
+  default     = "s3-access-logs"
 }
 
 variable "region" {
