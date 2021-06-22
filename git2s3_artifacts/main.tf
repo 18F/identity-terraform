@@ -4,20 +4,30 @@ variable "bucket_name_prefix" {
   type        = string
 }
 
-variable "log_bucket" {
-  description = "Name of the bucket used for S3 logging."
-  type        = string
-  default     = "s3-access-logs"
+variable "log_bucket_name" {
+  description = <<EOM
+(OPTIONAL) Specific name of the bucket used for S3 logging.
+Will default to $bucket_name_prefix.s3-access-logs.$account_id-$region
+if not explicitly declared.
+EOM
+  type    = string
+  default = ""
 }
 
 variable "region" {
-  default     = "us-west-2"
   description = "AWS Region"
+  type        = string
+  default     = "us-west-2"
 }
 
 variable "inventory_bucket_arn" {
-  description = "ARN of the S3 bucket used for collecting the S3 Inventory reports."
-  type        = string
+  description = <<EOM
+(OPTIONAL) ARN of the S3 bucket used for collecting the S3 Inventory reports.
+Will default to $bucket_name_prefix.s3-inventory.$account_id-$region
+if not explicitly declared.
+EOM
+  type    = string
+  default = ""
 }
 
 variable "sse_algorithm" {
@@ -39,8 +49,21 @@ variable "external_account_ids" {
 
 locals {
   git2s3_output_bucket = chomp(aws_cloudformation_stack.git2s3.outputs["OutputBucketName"])
-  log_bucket           = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  inventory_bucket     = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
+
+  log_bucket = var.log_bucket_name != "" ? var.log_bucket_name : join(".",
+    [
+      var.bucket_name_prefix,
+      "s3-access-logs",
+      "${data.aws_caller_identity.current.account_id}-${var.region}"
+    ]
+  )
+  inventory_bucket = var.inventory_bucket_arn != "" ? var.inventory_bucket_arn : join(".",
+    [
+      var.bucket_name_prefix,
+      "s3-inventory",
+      "${data.aws_caller_identity.current.account_id}-${var.region}"
+    ]
+  )
 }
 
 # -- Data Sources --
@@ -77,10 +100,11 @@ data "aws_iam_policy_document" "artifact_bucket" {
       "s3:List*"
     ]
     resources = [
-      "arn:aws:s3:::${var.artifact_bucket}",
-      "arn:aws:s3:::${var.artifact_bucket}/*"
+      aws_s3_bucket.artifact_bucket.arn,
+      "${aws_s3_bucket.artifact_bucket.arn}/*"
     ]
   }
+  
   statement {
     effect = "Allow"
     principals {
@@ -92,7 +116,7 @@ data "aws_iam_policy_document" "artifact_bucket" {
       "s3:Delete*",
     ]
     resources = [
-      "arn:aws:s3:::${var.artifact_bucket}/packer_config/*"
+      "${aws_s3_bucket.artifact_bucket.arn}/packer_config/*"
     ]
   }
 }
@@ -136,7 +160,7 @@ resource "aws_s3_bucket" "artifact_bucket" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
+        sse_algorithm = var.sse_algorithm
       }
     }
   }
@@ -146,19 +170,18 @@ resource "aws_s3_bucket" "artifact_bucket" {
   }
 }
 
-
 resource "aws_s3_bucket_policy" "git2s3_output_bucket" {
   bucket = local.git2s3_output_bucket
   policy = data.aws_iam_policy_document.git2s3_output_bucket.json
 }
 
 resource "aws_s3_bucket_policy" "artifact_bucket" {
-  bucket = var.artifact_bucket
+  bucket = aws_s3_bucket.artifact_bucket
   policy = data.aws_iam_policy_document.artifact_bucket.json
 }
 
 resource "aws_s3_bucket_object" "git2s3_output_bucket_name" {
-  bucket       = var.artifact_bucket
+  bucket       = aws_s3_bucket.artifact_bucket
   key          = "git2s3/OutputBucketName"
   content      = local.git2s3_output_bucket
   content_type = "text/plain"
