@@ -2,7 +2,7 @@
 terraform {
   required_providers {
     github = {
-      source  = "integrations/github"
+      source  = "hashicorp/github"
       version = "~> 2.9"
     }
   }
@@ -31,9 +31,9 @@ variable "region" {
   default     = "us-west-2"
 }
 
-variable "inventory_bucket_arn" {
+variable "inventory_bucket_name" {
   description = <<EOM
-(OPTIONAL) ARN of the S3 bucket used for collecting the S3 Inventory reports.
+(OPTIONAL) Specific name of the S3 bucket used for collecting the S3 Inventory reports.
 Will default to $bucket_name_prefix.s3-inventory.$account_id-$region
 if not explicitly declared.
 EOM
@@ -68,7 +68,7 @@ locals {
       "${data.aws_caller_identity.current.account_id}-${var.region}"
     ]
   )
-  inventory_bucket = var.inventory_bucket_arn != "" ? var.inventory_bucket_arn : join(".",
+  inventory_bucket = var.inventory_bucket_name != "" ? var.inventory_bucket_name : join(".",
     [
       var.bucket_name_prefix,
       "s3-inventory",
@@ -78,6 +78,9 @@ locals {
 }
 
 # -- Data Sources --
+data "aws_caller_identity" "current" {
+}
+
 data "github_ip_ranges" "ips" {
 }
 
@@ -138,7 +141,7 @@ resource "aws_cloudformation_stack" "git2s3" {
   name          = var.git2s3_stack_name
   template_body = file("${path.module}/git2s3.template")
   parameters    = {
-    AllowedIps          = data.github_ip_ranges.ips.git
+    AllowedIps          = join(",",data.github_ip_ranges.ips.git)
     QSS3BucketName      = "aws-quickstart"
     OutputBucketName    = ""
     ScmHostnameOverride = ""
@@ -164,8 +167,8 @@ resource "aws_s3_bucket" "artifact_bucket" {
   }
 
   logging {
-    target_bucket = aws_s3_bucket.s3-access-logs.id
-    target_prefix = "${local.state_bucket}/"
+    target_bucket = local.log_bucket
+    target_prefix = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
   }
 
   server_side_encryption_configuration {
@@ -181,18 +184,26 @@ resource "aws_s3_bucket" "artifact_bucket" {
   }
 }
 
+module "s3_config" {
+  source = "github.com/18F/identity-terraform//s3_config?ref=cad9776e886147179d563a9b058b92b3dfbf3957"
+
+  bucket_name_override = aws_s3_bucket.artifact_bucket.id
+  region               = var.region
+  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
+}
+
 resource "aws_s3_bucket_policy" "git2s3_output_bucket" {
   bucket = local.git2s3_output_bucket
   policy = data.aws_iam_policy_document.git2s3_output_bucket.json
 }
 
 resource "aws_s3_bucket_policy" "artifact_bucket" {
-  bucket = aws_s3_bucket.artifact_bucket
+  bucket = aws_s3_bucket.artifact_bucket.id
   policy = data.aws_iam_policy_document.artifact_bucket.json
 }
 
 resource "aws_s3_bucket_object" "git2s3_output_bucket_name" {
-  bucket       = aws_s3_bucket.artifact_bucket
+  bucket       = aws_s3_bucket.artifact_bucket.id
   key          = "git2s3/OutputBucketName"
   content      = local.git2s3_output_bucket
   content_type = "text/plain"
