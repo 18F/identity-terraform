@@ -1,3 +1,14 @@
+# -- Providers --
+terraform {
+  required_providers {
+    github = {
+      source  = "integrations/github"
+      version = "~> 2.9"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
 # -- Variables --
 variable "bucket_name_prefix" {
   description = "First substring in S3 bucket name of $bucket_name_prefix-public-artifacts-$region"
@@ -104,7 +115,7 @@ data "aws_iam_policy_document" "artifact_bucket" {
       "${aws_s3_bucket.artifact_bucket.arn}/*"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     principals {
@@ -124,7 +135,7 @@ data "aws_iam_policy_document" "artifact_bucket" {
 # -- Resources --
 
 resource "aws_cloudformation_stack" "git2s3" {
-  name          = "CodeSync-IdentityBaseImage"
+  name          = var.git2s3_stack_name
   template_body = file("${path.module}/git2s3.template")
   parameters    = {
     AllowedIps          = data.github_ip_ranges.ips.git
