@@ -40,13 +40,15 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_total" {
 
 resource "aws_cloudwatch_log_metric_filter" "squid_requests_denied" {
   name           = "${var.env_name}-squid-requests-denied"
-  pattern        = "\"DENIED\"" # logs containing DENIED anywhere
+  pattern        = "[timestamp, processing_time, ip_port, cache_result=\"*TCP_DENIED*\", length, http_method, url, client_name, hierarchy, content_type]"
   log_group_name = local.log_group_name
   metric_transformation {
     namespace     = var.metric_namespace
     name          = "${var.env_name}/DeniedRequests"
     value         = 1
-    default_value = 0
+    dimensions = {
+      url = "$url"
+    }
   }
 }
 
