@@ -8,10 +8,29 @@ resource "aws_codepipeline" "lambda" {
   }
 
   stage {
-    name = "Source"
+    name = "BuildSpec Source"
 
     action {
-      name             = "Source"
+      name             = "BuildSpecSource"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeCommit"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        PollForSourceChanges = "false"
+        RepositoryName       = local.build_project_name
+        BranchName           = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Application Source"
+
+    action {
+      name             = "ApplicationSource"
       category         = "Source"
       owner            = "AWS"
       provider         = "S3"
@@ -26,6 +45,7 @@ resource "aws_codepipeline" "lambda" {
     }
   }
 
+s3://login-gov.lambda-functions.894947205914-us-west-2/circleci/identity-infra-functions/main/identity-infra-functions.zip
   stage {
     name = "Deploy"
 
