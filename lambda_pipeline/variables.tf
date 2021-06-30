@@ -1,3 +1,13 @@
+variable build_account {
+  description = "Build Acccount Id"
+  type = string
+}
+
+variable shared_accounts {
+  description = "List of accounts to share artifacts with"
+  type = list
+  default = []
+}
 variable "region" {
   description = "AWS Region"
   type        = string
