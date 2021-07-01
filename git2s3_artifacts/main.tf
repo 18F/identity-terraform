@@ -141,7 +141,7 @@ resource "aws_cloudformation_stack" "git2s3" {
   name          = var.git2s3_stack_name
   template_body = file("${path.module}/git2s3.template")
   parameters    = {
-    AllowedIps          = join(",",data.github_ip_ranges.ips.git)
+    AllowedIps          = regex("^[0-9.,\\/]+?\\/32",join(",",data.github_ip_ranges.ips.git))
     QSS3BucketName      = "aws-quickstart"
     OutputBucketName    = ""
     ScmHostnameOverride = ""
