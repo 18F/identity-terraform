@@ -11,7 +11,10 @@ terraform {
 
 # -- Variables --
 variable "bucket_name_prefix" {
-  description = "First substring in S3 bucket name of $bucket_name_prefix-public-artifacts-$region"
+  description = <<EOM
+REQUIRED. First substring in names for log_bucket,
+inventory_bucket, and the public-artifacts bucket.
+EOM
   type        = string
 }
 
@@ -48,12 +51,15 @@ variable "sse_algorithm" {
 }
 
 variable "git2s3_stack_name" {
-  description = "Name for the Git2S3 CloudFormation Stack"
+  description = "REQUIRED. Name for the Git2S3 CloudFormation Stack"
   type        = string
 }
 
 variable "external_account_ids" {
-  description = "List of additional AWS account IDs, if any, to be permitted access to the public-artifacts bucket"
+  description = <<EOM
+(OPTIONAL) List of additional AWS account IDs, if any, to be permitted
+access to the public-artifacts bucket.
+EOM
   type        = list(string)
   default     = []
 }
@@ -141,7 +147,10 @@ resource "aws_cloudformation_stack" "git2s3" {
   name          = var.git2s3_stack_name
   template_body = file("${path.module}/git2s3.template")
   parameters    = {
-    AllowedIps          = regex("^[0-9.,\\/]+?\\/32",join(",",data.github_ip_ranges.ips.git))
+    AllowedIps          = regex(
+                            "^[0-9.,\\/]+\\/32",
+                            substr(join(",",data.github_ip_ranges.ips.git), 0, 512)
+                          )
     QSS3BucketName      = "aws-quickstart"
     OutputBucketName    = ""
     ScmHostnameOverride = ""
@@ -208,6 +217,8 @@ resource "aws_s3_bucket_object" "git2s3_output_bucket_name" {
   content      = local.git2s3_output_bucket
   content_type = "text/plain"
 }
+
+# -- Outputs --
 
 output "output_bucket" {
   value = aws_s3_bucket_object.git2s3_output_bucket_name.key
