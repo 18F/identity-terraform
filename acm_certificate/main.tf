@@ -1,36 +1,3 @@
-# -- Variables --
-
-variable "domain_name" {
-  description = "The primary name used on the issued TLS certificate"
-}
-
-variable "subject_alternative_names" {
-  default     = []
-  description = "A list of additional names to add to the certificate"
-}
-
-variable "validation_zone_id" {
-  description = "Zone ID used to create the validation CNAMEs"
-}
-
-variable "validation_cname_ttl" {
-  default = 300
-}
-
-# -- Outputs --
-
-output "cert_arn" {
-  description = "ARN of the issued ACM certificate"
-  value       = aws_acm_certificate.main.arn
-}
-
-output "finished_id" {
-  description = "Reference this output in order to depend on validation being complete."
-  value       = aws_acm_certificate_validation.main.id
-}
-
-# -- Resources --
-
 # Create the certificate with the specified SubjectAltNames
 resource "aws_acm_certificate" "main" {
   domain_name               = var.domain_name

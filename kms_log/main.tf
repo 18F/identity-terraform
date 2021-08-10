@@ -282,56 +282,6 @@ resource "aws_sns_topic_subscription" "kms_events_sqs_cw_target" {
   endpoint  = aws_sqs_queue.kms_cloudwatch_events.arn
 }
 
-# queue to deliver metrics from cloudtrail lambda to
-# elasticsearch
-resource "aws_sqs_queue" "kms_elasticsearch_events" {
-  name                              = "${var.env_name}-kms-es-events"
-  delay_seconds                     = 5
-  max_message_size                  = 2048
-  visibility_timeout_seconds        = 120
-  message_retention_seconds         = 345600 # 4 days
-  kms_master_key_id                 = aws_kms_key.kms_logging.arn
-  kms_data_key_reuse_period_seconds = 600
-  tags = {
-    environment = var.env_name
-  }
-}
-
-resource "aws_sqs_queue_policy" "es_events" {
-  queue_url = aws_sqs_queue.kms_elasticsearch_events.id
-  policy    = data.aws_iam_policy_document.sqs_kms_es_events_policy.json
-}
-
-# elasticsearch queue policy
-data "aws_iam_policy_document" "sqs_kms_es_events_policy" {
-  statement {
-    sid     = "Allow SNS"
-    effect  = "Allow"
-    actions = ["sqs:SendMessage"]
-    principals {
-      type = "Service"
-      identifiers = [
-        "sns.amazonaws.com",
-      ]
-    }
-    resources = [aws_sqs_queue.kms_elasticsearch_events.arn]
-    condition {
-      test     = "StringLike"
-      variable = "aws:SourceArn"
-      values = [
-        aws_sns_topic.kms_logging_events.arn,
-      ]
-    }
-  }
-}
-
-# elasticsearch queue subscription to sns topic for metrics
-resource "aws_sns_topic_subscription" "kms_events_sqs_es_target" {
-  topic_arn = aws_sns_topic.kms_logging_events.arn
-  protocol  = "sqs"
-  endpoint  = aws_sqs_queue.kms_elasticsearch_events.arn
-}
-
 # create kinesis data stream for application kms events
 resource "aws_kinesis_stream" "datastream" {
   name        = "${var.env_name}-kms-app-events"

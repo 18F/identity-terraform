@@ -13,11 +13,6 @@ output "kms-logging-events-topic" {
   value       = aws_sns_topic.kms_logging_events.arn
 }
 
-output "kms-elasticsearch-events-queue" {
-  description = "Queue for kms logging events to elasticsearch"
-  value       = aws_sqs_queue.kms_elasticsearch_events.arn
-}
-
 output "kms-cloudwatch-events-queue" {
   description = "Queue for kms logging events to cloudwatch"
   value       = aws_sqs_queue.kms_cloudwatch_events.arn
