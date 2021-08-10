@@ -20,15 +20,15 @@ EOM
 }
 
 locals {
-  role_group_map = transpose(
-    {
+  role_group_map = flatten([
+    for item, access in {
       for group, perms in var.group_role_map : group => flatten([
         for perm in perms: flatten([
           for pair in setproduct(keys(perm), flatten([values(perm)])): join("", [pair[1], "Assume", pair[0]])
         ])
       ])
-    }
-  )
+    }: formatlist("%s %s", item, access)
+  ])
 }
 
 # -- Resources --
@@ -39,14 +39,16 @@ resource "aws_iam_group" "iam_group" {
   name = each.key
 }
 
-resource "aws_iam_policy_attachment" "group_policy" {
-  for_each = local.role_group_map
+resource "aws_iam_group_policy_attachment" "group_policy" {
+  for_each = toset(local.role_group_map)
   
-  name       = each.key
-  groups     = each.value
-  policy_arn = "arn:aws:iam::${var.master_account_id}:policy/${each.key}"
+  group      = element(split(" ",each.key),0)
+  policy_arn = "arn:aws:iam::${var.master_account_id}:policy/${element(split(" ",each.key),1)}"
 
-  depends_on = [var.policy_depends_on]
+  depends_on = [
+    var.policy_depends_on,
+    aws_iam_group.iam_group
+  ]
 }
 
 # -- Outputs --
