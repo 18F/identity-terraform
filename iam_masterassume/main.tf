@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "role_policy_doc" {
         "sts:AssumeRole"
       ]
       resources = [
-        for arn in each.value : "${arn}"
+        for arn in each.value : arn
       ]
       condition {
       test     = "StringEquals"

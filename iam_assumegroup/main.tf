@@ -46,7 +46,10 @@ resource "aws_iam_policy_attachment" "group_policy" {
   groups     = each.value
   policy_arn = "arn:aws:iam::${var.master_account_id}:policy/${each.key}"
 
-  depends_on = [var.policy_depends_on]
+  depends_on = [
+    var.policy_depends_on,
+    aws_iam_group.iam_group
+  ]
 }
 
 # -- Outputs --
