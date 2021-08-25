@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "kms" {
       "kms:*",
     ]
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       ]
@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "kms" {
       "kms:DescribeKey",
     ]
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = concat(
         var.ec2_kms_arns
       )
@@ -49,7 +49,7 @@ data "aws_iam_policy_document" "kms" {
       "*",
     ]
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = [
         "events.amazonaws.com",
         "sns.amazonaws.com",
@@ -592,7 +592,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   function_name = local.ct_processor_lambda_name
   description   = "18F/identity-lambda-functions: KMS CT Log Processor"
   role          = aws_iam_role.cloudtrail_processor.arn
-  handler       = "main.IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
+  handler       = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
   runtime       = "ruby2.7"
   timeout       = 120 # seconds
 
@@ -614,8 +614,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=897cd9f749ead05a97b0f904a5dedfe83d9a9566"
-
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=cee758e3ed080b27aedc45087e8ae4d5330dd2d3"
+  
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
   alarm_actions        = [var.alarm_sns_topic_arn]
@@ -781,7 +781,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   function_name = local.cw_processor_lambda_name
   description   = "18F/identity-lambda-functions: KMS CW Log Processor"
   role          = aws_iam_role.cloudwatch_processor.arn
-  handler       = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
+  handler       = "main.Functions::IdentityKMSMonitor::CloudWatchKMSHandler.process"
   runtime       = "ruby2.7"
   timeout       = 120 # seconds
 
@@ -802,8 +802,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=897cd9f749ead05a97b0f904a5dedfe83d9a9566"
-
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=cee758e3ed080b27aedc45087e8ae4d5330dd2d3"
+  
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
   alarm_actions        = [var.alarm_sns_topic_arn]
@@ -924,7 +924,7 @@ resource "aws_lambda_function" "event_processor" {
   function_name = local.event_processor_lambda_name
   description   = "18F/identity-lambda-functions: KMS Log Event Processor"
   role          = aws_iam_role.event_processor.arn
-  handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
+  handler       = "main.Functions::IdentityKMSMonitor::CloudWatchEventGenerator.process"
   runtime       = "ruby2.7"
   timeout       = 120 # seconds
 

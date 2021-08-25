@@ -11,7 +11,7 @@ To work properly, an S3 bucket for collecting Inventory reports must already exi
 
 ```hcl
 module "secrets_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=master"
+  source = "github.com/18F/identity-terraform//s3_config?ref=main"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = var.secrets_bucket_type

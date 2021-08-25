@@ -10,7 +10,7 @@ care of creating a CloudWatch dashboard showing a variety of useful metrics.
 
 ```hcl
 module "rds_dashboard_my_database" {
-    source = "github.com/18F/identity-terraform//cloudwatch_dashboard_rds?ref=master"
+    source = "github.com/18F/identity-terraform//cloudwatch_dashboard_rds?ref=main"
 
     dashboard_name = "my-rds-dashboard"
 

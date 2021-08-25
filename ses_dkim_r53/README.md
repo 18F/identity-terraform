@@ -11,7 +11,7 @@ Given a domain name and a Route53 zone ID, this Terraform module will create:
 
 ```hcl
 module "core_ses" {
-  source = "github.com/18F/identity-terraform//ses_dkim_r53?ref=master"
+  source = "github.com/18F/identity-terraform//ses_dkim_r53?ref=main"
 
   domain                    = var.root_domain
   zone_id                   = module.common_dns.primary_zone_id

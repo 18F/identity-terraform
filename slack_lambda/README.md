@@ -24,7 +24,7 @@ resource "aws_sns_topic" "slack_otherevents" {
 }
 
 module "slack_login_otherevents" {
-  source = "github.com/18F/identity-terraform//slack_lambda?ref=master"
+  source = "github.com/18F/identity-terraform//slack_lambda?ref=main"
   
   lambda_name        = "snstoslack_login_otherevents"
   lambda_description = "Sends messages to #login-otherevents Slack channel via SNS subscription."

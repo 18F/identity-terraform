@@ -12,7 +12,7 @@ resource "aws_route53_zone" "default" {
 }
 
 module "acm-cert" {
-  source = "github.com/18F/identity-terraform//acm_certificate?ref=master"
+  source = "github.com/18F/identity-terraform//acm_certificate?ref=main"
   enabled = 1
   domain_name = "test.example.com"
   subject_alternative_names = [

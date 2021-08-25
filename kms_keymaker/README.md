@@ -8,7 +8,7 @@ These resources were, previously, all included within `kms_log` in a more monoli
 
 ```hcl
 module "kms_keymaker_uw2" {
-  source = "github.com/18F/identity-terraform//kms_keymaker?ref=master"
+  source = "github.com/18F/identity-terraform//kms_keymaker?ref=main"
 
   env_name                   = "testing"
   ec2_kms_arns               = local.kms_arns
