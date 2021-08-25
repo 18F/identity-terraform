@@ -945,6 +945,11 @@ resource "aws_lambda_function" "event_processor" {
 resource "aws_lambda_event_source_mapping" "event_processor" {
   event_source_arn = aws_sqs_queue.kms_cloudwatch_events.arn
   function_name    = aws_lambda_function.event_processor.arn
+  depends_on = [
+    aws_iam_role.event_processor,
+    aws_iam_role_policy.event_processor_kms,
+    aws_iam_role_policy.event_processor_sqs
+  ]
 }
 
 resource "aws_iam_role" "event_processor" {
