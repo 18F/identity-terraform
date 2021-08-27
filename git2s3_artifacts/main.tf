@@ -67,17 +67,24 @@ EOM
 locals {
   git2s3_output_bucket = chomp(aws_cloudformation_stack.git2s3.outputs["OutputBucketName"])
 
-  log_bucket = var.log_bucket_name != "" ? var.log_bucket_name : join(".",
-    [
-      var.bucket_name_prefix,
-      "s3-access-logs",
-      "${data.aws_caller_identity.current.account_id}-${var.region}"
-    ]
-  )
+  github_ipv4 = compact([
+    for ip in data.github_ip_ranges.ips.git : try(regex(local.ip_regex, ip),"")
+  ])
+
   inventory_bucket = var.inventory_bucket_name != "" ? var.inventory_bucket_name : join(".",
     [
       var.bucket_name_prefix,
       "s3-inventory",
+      "${data.aws_caller_identity.current.account_id}-${var.region}"
+    ]
+  )
+
+  ip_regex = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\/(?:[0-2][0-9]|[3][0-2])"
+
+  log_bucket = var.log_bucket_name != "" ? var.log_bucket_name : join(".",
+    [
+      var.bucket_name_prefix,
+      "s3-access-logs",
       "${data.aws_caller_identity.current.account_id}-${var.region}"
     ]
   )
@@ -147,10 +154,7 @@ resource "aws_cloudformation_stack" "git2s3" {
   name          = var.git2s3_stack_name
   template_body = file("${path.module}/git2s3.template")
   parameters    = {
-    AllowedIps          = regex(
-                            "^[0-9.,\\/]+\\/32",
-                            substr(join(",",data.github_ip_ranges.ips.git), 0, 512)
-                          )
+    AllowedIps          = substr(join(",",local.github_ipv4), 0, 512)
     QSS3BucketName      = "aws-quickstart"
     OutputBucketName    = ""
     ScmHostnameOverride = ""
