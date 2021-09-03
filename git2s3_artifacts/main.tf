@@ -110,7 +110,7 @@ resource "aws_s3_bucket" "artifact_bucket" {
 }
 
 module "s3_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=d54761dff512b221a2077c4bca215bc561e4c9a2"
+  source = "github.com/18F/identity-terraform//s3_config?ref=59d78d2087cfb9554a7454ca455a9d7e221606a2"
 
   bucket_name_override = aws_s3_bucket.artifact_bucket.id
   region               = var.region
