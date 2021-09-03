@@ -3,17 +3,20 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
     }
+    archive = {
+      source  = "hashicorp/archive"
+    }
     external = {
       source  = "hashicorp/external"
-    }
-    github = {
-      source  = "integrations/github"
     }
     null = {
       source  = "hashicorp/null"
     }
     template = {
       source  = "hashicorp/template"
+    }
+    github = {
+      source  = "integrations/github"
     }
     newrelic = {
       source  = "newrelic/newrelic"
