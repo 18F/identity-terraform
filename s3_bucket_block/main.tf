@@ -88,7 +88,7 @@ resource "aws_s3_bucket" "bucket" {
 
 module "bucket_config" {
   for_each = var.bucket_data
-  source = "github.com/18F/identity-terraform//s3_config?ref=59d78d2087cfb9554a7454ca455a9d7e221606a2"
+  source = "github.com/18F/identity-terraform//s3_config?ref=53ab4c954af5139a7988d475b6f19fb959caa63e"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = each.key

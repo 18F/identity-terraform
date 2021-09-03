@@ -614,7 +614,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=59d78d2087cfb9554a7454ca455a9d7e221606a2"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=53ab4c954af5139a7988d475b6f19fb959caa63e"
   
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
@@ -802,7 +802,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=59d78d2087cfb9554a7454ca455a9d7e221606a2"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=53ab4c954af5139a7988d475b6f19fb959caa63e"
   
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
