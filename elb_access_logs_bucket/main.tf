@@ -132,7 +132,7 @@ lifecycle_rule {
 }
 
 module "s3_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=cad9776e886147179d563a9b058b92b3dfbf3957"
+  source = "github.com/18F/identity-terraform//s3_config?ref=59d78d2087cfb9554a7454ca455a9d7e221606a2"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = "elb-logs"

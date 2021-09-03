@@ -29,7 +29,7 @@ can have account-category-specific access to specific roles, e.g.:
 
 ```hcl
 module "devops_group" {
-  source = "github.com/18F/identity-terraform//iam_assumegroup?ref=master"
+  source = "github.com/18F/identity-terraform//iam_assumegroup?ref=main"
   
   group_role_map = {
     "appdev" = [

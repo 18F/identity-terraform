@@ -26,7 +26,7 @@ A module can be added to the Terraform configuration for each "type" of account,
 
 ```hcl
 module "assume_roles_prod" {
-  source = "github.com/18F/identity-terraform//iam_masterassume?ref=master"
+  source = "github.com/18F/identity-terraform//iam_masterassume?ref=main"
 
   role_list = [
     "FullAdministrator",

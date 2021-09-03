@@ -16,7 +16,7 @@ present in the map, then the `default_ami_id` will be used instead.
 
 ```hcl
 module "dbserver_launch_template" {
-  source = "github.com/18F/identity-terraform//launch_template?ref=master"
+  source = "github.com/18F/identity-terraform//launch_template?ref=main"
 
   role           = "dbserver"
   env            = "${var.env_name}"
