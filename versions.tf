@@ -22,5 +22,5 @@ terraform {
       source  = "newrelic/newrelic"
     }
   }
-  required_version = ">= 0.13.7"
+  required_version = ">= 1.0.2"
 }
