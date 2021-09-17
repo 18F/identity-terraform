@@ -592,7 +592,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   function_name = local.ct_processor_lambda_name
   description   = "18F/identity-lambda-functions: KMS CT Log Processor"
   role          = aws_iam_role.cloudtrail_processor.arn
-  handler       = "main.Functions::IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
+  handler       = "main.IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
   runtime       = "ruby2.7"
   timeout       = 120 # seconds
 
@@ -781,7 +781,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   function_name = local.cw_processor_lambda_name
   description   = "18F/identity-lambda-functions: KMS CW Log Processor"
   role          = aws_iam_role.cloudwatch_processor.arn
-  handler       = "main.Functions::IdentityKMSMonitor::CloudWatchKMSHandler.process"
+  handler       = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
   runtime       = "ruby2.7"
   timeout       = 120 # seconds
 
@@ -924,7 +924,7 @@ resource "aws_lambda_function" "event_processor" {
   function_name = local.event_processor_lambda_name
   description   = "18F/identity-lambda-functions: KMS Log Event Processor"
   role          = aws_iam_role.event_processor.arn
-  handler       = "main.Functions::IdentityKMSMonitor::CloudWatchEventGenerator.process"
+  handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
   runtime       = "ruby2.7"
   timeout       = 120 # seconds
 
