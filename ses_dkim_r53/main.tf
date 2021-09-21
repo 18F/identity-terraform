@@ -39,5 +39,5 @@ resource "aws_route53_record" "primary_ses_dkim" {
 
 output "ses_token" {
   description = "Token for the primary verification record in Route 53."
-  value = aws_ses_domain_identity.primary.verification_token
+  value       = aws_ses_domain_identity.primary.verification_token
 }

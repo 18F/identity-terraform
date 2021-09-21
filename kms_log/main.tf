@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "kms" {
       "kms:*",
     ]
     principals {
-      type        = "AWS"
+      type = "AWS"
       identifiers = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       ]
@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "kms" {
       "kms:DescribeKey",
     ]
     principals {
-      type        = "AWS"
+      type = "AWS"
       identifiers = concat(
         var.ec2_kms_arns
       )
@@ -49,7 +49,7 @@ data "aws_iam_policy_document" "kms" {
       "*",
     ]
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "events.amazonaws.com",
         "sns.amazonaws.com",
@@ -615,7 +615,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 
 module "ct-processor-github-alerts" {
   source = "github.com/18F/identity-terraform//lambda_alerts?ref=5d338480d96af4c5123fcbebb0d0a189e31496b4"
-  
+
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
   alarm_actions        = [var.alarm_sns_topic_arn]
@@ -803,7 +803,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 
 module "cw-processor-github-alerts" {
   source = "github.com/18F/identity-terraform//lambda_alerts?ref=5d338480d96af4c5123fcbebb0d0a189e31496b4"
-  
+
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
   alarm_actions        = [var.alarm_sns_topic_arn]

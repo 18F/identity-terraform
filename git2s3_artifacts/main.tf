@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "git2s3_output_bucket" {
   statement {
     effect = "Allow"
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = formatlist("arn:aws:iam::%s:root", var.external_account_ids)
     }
     actions = [
@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "artifact_bucket" {
   statement {
     effect = "Allow"
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = formatlist("arn:aws:iam::%s:root", var.external_account_ids)
     }
     actions = [
@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "artifact_bucket" {
   statement {
     effect = "Allow"
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = formatlist("arn:aws:iam::%s:root", var.external_account_ids)
     }
     actions = [
@@ -62,11 +62,11 @@ data "aws_iam_policy_document" "artifact_bucket" {
 resource "aws_cloudformation_stack" "git2s3" {
   name          = var.git2s3_stack_name
   template_body = file("${path.module}/git2s3.template")
-  parameters    = {
-    AllowedIps          = regex(
-                            "^[0-9.,\\/]+\\/32",
-                            substr(join(",",local.github_ipv4), 0, 512)
-                          )
+  parameters = {
+    AllowedIps = regex(
+      "^[0-9.,\\/]+\\/32",
+      substr(join(",", local.github_ipv4), 0, 512)
+    )
     QSS3BucketName      = "aws-quickstart"
     OutputBucketName    = ""
     ScmHostnameOverride = ""
@@ -83,8 +83,8 @@ resource "aws_cloudformation_stack" "git2s3" {
 }
 
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
-  acl    = "private"
+  bucket        = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
+  acl           = "private"
   force_destroy = true
 
   versioning {

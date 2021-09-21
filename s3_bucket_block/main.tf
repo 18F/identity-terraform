@@ -40,9 +40,9 @@ data "aws_caller_identity" "current" {
 resource "aws_s3_bucket" "bucket" {
   for_each = var.bucket_data
 
-  bucket = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}"
-  acl    = lookup(each.value, "acl", "private")
-  policy = lookup(each.value, "policy", "")
+  bucket        = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}"
+  acl           = lookup(each.value, "acl", "private")
+  policy        = lookup(each.value, "policy", "")
   force_destroy = lookup(each.value, "force_destroy", true)
 
   logging {
@@ -59,11 +59,11 @@ resource "aws_s3_bucket" "bucket" {
     content {
       id      = lifecycle_rule.value["id"]
       enabled = lifecycle_rule.value["enabled"]
-      prefix = lifecycle_rule.value["prefix"]
+      prefix  = lifecycle_rule.value["prefix"]
       dynamic "transition" {
         for_each = lifecycle_rule.value["transitions"]
         content {
-          days = transition.value["days"]
+          days          = transition.value["days"]
           storage_class = transition.value["storage_class"]
         }
       }
@@ -88,7 +88,7 @@ resource "aws_s3_bucket" "bucket" {
 
 module "bucket_config" {
   for_each = var.bucket_data
-  source = "github.com/18F/identity-terraform//s3_config?ref=5d338480d96af4c5123fcbebb0d0a189e31496b4"
+  source   = "github.com/18F/identity-terraform//s3_config?ref=5d338480d96af4c5123fcbebb0d0a189e31496b4"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = each.key
@@ -100,7 +100,7 @@ module "bucket_config" {
 # -- Outputs --
 output "buckets" {
   description = "Map of the bucket names:ids created from bucket_data."
-  value       = zipmap(
-      sort(keys(aws_s3_bucket.bucket)[*]),
-      sort(values(aws_s3_bucket.bucket)[*]["id"]))
+  value = zipmap(
+    sort(keys(aws_s3_bucket.bucket)[*]),
+  sort(values(aws_s3_bucket.bucket)[*]["id"]))
 }
