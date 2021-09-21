@@ -1,0 +1,46 @@
+version: 2.1
+
+jobs:
+  setup:
+    docker:
+      - image: cimg/ruby:2.7
+    working_directory: /tmp/identity-terraform
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  tf-fmt-check:
+    docker:
+      # TODO - Pin this!
+      - image: hashicorp/terraform
+    working_directory: /tmp/identity-terraform
+    steps:
+      - attach_workspace:
+          at: .
+      - run: terraform fmt -recursive -diff -check ./terraform
+  tfsec-check-subdirs-enforce:
+    docker:
+      - image: aquasec/tfsec-ci
+    working_directory: /tmp/identity-terraform
+    steps:
+      - attach_workspace:
+          at: .
+      - run: for d in $(find ./ -type d); do echo "### CHECKING ${d}"; tfsec --no-color ${d}; done
+
+workflows:
+  version: 2
+  lint:
+    jobs:
+      - setup
+      - tf-fmt-check:
+          requires:
+            - setup
+  sast:
+    jobs:
+      - setup
+      - tfsec-check-subdirs-enforce:
+          requires:
+            - setup
+
