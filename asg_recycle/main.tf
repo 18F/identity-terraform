@@ -15,7 +15,7 @@ variable "normal_desired_capacity" {
 
 variable "override_spindown_capacity" {
   description = "Set a specific number of instances for spindown instead of normal_desired_capacity"
-  default = -1
+  default     = -1
 }
 
 variable "max_size" {

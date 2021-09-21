@@ -13,8 +13,8 @@ variable "log_bucket_name" {
 Will default to $bucket_name_prefix.s3-access-logs.$account_id-$region
 if not explicitly declared.
 EOM
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
 }
 
 variable "region" {
@@ -29,8 +29,8 @@ variable "inventory_bucket_name" {
 Will default to $bucket_name_prefix.s3-inventory.$account_id-$region
 if not explicitly declared.
 EOM
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
 }
 
 variable "sse_algorithm" {
@@ -56,7 +56,7 @@ EOM
 locals {
   ip_regex = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\/(?:[0-2][0-9]|[3][0-2])"
   github_ipv4 = compact([
-    for ip in data.github_ip_ranges.ips.git : try(regex(local.ip_regex, ip),"")
+    for ip in data.github_ip_ranges.ips.git : try(regex(local.ip_regex, ip), "")
   ])
 
   git2s3_output_bucket = chomp(aws_cloudformation_stack.git2s3.outputs["OutputBucketName"])

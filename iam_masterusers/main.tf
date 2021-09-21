@@ -11,8 +11,8 @@ variable "group_depends_on" {
 the specified value (i.e. another resource, such as the respective
 group) exists before it is created.
 EOM
-  type    = any
-  default = null
+  type        = any
+  default     = null
 }
 
 # -- Resources --
@@ -27,9 +27,9 @@ resource "aws_iam_user" "master_user" {
 resource "aws_iam_group_membership" "master_group" {
   for_each = transpose(var.user_map)
 
-  name       = "${each.key}-group"
-  group      = each.key
-  users      = each.value
+  name  = "${each.key}-group"
+  group = each.key
+  users = each.value
   depends_on = [
     aws_iam_user.master_user,
     var.group_depends_on
@@ -45,7 +45,7 @@ resource "aws_iam_policy" "manage_your_account" {
 
 resource "aws_iam_user_policy_attachment" "manage_your_account" {
   for_each = aws_iam_user.master_user
-  
+
   user       = each.key
   policy_arn = aws_iam_policy.manage_your_account.arn
 }

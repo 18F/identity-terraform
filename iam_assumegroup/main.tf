@@ -6,7 +6,7 @@ variable "master_account_id" {
 
 variable "group_role_map" {
   description = "Roles map for IAM groups, along with account types per role to grant access to."
-  type = map(list(map(list(string))))
+  type        = map(list(map(list(string))))
 }
 
 variable "policy_depends_on" {
@@ -15,16 +15,16 @@ variable "policy_depends_on" {
 the specified value (i.e. another resource, such as the respective
 group_policy) exists before it is created.
 EOM
-  type    = any
-  default = null
+  type        = any
+  default     = null
 }
 
 locals {
   role_group_map = transpose(
     {
       for group, perms in var.group_role_map : group => flatten([
-        for perm in perms: flatten([
-          for pair in setproduct(keys(perm), flatten([values(perm)])): join("", [pair[1], "Assume", pair[0]])
+        for perm in perms : flatten([
+          for pair in setproduct(keys(perm), flatten([values(perm)])) : join("", [pair[1], "Assume", pair[0]])
         ])
       ])
     }
@@ -41,7 +41,7 @@ resource "aws_iam_group" "iam_group" {
 
 resource "aws_iam_policy_attachment" "group_policy" {
   for_each = local.role_group_map
-  
+
   name       = each.key
   groups     = each.value
   policy_arn = "arn:aws:iam::${var.master_account_id}:policy/${each.key}"

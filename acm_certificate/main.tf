@@ -12,7 +12,7 @@ resource "aws_acm_certificate" "main" {
 # Create each validation CNAME
 resource "aws_route53_record" "validation-cnames" {
   for_each = {
-    for item in aws_acm_certificate.main.domain_validation_options: item.domain_name => {
+    for item in aws_acm_certificate.main.domain_validation_options : item.domain_name => {
       name   = item.resource_record_name
       record = item.resource_record_value
       type   = item.resource_record_type
@@ -31,6 +31,6 @@ resource "aws_route53_record" "validation-cnames" {
 # You can depend_on this to wait for the ACM cert to be ready.
 resource "aws_acm_certificate_validation" "main" {
   certificate_arn         = aws_acm_certificate.main.arn
-  validation_record_fqdns = [for record in aws_route53_record.validation-cnames: record.fqdn]
+  validation_record_fqdns = [for record in aws_route53_record.validation-cnames : record.fqdn]
 }
 

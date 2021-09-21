@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "kms" {
       "kms:*",
     ]
     principals {
-      type        = "AWS"
+      type = "AWS"
       identifiers = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       ]
@@ -30,7 +30,7 @@ data "aws_iam_policy_document" "kms" {
       "kms:DescribeKey",
     ]
     principals {
-      type        = "AWS"
+      type = "AWS"
       identifiers = concat(
         var.ec2_kms_arns
       )
@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "kms" {
       "*",
     ]
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "events.amazonaws.com",
         "sns.amazonaws.com",
@@ -148,11 +148,11 @@ data "aws_iam_policy_document" "kms_events_topic_policy" {
       "SNS:Publish",
     ]
 
-#    condition {
-#      test     = "StringLike"
-#      variable = "aws:SourceArn"
-#      values = [aws_cloudwatch_event_rule.decrypt.arn]
-#    }
+    #    condition {
+    #      test     = "StringLike"
+    #      variable = "aws:SourceArn"
+    #      values = [aws_cloudwatch_event_rule.decrypt.arn]
+    #    }
 
     effect = "Allow"
 
