@@ -19,8 +19,13 @@ locals {
         eventmsg = event['Records'][0]['Sns']['Message']
         try:
           data = json.loads(eventmsg)
-          if data['detailType'] == 'CodePipeline Pipeline Execution State Change':
+          if 'detailType' in data and data['detailType'] == 'CodePipeline Pipeline Execution State Change':
             msgtext = 'auto-terraform:  ' + data['detail']['pipeline'] + ' pipeline ' + data['detail']['state'] + ' with execution ID ' + data['detail']['execution-id']
+          elif 'AlarmName' in data and 'AlarmDescription' in data:
+            msgtext = ('Alarm has gone off!\n' + data['AlarmName'] + '\n' + data['AlarmDescription'] + '\n' + data['NewStateReason'] + '\nTime: ' +
+                      data['StateChangeTime'] + '\nRegion: ' + data['Region'])
+          else:
+            msgtext = eventmsg
         except:
           msgtext = eventmsg
         msg = {
