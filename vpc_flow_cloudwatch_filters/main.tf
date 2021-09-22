@@ -71,7 +71,7 @@ resource "aws_cloudwatch_log_metric_filter" "vpc_flow_rejections_unexpected" {
 
 resource "aws_cloudwatch_metric_alarm" "vpc_rejection_alarm" {
   alarm_name        = "${var.env_name}-vpc-flow-rejections-unexpected"
-  alarm_description = "(Managed by Terraform) Alarm when the VPC flow log shows any unexpected traffic"
+  alarm_description = "Alarm when the VPC flow log shows any unexpected traffic [TF]"
   namespace         = var.metric_namespace
   metric_name       = "${var.env_name}/UnexpectedRejections"
 

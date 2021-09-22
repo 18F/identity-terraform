@@ -23,7 +23,7 @@ variable "target_threshold" {
 
 resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
   alarm_name        = "${var.env_name} IDP ELB HTTP 5XX"
-  alarm_description = "HTTP 5XX errors served by the ELB without the IDP (Managed by Terraform)"
+  alarm_description = "HTTP 5XX errors served by the ELB without the IDP [TF]"
   namespace         = "AWS/ApplicationELB"
   metric_name       = "HTTPCode_ELB_5XX_Count"
   dimensions = {
@@ -44,7 +44,7 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
 
 resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
   alarm_name        = "${var.env_name} IDP Target HTTP 5XX"
-  alarm_description = "HTTP 5XX errors served by IDP (Managed by Terraform)"
+  alarm_description = "HTTP 5XX errors served by IDP [TF]"
   namespace         = "AWS/ApplicationELB"
   metric_name       = "HTTPCode_Target_5XX_Count"
   dimensions = {

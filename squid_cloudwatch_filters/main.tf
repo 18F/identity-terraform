@@ -52,7 +52,7 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_denied" {
 
 resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
   alarm_name        = "${var.env_name}-squid-denials"
-  alarm_description = "(Managed by Terraform) Alarm when the Squid access log shows any denied requests"
+  alarm_description = "Alarm when the Squid access log shows any denied requests [TF]"
   namespace         = var.metric_namespace
   metric_name       = "${var.env_name}/DeniedRequests"
 
@@ -71,7 +71,7 @@ resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
 
 resource "aws_cloudwatch_metric_alarm" "squid_total_requests" {
   alarm_name        = "${var.env_name}-squid-total-requests"
-  alarm_description = "(Managed by Terraform) Alarm when the Squid access log total requests fall below threshold"
+  alarm_description = "Alarm when the Squid access log total requests fall below threshold [TF]"
   namespace         = var.metric_namespace
   metric_name       = "${var.env_name}/TotalRequests"
 
