@@ -22,13 +22,13 @@ locals {
           if 'detailType' in data and data['detailType'] == 'CodePipeline Pipeline Execution State Change':
             msgtext = 'auto-terraform:  ' + data['detail']['pipeline'] + ' pipeline ' + data['detail']['state'] + ' with execution ID ' + data['detail']['execution-id']
           elif 'AlarmName' in data and 'AlarmDescription' in data:
-```suggestion
-            msgtext = '\n'.join(' '.join(pair) for pair in [
-              ['*Alarm has gone off!*'],
-              ['*' + data['AlarmName'] + '*', data['AlarmDescription']],
-              [data['NewStateReason']],
-              ['*Time*:', data['StateChangeTime']],
-              ['*Region*:', data['Region']])
+            msgtext = '\n'.join([
+              '*Alarm has gone off!*',
+              f'*{data["AlarmName"]}*',
+              data["AlarmDescription"],
+              data["NewStateReason"],
+              f'*Time*: {data["StateChangeTime"]}',
+              f'*Region*: {data["Region"]}'])
           else:
             msgtext = eventmsg
         except:
