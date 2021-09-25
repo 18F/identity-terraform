@@ -19,15 +19,15 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: terraform fmt -recursive -diff -check ./terraform
-  tfsec-check-subdirs-enforce:
+      - run: terraform fmt -recursive -diff -check ./
+  tfsec-check-subdirs:
     docker:
       - image: aquasec/tfsec-ci
     working_directory: /tmp/identity-terraform
     steps:
       - attach_workspace:
           at: .
-      - run: for d in $(find ./ -type d); do echo "### CHECKING ${d}"; tfsec --no-color ${d}; done
+      - run: for d in $(find ./ -type d); do echo "### CHECKING ${d}"; tfsec --soft-fail --no-color ${d}; done
 
 workflows:
   version: 2
@@ -40,7 +40,7 @@ workflows:
   sast:
     jobs:
       - setup
-      - tfsec-check-subdirs-enforce:
+      - tfsec-check-subdirs:
           requires:
             - setup
 
