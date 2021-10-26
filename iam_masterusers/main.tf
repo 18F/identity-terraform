@@ -2,7 +2,7 @@
 
 variable "user_map" {
   description = "Map of users to group memberships."
-  type        = map(list(string))
+  type        = map(map(list(string)))
 }
 
 variable "group_depends_on" {
@@ -25,7 +25,7 @@ resource "aws_iam_user" "master_user" {
 }
 
 resource "aws_iam_group_membership" "master_group" {
-  for_each = transpose(var.user_map)
+  for_each = transpose({for k, v in var.user_map : k => v.aws_groups})
 
   name       = "${each.key}-group"
   group      = each.key
