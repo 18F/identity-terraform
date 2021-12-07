@@ -65,20 +65,6 @@ data "aws_iam_policy_document" "ksk_policy" {
   }
 }
 
-# -- Providers
-
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      configuration_aliases = [
-        aws.usw2,
-        aws.use1
-      ]
-    }
-  }
-}
-
 # -- Locals
 
 locals {
