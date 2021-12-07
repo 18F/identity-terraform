@@ -1,19 +1,3 @@
-variable "dnssec_alarms" {
-  description = "Data for any desired DNSSEC / KSK alarms in CloudWatch (if creating)"
-  type        = any
-  default     = {
-    "dnssec_alarm_example" = {
-      desc          = "ZONEID DNSSEC Alarm"
-      metric_name   = "MetricName"
-      statistic     = "Sum"
-      comp_operator = "GreaterThanThreshold"
-      statistic     = 0
-      period        = 86400
-      eval_periods  = 1
-    }
-  }
-}
-
 variable "alarm_actions" {
   type        = list(string)
   description = "A list of ARNs to notify when the alarms fire"
@@ -43,4 +27,28 @@ variable "dnssec_zone_name" {
 variable "dnssec_zone_id" {
   description = "ID of the Route53 DNS domain to to apply DNSSEC configuration to."
   type        = string
+}
+
+variable "dnssec_ksks_action_req_alarm_desc" {
+  type        = string
+  description = <<EOM
+(Optional) Extra text for the  dnssec_ksks_action_req CloudWatch Alarm description,
+i.e. link to internal documentation, help pages, etc.
+EOM
+}
+
+variable "dnssec_ksk_age_alarm_desc" {
+  type        = string
+  description = <<EOM
+(Optional) Extra text for the  dnssec_ksk_age CloudWatch Alarm description,
+i.e. link to internal documentation, help pages, etc.
+EOM
+}
+
+variable "dnssec_errors_alarm_desc" {
+  type        = string
+  description = <<EOM
+(Optional) Extra text for the  dnssec_errors CloudWatch Alarm description,
+i.e. link to internal documentation, help pages, etc.
+EOM
 }

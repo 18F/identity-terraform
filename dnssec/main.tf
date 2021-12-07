@@ -79,6 +79,38 @@ terraform {
   }
 }
 
+# -- Locals
+
+locals {
+  dnssec_alarms = {
+    "dnssec_ksks_action_req" = {
+      metric_name = "KSKActionRequired"
+      desc        = join("",[
+        "1+ DNSSEC KSKs require attention in <24h",
+        var.dnssec_ksks_action_req_alarm_desc
+      ])
+    }
+    "dnssec_ksk_age" = {
+      statistic   = "Maximum"
+      threshold   = var.dnssec_ksk_max_days * 24 * 60 * 60
+      metric_name = "KSKAge"
+      desc        = join("",[
+        "1+ DNSSEC KSKs are >${var.dnssec_ksk_max_days} days old",
+        var.dnssec_ksk_age_alarm_desc
+      ])
+    }
+    "dnssec_errors" = {
+      metric_name = "Errors"
+      desc        = join("",[
+        "DNSSEC encountered 1+ errors in <24h",
+        var.dnssec_errors_alarm_desc
+      ])
+    }
+  }
+}
+
+# -- Resources
+
 resource "aws_kms_key" "dnssec" {
   for_each = var.dnssec_ksks
   provider = aws.use1
@@ -129,22 +161,22 @@ resource "aws_route53_hosted_zone_dnssec" "dnssec" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "dnssec" {
-  for_each = var.dnssec_alarms
+  for_each = local.dnssec_alarms
 
   alarm_name        = "${var.dnssec_zone_name}-${each.key}"
-  alarm_description = lookup(each.value, "desc", "${var.dnssec_zone_name}-${each.key} alarm")
+  alarm_description = each.value.desc
   namespace         = "AWS/Route53"
-  metric_name       = join("",["DNSSEC",lookup(each.value, "metric_name", replace(each.key, "/[^a-zA-Z0-9 ]/", ""))])
+  metric_name       = "DNSSEC${each.value.metric_name}"
 
   dimensions = {
     HostedZoneId = var.dnssec_zone_id
   }
 
   statistic           = lookup(each.value, "statistic", "Sum")
-  comparison_operator = lookup(each.value, "comp_operator", "GreaterThanThreshold")
-  threshold           = lookup(each.value, "statistic", 0)
-  period              = lookup(each.value, "period", 86400)
-  evaluation_periods  = lookup(each.value, "eval_periods", 1)
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = lookup(each.value, "threshold", 0)
+  period              = 86400
+  evaluation_periods  = 1
   alarm_actions       = var.alarm_actions
   ok_actions          = var.alarm_actions
 }
