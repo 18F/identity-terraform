@@ -52,3 +52,12 @@ variable "dnssec_errors_alarm_desc" {
 i.e. link to internal documentation, help pages, etc.
 EOM
 }
+
+variable "protect_resources" {
+  type        = bool
+  description = <<EOM
+Whether or not to create the IAM policy that prevents disabling/destruction of
+DNSSEC itself, the associated KSKs/KMS keys/aliases, and the Route53 Hosted Zone.
+EOM
+  default = true
+}

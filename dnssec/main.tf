@@ -106,9 +106,17 @@ resource "aws_kms_key" "dnssec" {
   key_usage                = "SIGN_VERIFY"
   policy                   = data.aws_iam_policy_document.ksk_policy.json
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  #####
+  # These blocks are here, but commented out, because they currently (Dec 2021)
+  # are not configurable with variables / don't support interpolation.
+  # See the README for more info, as well as:
+  # https://github.com/hashicorp/terraform/issues/3116
+  # https://github.com/hashicorp/terraform/issues/4149
+  #####
+
+  #lifecycle {
+  #  prevent_destroy = true
+  #}
 }
 
 resource "aws_kms_alias" "dnssec" {
@@ -118,9 +126,9 @@ resource "aws_kms_alias" "dnssec" {
   name          = "alias/${replace(var.dnssec_zone_name, "/\\./", "_")}-ksk-${each.key}"
   target_key_id = aws_kms_key.dnssec[each.key].key_id
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  #lifecycle {
+  #  prevent_destroy = true
+  #}
 }
 
 resource "aws_route53_key_signing_key" "dnssec" {
@@ -130,9 +138,9 @@ resource "aws_route53_key_signing_key" "dnssec" {
   key_management_service_arn = aws_kms_key.dnssec[each.key].arn
   name                       = "${var.dnssec_zone_name}-ksk-${each.key}"
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  #lifecycle {
+  #  prevent_destroy = true
+  #}
 }
 
 resource "aws_route53_hosted_zone_dnssec" "dnssec" {
@@ -141,9 +149,67 @@ resource "aws_route53_hosted_zone_dnssec" "dnssec" {
   ]
   hosted_zone_id = var.dnssec_zone_id
 
-  lifecycle {
-    prevent_destroy = true
+  #lifecycle {
+  #  prevent_destroy = true
+  #}
+}
+
+data "aws_iam_policy_document" "dnssec_disable_prevent" {
+  count = var.protect_resources ? 1 : 0
+
+  statement {
+    sid    = "HostedZoneAndKSKDisableDeletePrevent"
+    effect = "Deny"
+    actions = [
+      "route53:DeactivateKeySigningKey",
+      "route53:DeleteHostedZone",
+      "route53:DeleteKeySigningKey",
+      "route53:DisableHostedZoneDNSSEC",
+    ]
+    resources = [
+      "arn:aws:route53:::hostedzone/${var.dnssec_zone_id}"
+    ]
   }
+
+  dynamic "statement" {
+    for_each = var.dnssec_ksks
+
+    content {
+      sid       = "KMSDisableDeletePreventForAlias${statement.key}"
+      effect = "Deny"
+      actions = [
+        "kms:DeleteAlias",
+      ]
+      resources = [
+        aws_kms_alias.dnssec[statement.key].arn
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.dnssec_ksks
+
+    content {
+      sid    = "KMSKeyDisableDeletePreventForKey${statement.key}"
+      effect = "Deny"
+      actions = [
+        "kms:DisableKey",
+        "kms:ScheduleKeyDeletion",
+      ]
+      resources = [
+        aws_kms_alias.dnssec[statement.key].target_key_arn
+      ]
+    }
+  }
+}
+
+resource "aws_iam_policy" "dnssec_disable_prevent" {
+  count = var.protect_resources ? 1 : 0
+
+  name        = "DNSSecDisablePrevent"
+  path        = "/"
+  description = "Prevent disabling of DNSSEC / deletion of hosted zone ${var.dnssec_zone_name}"
+  policy      = data.aws_iam_policy_document.dnssec_disable_prevent[count.index].json
 }
 
 resource "aws_cloudwatch_metric_alarm" "dnssec" {
