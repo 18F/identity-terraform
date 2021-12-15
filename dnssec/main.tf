@@ -71,7 +71,7 @@ locals {
   dnssec_alarms = {
     "dnssec_ksks_action_req" = {
       metric_name = "KSKActionRequired"
-      desc        = join("",[
+      desc = join("",[
         "1+ DNSSEC KSKs require attention in <24h",
         var.dnssec_ksks_action_req_alarm_desc
       ])
@@ -80,14 +80,14 @@ locals {
       statistic   = "Maximum"
       threshold   = var.dnssec_ksk_max_days * 24 * 60 * 60
       metric_name = "KSKAge"
-      desc        = join("",[
+      desc = join("",[
         "1+ DNSSEC KSKs are >${var.dnssec_ksk_max_days} days old",
         var.dnssec_ksk_age_alarm_desc
       ])
     }
     "dnssec_errors" = {
       metric_name = "Errors"
-      desc        = join("",[
+      desc = join("",[
         "DNSSEC encountered 1+ errors in <24h",
         var.dnssec_errors_alarm_desc
       ])
@@ -106,13 +106,13 @@ resource "aws_kms_key" "dnssec" {
   key_usage                = "SIGN_VERIFY"
   policy                   = data.aws_iam_policy_document.ksk_policy.json
 
-  #####
   # These blocks are here, but commented out, because they currently (Dec 2021)
-  # are not configurable with variables / don't support interpolation.
+  # are not configurable with variables / don't support interpolation,
+  # which hinders key rotation significantly.
+  # 
   # See the README for more info, as well as:
   # https://github.com/hashicorp/terraform/issues/3116
   # https://github.com/hashicorp/terraform/issues/4149
-  #####
 
   #lifecycle {
   #  prevent_destroy = true
@@ -149,9 +149,12 @@ resource "aws_route53_hosted_zone_dnssec" "dnssec" {
   ]
   hosted_zone_id = var.dnssec_zone_id
 
-  #lifecycle {
-  #  prevent_destroy = true
-  #}
+  # This block CAN remain, because preventing DNSSEC signing from
+  # deletion is paramount, and key rotation doesn't require this
+  # resource to be changed/interpolated through.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 data "aws_iam_policy_document" "dnssec_disable_prevent" {
@@ -175,7 +178,7 @@ data "aws_iam_policy_document" "dnssec_disable_prevent" {
     for_each = var.dnssec_ksks
 
     content {
-      sid       = "KMSDisableDeletePreventForAlias${statement.key}"
+      sid    = "KMSDisableDeletePreventForAlias${statement.key}"
       effect = "Deny"
       actions = [
         "kms:DeleteAlias",
