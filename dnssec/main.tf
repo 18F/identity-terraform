@@ -71,7 +71,7 @@ locals {
   dnssec_alarms = {
     "dnssec_ksks_action_req" = {
       metric_name = "KSKActionRequired"
-      desc = join("",[
+      desc = join("", [
         "1+ DNSSEC KSKs require attention in <24h",
         var.dnssec_ksks_action_req_alarm_desc
       ])
@@ -80,14 +80,14 @@ locals {
       statistic   = "Maximum"
       threshold   = var.dnssec_ksk_max_days * 24 * 60 * 60
       metric_name = "KSKAge"
-      desc = join("",[
+      desc = join("", [
         "1+ DNSSEC KSKs are >${var.dnssec_ksk_max_days} days old",
         var.dnssec_ksk_age_alarm_desc
       ])
     }
     "dnssec_errors" = {
       metric_name = "Errors"
-      desc = join("",[
+      desc = join("", [
         "DNSSEC encountered 1+ errors in <24h",
         var.dnssec_errors_alarm_desc
       ])
