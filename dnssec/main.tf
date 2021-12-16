@@ -149,12 +149,9 @@ resource "aws_route53_hosted_zone_dnssec" "dnssec" {
   ]
   hosted_zone_id = var.dnssec_zone_id
 
-  # This block CAN remain, because preventing DNSSEC signing from
-  # deletion is paramount, and key rotation doesn't require this
-  # resource to be changed/interpolated through.
-  lifecycle {
-    prevent_destroy = true
-  }
+  #lifecycle {
+  #  prevent_destroy = true
+  #}
 }
 
 data "aws_iam_policy_document" "dnssec_disable_prevent" {
