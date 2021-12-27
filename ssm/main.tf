@@ -1,64 +1,208 @@
-# -- Variables --
-# Remove this variable when modules support count
-# https://github.com/hashicorp/terraform/issues/953
-variable "enabled" {
-  default     = 1
-  description = "Whether this module is enabled (hack around modules not supporting count)"
-}
-
-variable "region" {
-  default     = "us-west-2"
-  description = "AWS Region"
-}
-
-variable "env_name" {
-  description = "Environment name, for prefixing the ssm logstream"
-}
-
-# -- Data --
 data "aws_caller_identity" "current" {
 }
 
-data "aws_iam_policy_document" "ssm" {
+# KMS keys
+data "aws_iam_policy_document" "kms_ssm" {
+  for_each = toset(local.ssm_kms_keys)
+
   statement {
-    sid = "ssmmessages"
+    sid    = "KMSKeyAccess"
+    effect = "Allow"
     actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:GenerateDataKey*",
+      "kms:ReEncrypt*"
+    ]
+    resources = [
+      aws_kms_key.kms_ssm[each.key].arn,
+    ]
+  }
+
+  statement {
+    sid    = "KMSRootAdminAndIAM"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
+    }
+    actions = [
+      "kms:*"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_kms_key" "kms_ssm" {
+  for_each = toset(local.ssm_kms_keys)
+
+  description             = "KMSKeyFor${title(each.key)}"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_alias" "kms_ssm" {
+  for_each = toset(local.ssm_kms_keys)
+
+  name          = "alias/ssm-${each.key}"
+  target_key_id = aws_kms_key.kms_ssm[each.key].key_id
+}
+
+# S3 bucket w/KMS key encryption for SSM access logs
+resource "aws_s3_bucket" "ssm_logs" {
+  bucket = local.s3_bucket_name
+  acl    = "private"
+
+  logging {
+    target_bucket = local.log_bucket
+    target_prefix = "${local.s3_bucket_name}/"
+  }
+
+  tags = {
+    environment = var.env_name
+  }
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.kms_ssm["s3"].key_id
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    id      = "expire"
+    prefix  = "/"
+    enabled = true
+
+    transition {
+      storage_class = "INTELLIGENT_TIERING"
+    }
+    noncurrent_version_transition {
+      storage_class = "INTELLIGENT_TIERING"
+    }
+    expiration {
+      days = 2190
+    }
+    noncurrent_version_expiration {
+      days = 2190
+    }
+  }
+}
+
+module "ssm_logs_bucket_config" {
+  source = "github.com/18F/identity-terraform//s3_config?ref=7e11ebe24e3a9cbc34d1413cf4d20b3d71390d5b"
+
+  bucket_name_prefix   = var.bucket_name_prefix
+  bucket_name          = "${var.env_name}-ssm-logs"
+  region               = var.region
+  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
+}
+
+resource "aws_cloudwatch_log_group" "cw_ssm_logs" {
+  name              = "aws-ssm-logs-${var.env_name}" #stream name must start with "aws-ssm-logs"
+  retention_in_days = 365
+}
+
+# Policy and roles to permit SSM access / actions on EC2 instances, and to allow them to send metrics and logs to CloudWatch
+data "aws_iam_policy_document" "ssm_access_role_policy" {
+  # Basic
+  statement {
+    sid = "SSMCoreAccess"
+    actions = [
+      "ssm:UpdateInstanceInformation",
       "ssmmessages:CreateControlChannel",
       "ssmmessages:CreateDataChannel",
       "ssmmessages:OpenControlChannel",
-      "ssmmessages:OpenDataChannel",
-      "ssm:UpdateInstanceInformation",
+      "ssmmessages:OpenDataChannel"
     ]
-
     resources = [
       "*",
     ]
   }
   statement {
-    sid = "ssmlogs"
+    sid = "CloudWatchLogsAccessForSSM"
     actions = [
+      "logs:CreateLogGroup",
       "logs:CreateLogStream",
-      "logs:PutLogEvents",
       "logs:DescribeLogGroups",
       "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
     ]
-
+    resources = [
+      "*"
+    ]
+  }
+  # S3
+  statement {
+    sid = "S3ConfigAccessForSSM"
+    actions = [
+      "s3:GetEncryptionConfiguration"
+    ]
     resources = [
       "*",
     ]
   }
+  statement {
+    sid = "S3LoggingAccessForSSM"
+    actions = [
+      "s3:PutObject"
+    ]
+    resources = [
+      aws_s3_bucket.ssm_logs.arn
+    ]
+  }
+  # KMS
+  statement {
+    sid = "KMSAccessForSSM"
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:GenerateDataKey*",
+      "kms:ReEncrypt*"
+    ]
+    resources = [
+      aws_kms_key.kms_ssm["s3"].arn,
+      aws_kms_key.kms_ssm["sessions"].arn
+    ]
+  }
 }
 
-# -- Resources --
-resource "aws_iam_policy" "ec2_ssm_policy" {
-  count       = var.enabled
-  name        = "${var.env_name}_ec2_ssm_policy"
-  path        = "/"
-  description = "Allow SSM session management"
-  policy      = data.aws_iam_policy_document.ssm.json
-}
+# SSM Doc(s)
+resource "aws_ssm_document" "ssm_cmd" {
+  for_each = var.ssm_doc_map
 
-# -- Outputs --
-output "ssm_iam_policy_arn" {
-  value = var.enabled == 1 ? aws_iam_policy.ec2_ssm_policy[0].arn : null
+  name          = "${var.env_name}-ssm-document-${each.key}"
+  document_type = "Session"
+
+  version_name = "1.0.0"
+  target_type  = "/AWS::EC2::Instance"
+
+  document_format = "YAML"
+  content         = <<DOC
+---
+schemaVersion: '1.0'
+description: ${each.value["description"]}
+sessionType: Standard_Stream
+inputs:
+  s3BucketName: ${aws_s3_bucket.ssm_logs.id}
+  s3EncryptionEnabled: true
+  cloudWatchLogGroupName: ${aws_cloudwatch_log_group.cw_ssm_logs.name}
+  kmsKeyId: ${aws_kms_key.kms_ssm["sessions"].arn}
+  runAsEnabled: true
+  runAsDefaultUser: ''
+  shellProfile:
+    linux: '${each.value["command"]} ; exit'
+  DOC
 }
