@@ -12,6 +12,15 @@ EOM
   }
 }
 
+variable "session_timeout" {
+  description = <<EOM
+REQUIRED. Amount of time (in minutes) of inactivity
+to allow before a session ends.
+EOM
+  type        = number
+  default     = 15
+}
+
 variable "region" {
   description = "REQUIRED. AWS Region"
   type        = string
@@ -61,6 +70,4 @@ locals {
   inventory_bucket = var.inventory_bucket_name != "" ? var.inventory_bucket_name : join(".",
     [var.bucket_name_prefix, "s3-inventory", local.bucket_name_suffix]
   )
-
-  ssm_kms_keys = ["s3", "sessions"]
 }

@@ -3,23 +3,6 @@ data "aws_caller_identity" "current" {
 
 # KMS keys
 data "aws_iam_policy_document" "kms_ssm" {
-  for_each = toset(local.ssm_kms_keys)
-
-  statement {
-    sid    = "KMSKeyAccess"
-    effect = "Allow"
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:GenerateDataKey*",
-      "kms:ReEncrypt*"
-    ]
-    resources = [
-      aws_kms_key.kms_ssm[each.key].arn,
-    ]
-  }
-
   statement {
     sid    = "KMSRootAdminAndIAM"
     effect = "Allow"
@@ -36,21 +19,44 @@ data "aws_iam_policy_document" "kms_ssm" {
       "*"
     ]
   }
+
+  statement {
+    sid    = "KMSCloudWatchEncryption"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["logs.${var.region}.amazonaws.com"]
+    }
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:GenerateDataKey*",
+      "kms:ReEncrypt*"
+    ]
+    resources = [
+      "*"
+    ]
+    condition {
+      test = "ArnLike"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values = [
+        aws_cloudwatch_log_group.cw_ssm_logs.arn
+      ]
+    }
+  }
 }
 
 resource "aws_kms_key" "kms_ssm" {
-  for_each = toset(local.ssm_kms_keys)
-
-  description             = "KMSKeyFor${title(each.key)}"
+  description             = "KMSKeyForSSMSessions"
   deletion_window_in_days = 7
   enable_key_rotation     = true
+  policy                  = data.aws_iam_policy_document.kms_ssm.json
 }
 
 resource "aws_kms_alias" "kms_ssm" {
-  for_each = toset(local.ssm_kms_keys)
-
-  name          = "alias/ssm-${each.key}"
-  target_key_id = aws_kms_key.kms_ssm[each.key].key_id
+  name          = "alias/${var.env_name}-kms-ssm"
+  target_key_id = aws_kms_key.kms_ssm.key_id
 }
 
 # S3 bucket w/KMS key encryption for SSM access logs
@@ -70,7 +76,7 @@ resource "aws_s3_bucket" "ssm_logs" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.kms_ssm["s3"].key_id
+        kms_master_key_id = aws_kms_key.kms_ssm.key_id
         sse_algorithm     = "aws:kms"
       }
     }
@@ -112,6 +118,7 @@ module "ssm_logs_bucket_config" {
 resource "aws_cloudwatch_log_group" "cw_ssm_logs" {
   name              = "aws-ssm-logs-${var.env_name}" #stream name must start with "aws-ssm-logs"
   retention_in_days = 365
+  kms_key_id        = aws_kms_key.kms_ssm.arn
 }
 
 # Policy and roles to permit SSM access / actions on EC2 instances, and to allow them to send metrics and logs to CloudWatch
@@ -134,7 +141,6 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
     sid = "CloudWatchLogsAccessForSSM"
     actions = [
       "logs:CreateLogGroup",
-      "logs:CreateLogStream",
       "logs:DescribeLogGroups",
       "logs:DescribeLogStreams",
       "logs:PutLogEvents",
@@ -159,22 +165,27 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
       "s3:PutObject"
     ]
     resources = [
-      aws_s3_bucket.ssm_logs.arn
+      "${aws_s3_bucket.ssm_logs.arn}/*"
     ]
   }
   # KMS
   statement {
-    sid = "KMSAccessForSSM"
+    sid = "KMSDecryptionAccess"
     actions = [
-      "kms:Encrypt",
       "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:GenerateDataKey*",
-      "kms:ReEncrypt*"
     ]
     resources = [
-      aws_kms_key.kms_ssm["s3"].arn,
-      aws_kms_key.kms_ssm["sessions"].arn
+      aws_kms_key.kms_ssm.arn
+    ]
+  }
+  
+  statement {
+    sid = "KMSDataKeyAccess"
+    actions = [
+      "kms:GenerateDataKey",
+    ]
+    resources = [
+      "*"
     ]
   }
 }
@@ -186,7 +197,7 @@ resource "aws_ssm_document" "ssm_cmd" {
   name          = "${var.env_name}-ssm-document-${each.key}"
   document_type = "Session"
 
-  version_name = "1.0.0"
+  version_name = "1.1.0"
   target_type  = "/AWS::EC2::Instance"
 
   document_format = "YAML"
@@ -199,7 +210,9 @@ inputs:
   s3BucketName: ${aws_s3_bucket.ssm_logs.id}
   s3EncryptionEnabled: true
   cloudWatchLogGroupName: ${aws_cloudwatch_log_group.cw_ssm_logs.name}
+  cloudWatchEncryptionEnabled: true
   kmsKeyId: ${aws_kms_key.kms_ssm["sessions"].arn}
+  idleSessionTimeout: ${var.session_timeout}
   runAsEnabled: true
   runAsDefaultUser: ''
   shellProfile:
