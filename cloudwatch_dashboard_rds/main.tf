@@ -62,7 +62,7 @@ resource "aws_cloudwatch_dashboard" "main" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.db_instance_identifier}" ]
+                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "stat": "Maximum" } ]
                 ],
                 "region": "${var.region}",
                 "title": "CPUUtilization",
@@ -117,7 +117,7 @@ resource "aws_cloudwatch_dashboard" "main" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.db_instance_identifier}" ]
+                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "stat": "Maximum" } ]
                 ],
                 "region": "${var.region}",
                 "yAxis": {
@@ -141,7 +141,7 @@ resource "aws_cloudwatch_dashboard" "main" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "FreeableMemory", "DBInstanceIdentifier", "${var.db_instance_identifier}" ]
+                    [ "AWS/RDS", "FreeableMemory", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "stat": "Minimum" } ]
                 ],
                 "region": "${var.region}",
                 "yAxis": {
@@ -165,8 +165,8 @@ resource "aws_cloudwatch_dashboard" "main" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "ReadLatency", "DBInstanceIdentifier", "${var.db_instance_identifier}" ],
-                    [ ".", "WriteLatency", ".", "." ]
+                    [ "AWS/RDS", "ReadLatency", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "stat": "Maximum" } ],
+                    [ ".", "WriteLatency", ".", ".", { "stat": "Maximum" } ]
                 ],
                 "region": "${var.region}",
                 "title": "Latency",
@@ -200,7 +200,7 @@ resource "aws_cloudwatch_dashboard" "main" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "FreeStorageSpace", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "label": "FreeStorageSpace" } ]
+                    [ "AWS/RDS", "FreeStorageSpace", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "label": "FreeStorageSpace", "stat": "Minimum" } ]
                 ],
                 "region": "${var.region}",
                 "title": "Disk Free",
@@ -225,7 +225,7 @@ resource "aws_cloudwatch_dashboard" "main" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "DiskQueueDepth", "DBInstanceIdentifier", "${var.db_instance_identifier}" ]
+                    [ "AWS/RDS", "DiskQueueDepth", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "stat": "Maximum" } ]
                 ],
                 "region": "${var.region}",
                 "title": "DiskQueueDepth",
@@ -262,8 +262,8 @@ resource "aws_cloudwatch_dashboard" "main" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "NetworkTransmitThroughput", "DBInstanceIdentifier", "${var.db_instance_identifier}" ],
-                    [ ".", "NetworkReceiveThroughput", ".", "." ]
+                    [ "AWS/RDS", "NetworkTransmitThroughput", "DBInstanceIdentifier", "${var.db_instance_identifier}", { "stat": "Maximum" } ],
+                    [ ".", "NetworkReceiveThroughput", ".", ".", { "stat": "Maximum" } ]
                 ],
                 "region": "${var.region}",
                 "yAxis": {
