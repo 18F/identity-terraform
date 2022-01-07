@@ -52,6 +52,12 @@ variable "use_spot_instances" {
   default     = 0
 }
 
+variable "metadata_response_hop_limit" {
+  description = "Desired HTTP PUT response hop limit for instance metadata requests. You might need a larger hop limit for backward compatibility with container services running on the instance."
+  type = number
+  default = 1
+}
+
 # ----
 
 resource "aws_launch_template" "template" {
@@ -85,6 +91,7 @@ resource "aws_launch_template" "template" {
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"
+    http_put_response_hop_limit = var.metadata_response_hop_limit
   }
 
   monitoring {
