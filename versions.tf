@@ -22,7 +22,7 @@ terraform {
       source = "newrelic/newrelic"
     }
   }
-  required_version = ">= 1.0.2"
+  required_version = ">= 1.1.3"
 }
 
 provider "aws" {
