@@ -18,14 +18,14 @@ EOM
 # -- Resources --
 
 resource "aws_iam_user" "master_user" {
-  for_each = var.user_map
+  for_each = { for k, v in var.user_map : k => v if contains(keys(v), "aws_groups") }
 
   name          = each.key
   force_destroy = true
 }
 
 resource "aws_iam_group_membership" "master_group" {
-  for_each = transpose({ for k, v in var.user_map : k => v.aws_groups })
+  for_each = transpose({ for k, v in var.user_map : k => v.aws_groups if contains(keys(v), "aws_groups") })
 
   name  = "${each.key}-group"
   group = each.key
