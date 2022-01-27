@@ -3,7 +3,12 @@ output "ssm_access_role_policy" {
   value       = data.aws_iam_policy_document.ssm_access_role_policy.json
 }
 
-output "ssm_cw_logs" {
+output "ssm_session_logs" {
   description = "Name of the CloudWatch Log Group for SSM access logging."
-  value       = aws_cloudwatch_log_group.cw_ssm_logs.name
+  value       = aws_cloudwatch_log_group.ssm_session_logs.name
+}
+
+output "ssm_cmd_logs" {
+  description = "Name of the CloudWatch Log Group for SSM command logging."
+  value       = aws_cloudwatch_log_group.ssm_cmd_logs.name
 }
