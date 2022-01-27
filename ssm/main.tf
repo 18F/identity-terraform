@@ -38,10 +38,18 @@ data "aws_iam_policy_document" "kms_ssm" {
       "*"
     ]
     condition {
-      test = "ArnLike"
+      test     = "ArnLike"
       variable = "kms:EncryptionContext:aws:logs:arn"
       values = [
-        aws_cloudwatch_log_group.cw_ssm_logs.arn
+        for logname in ["sessions", "cmds"] : join(":",
+          [
+            "arn:aws:logs",
+            var.region,
+            data.aws_caller_identity.current.account_id,
+            "log-group",
+            "aws-ssm-${logname}-${var.env_name}"
+          ]
+        )
       ]
     }
   }
@@ -115,8 +123,8 @@ module "ssm_logs_bucket_config" {
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
 }
 
-resource "aws_cloudwatch_log_group" "cw_ssm_logs" {
-  name              = "aws-ssm-logs-${var.env_name}" #stream name must start with "aws-ssm-logs"
+resource "aws_cloudwatch_log_group" "ssm_session_logs" {
+  name              = "aws-ssm-sessions-${var.env_name}" #stream name must start with "aws-ssm-logs"
   retention_in_days = 365
   kms_key_id        = aws_kms_key.kms_ssm.arn
 }
@@ -178,7 +186,7 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
       aws_kms_key.kms_ssm.arn
     ]
   }
-  
+
   statement {
     sid = "KMSDataKeyAccess"
     actions = [
@@ -200,22 +208,74 @@ resource "aws_ssm_document" "ssm_cmd" {
   version_name = "1.1.0"
   target_type  = "/AWS::EC2::Instance"
 
-  document_format = "YAML"
+  document_format = "JSON"
   content         = <<DOC
----
-schemaVersion: '1.0'
-description: ${each.value["description"]}
-sessionType: Standard_Stream
-inputs:
-  s3BucketName: ${aws_s3_bucket.ssm_logs.id}
-  s3EncryptionEnabled: true
-  cloudWatchLogGroupName: ${aws_cloudwatch_log_group.cw_ssm_logs.name}
-  cloudWatchEncryptionEnabled: true
-  kmsKeyId: ${aws_kms_key.kms_ssm["sessions"].arn}
-  idleSessionTimeout: ${var.session_timeout}
-  runAsEnabled: true
-  runAsDefaultUser: ''
-  shellProfile:
-    linux: '${each.value["command"]} ; exit'
-  DOC
+{
+  "schemaVersion": "1.0",
+  "description": "${each.value["description"]}",
+  "sessionType": "Standard_Stream",
+  "inputs": {
+    %{if each.value["logging"]}"s3BucketName": "${aws_s3_bucket.ssm_logs.id}",
+    "s3EncryptionEnabled": true,
+    "cloudWatchLogGroupName": "${aws_cloudwatch_log_group.ssm_session_logs.name}",
+    "cloudWatchEncryptionEnabled": true,%{else}"s3EncryptionEnabled": false,
+    "cloudWatchEncryptionEnabled": false,%{endif}"kmsKeyId": "${aws_kms_key.kms_ssm.arn}",
+    "idleSessionTimeout": "${var.session_timeout}",
+    "runAsEnabled": true,
+    "runAsDefaultUser": "",
+    "shellProfile": {
+      "linux": "${each.value["command"]} ; exit"
+    }
+  }
 }
+DOC
+}
+
+# log when SSM commands are used, even if session data is not
+resource "aws_cloudwatch_event_rule" "ssm_cmd" {
+  for_each = var.ssm_doc_map
+
+  name        = "${var.env_name}-ssm-cmd-${each.key}"
+  description = "Capture when SSM command '${each.key}' used in ${var.env_name}"
+
+  event_pattern = <<PATTERN
+{
+    "source": [
+        "aws.ssm"
+    ],
+    "detail-type": [
+        "AWS API Call via CloudTrail"
+    ],
+    "detail": {
+        "eventSource": [
+            "ssm.amazonaws.com"
+        ],
+        "requestParameters": {
+            "documentName": [
+              "${var.env_name}-ssm-document-${each.key}"
+            ]
+        },
+        "eventName": [
+            "StartSession",
+            "ResumeSession",
+            "TerminateSession"
+        ]
+    }
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_log_group" "ssm_cmd_logs" {
+  name              = "aws-ssm-cmds-${var.env_name}" #stream name must start with "aws-ssm-cmds"
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.kms_ssm.arn
+}
+
+resource "aws_cloudwatch_event_target" "ssm_cmds" {
+  for_each = var.ssm_doc_map
+
+  rule      = aws_cloudwatch_event_rule.ssm_cmd[each.key].name
+  target_id = "${var.env_name}_SSMCmd_${each.key}"
+  arn       = aws_cloudwatch_log_group.ssm_cmd_logs.arn
+}
+

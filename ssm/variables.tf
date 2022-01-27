@@ -1,13 +1,15 @@
 variable "ssm_doc_map" {
   description = <<EOM
-REQUIRED. Map of data for SSM Documents. Each must include
-the document name, description, and command(s) to run at login.
+REQUIRED. Map of data for SSM Documents. Each must include the
+document name, description, command(s) to run at login, and
+whether to log the commands/output from the given session/document.
 EOM
   type        = map(map(string))
   default = {
     "default" = {
       description = "Default login shell"
       command     = "cd ; /bin/bash"
+      logging     = true
     },
   }
 }
