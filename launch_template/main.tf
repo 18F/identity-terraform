@@ -40,11 +40,14 @@ resource "aws_launch_template" "template" {
 
   tag_specifications {
     resource_type = "instance"
-    tags = {
-      Name   = "asg-${var.env}-${var.role}"
-      prefix = var.role
-      domain = "${var.env}.${var.root_domain}"
-    }
+    tags = merge(
+      {
+        Name   = "asg-${var.env}-${var.role}"
+        prefix = var.role
+        domain = "${var.env}.${var.root_domain}"
+      },
+      var.instance_tags,
+    )
   }
 
   tag_specifications {

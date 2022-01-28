@@ -34,6 +34,12 @@ variable "security_group_ids" {
   type = list(string)
 }
 
+variable "instance_tags" {
+  description = "Tags to apply to the launched instances"
+  type        = map(string)
+  default     = {}
+}
+
 variable "template_tags" {
   description = "Tags to apply to the launch template"
   type        = map(string)
