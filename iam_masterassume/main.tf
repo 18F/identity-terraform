@@ -52,6 +52,25 @@ data "aws_iam_policy_document" "role_policy_doc" {
       ]
     }
   }
+
+  statement {
+    sid    = "${each.key}TagSessions"
+    effect = "Allow"
+    actions = [
+      "sts:TagSession"
+    ]
+    resources = [
+      for arn in each.value : arn
+    ]
+    condition {
+      test     = "Bool"
+      variable = "aws:MultiFactorAuthPresent"
+
+      values = [
+        "true",
+      ]
+    }
+  }
 }
 
 resource "aws_iam_policy" "account_role_policy" {
