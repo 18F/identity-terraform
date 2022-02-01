@@ -22,6 +22,9 @@ resource "aws_iam_user" "master_user" {
 
   name          = each.key
   force_destroy = true
+  tags = element(lookup(each.value, "ec2_username", [""]), 0) == "" ? {} : {
+    ec2_username = element(each.value["ec2_username"], 0)
+  }
 }
 
 resource "aws_iam_group_membership" "master_group" {

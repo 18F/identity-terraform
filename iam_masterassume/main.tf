@@ -10,6 +10,15 @@ variable "role_list" {
   type        = list(any)
 }
 
+variable "username_tag" {
+  type        = string
+  default     = "ec2_username"
+  description = <<EOM
+Name of an AWS tag used to assign a username (for SSM access via SSMSessionRunAs tags)
+to an AWS user. Defaults to 'ec2_username' as per the iam_masterusers module.
+EOM
+}
+
 locals {
   # Build an enumerated map of "ACCOUNT_TYPEAssumeROLE" elements
   # to build policy documents and policies from.
@@ -68,6 +77,14 @@ data "aws_iam_policy_document" "role_policy_doc" {
 
       values = [
         "true",
+      ]
+    }
+    condition {
+      test     = "Null"
+      variable = "aws:PrincipalTag/${var.username_tag}"
+
+      values = [
+        "false",
       ]
     }
   }
