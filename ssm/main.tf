@@ -202,33 +202,29 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
 resource "aws_ssm_document" "ssm_cmd" {
   for_each = var.ssm_doc_map
 
-  name          = "${var.env_name}-ssm-document-${each.key}"
-  document_type = "Session"
-
-  version_name = "1.1.0"
-  target_type  = "/AWS::EC2::Instance"
-
-  document_format = "JSON"
+  name            = "${var.env_name}-ssm-document-${each.key}"
+  document_type   = "Session"
+  target_type     = "/AWS::EC2::Instance"
+  document_format = "YAML"
   content         = <<DOC
-{
-  "schemaVersion": "1.0",
-  "description": "${each.value["description"]}",
-  "sessionType": "Standard_Stream",
-  "inputs": {
-    %{if each.value["logging"]}"s3BucketName": "${aws_s3_bucket.ssm_logs.id}",
-    "s3EncryptionEnabled": true,
-    "cloudWatchLogGroupName": "${aws_cloudwatch_log_group.ssm_session_logs.name}",
-    "cloudWatchEncryptionEnabled": true,%{else}"s3EncryptionEnabled": false,
-    "cloudWatchEncryptionEnabled": false,%{endif}"kmsKeyId": "${aws_kms_key.kms_ssm.arn}",
-    "idleSessionTimeout": "${var.session_timeout}",
-    "runAsEnabled": true,
-    "runAsDefaultUser": "",
-    "shellProfile": {
-      "linux": "${each.value["command"]} ; exit"
-    }
-  }
-}
-DOC
+---
+schemaVersion: '1.0'
+description: ${each.value["description"]}
+sessionType: Standard_Stream
+inputs:
+  %{if each.value["logging"]}s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
+  s3EncryptionEnabled: true
+  cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm_session_logs.name}"
+  cloudWatchEncryptionEnabled: true
+  cloudWatchStreamingEnabled: true%{else}s3EncryptionEnabled: false
+  cloudWatchEncryptionEnabled: false%{endif}
+  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
+  idleSessionTimeout: ${var.session_timeout}
+  runAsEnabled: true
+  runAsDefaultUser: ''
+  shellProfile:
+    linux: 'trap "exit 0" INT; ${each.value["command"]} ; exit'
+  DOC
 }
 
 # log when SSM commands are used, even if session data is not
