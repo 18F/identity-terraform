@@ -96,10 +96,10 @@ resource "aws_lambda_function" "windowed_slo" {
 
   environment {
     variables = {
-      WINDOW_DAYS = var.window_days
-      SLI_NAMESPACE = var.sli_namespace
+      WINDOW_DAYS       = var.window_days
+      SLI_NAMESPACE     = var.sli_namespace
       LOAD_BALANCER_ARN = var.load_balancer_arn
-      SLI_PREFIX = var.sli_prefix
+      SLI_PREFIX        = var.sli_prefix
     }
   }
 }
@@ -111,15 +111,15 @@ resource "aws_cloudwatch_event_rule" "every_one_day" {
 }
 
 resource "aws_cloudwatch_event_target" "check_foo_every_one_day" {
-  rule      = "${aws_cloudwatch_event_rule.every_one_day.name}"
+  rule      = aws_cloudwatch_event_rule.every_one_day.name
   target_id = "lambda"
-  arn       = "${aws_lambda_function.windowed_slo.arn}"
+  arn       = aws_lambda_function.windowed_slo.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_windowed_slo" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.windowed_slo.function_name}"
+  function_name = aws_lambda_function.windowed_slo.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_event_rule.every_one_day.arn}"
+  source_arn    = aws_cloudwatch_event_rule.every_one_day.arn
 }

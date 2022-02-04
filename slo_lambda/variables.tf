@@ -12,23 +12,23 @@ variable "lambda_runtime" {
 
 variable "window_days" {
   description = "SLI window in days"
-  type = number
-  default = 24
+  type        = number
+  default     = 24
 }
 
 variable "sli_namespace" {
   description = "CloudWatch namespace in which to insert the SLI metric"
-  type = string
-  default = "prod/sli"
+  type        = string
+  default     = "prod/sli"
 }
 
 variable "load_balancer_arn" {
   description = "ID of ALB"
-  type = string
+  type        = string
 }
 
 variable "sli_prefix" {
   description = "Prefix for SLI metric names"
-  type = string
-  default = "test"
+  type        = string
+  default     = "test"
 }
