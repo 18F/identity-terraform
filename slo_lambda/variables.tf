@@ -28,7 +28,7 @@ variable "load_balancer_arn" {
 }
 
 variable "sli_prefix" {
-  description = "Prefix for SLI metric names"
+  description = "Prefix for SLI metric names, commonly the source, e.g. idp, gitlab."
   type        = string
-  default     = "test"
+  default     = "idp"
 }
