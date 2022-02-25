@@ -32,7 +32,7 @@ locals {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": f'*Alarm has gone off!* {data["AlarmName"]}',
+                  "text": f'*Alarm has gone off!*\n*{data["AlarmName"]}*',
                 },
               },
             ]
@@ -52,7 +52,7 @@ locals {
                 "text": {
                   "type": "plain_text",
                   "text": "View Runbook :books:",
-                  "emoji": true
+                  "emoji": True
                 },
                 "value": "runbook-id",
                 "url": runbook_url,
@@ -60,7 +60,7 @@ locals {
               }
 
               description_no_runbook = data["AlarmDescription"].split('Runbook:')[0]
-              blocks[0]["text"] += f'\n_{description_no_runbook}_'
+              blocks[0]["text"]["text"] += f'\n{description_no_runbook}'
             else:
               blocks.append({
                 "type": "section",
@@ -91,7 +91,7 @@ locals {
               f'*Region*: {data["Region"]}'])
           else:
             msgtext = eventmsg
-        except:
+        except Exception as e:
           msgtext = eventmsg
         msg = {
             "channel": slackChannel,
