@@ -21,7 +21,7 @@ locals {
     def lambda_handler(event, context):
         url = parameter['Parameter']['Value']
         eventmsg = event['Records'][0]['Sns']['Message']
-        blocks = null
+        blocks = None
         try:
           data = json.loads(eventmsg)
           if 'detailType' in data and data['detailType'] == 'CodePipeline Pipeline Execution State Change':
@@ -77,8 +77,9 @@ locals {
                 "text": '\n'.join([
                   data["NewStateReason"],
                   f'*Time*: {formatted_time}',
-                  f'*Region*: {data["Region"]}'])
-                ])
+                  f'*Region*: {data["Region"]}'
+                ]),
+              }
             })
 
             msgtext = '\n'.join([
