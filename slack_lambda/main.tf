@@ -28,10 +28,12 @@ locals {
             msgtext = 'auto-terraform:  ' + data['detail']['pipeline'] + ' pipeline ' + data['detail']['state'] + ' with execution ID ' + data['detail']['execution-id']
           elif 'AlarmName' in data and 'AlarmDescription' in data:
             blocks = [
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": f'*Alarm has gone off!* {data["AlarmName"]}',
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": f'*Alarm has gone off!* {data["AlarmName"]}',
+                },
               },
             ]
 
