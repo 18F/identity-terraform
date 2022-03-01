@@ -105,7 +105,7 @@ resource "aws_lambda_function" "windowed_slo" {
 }
 
 resource "aws_cloudwatch_event_rule" "every_one_day" {
-  name                = "every-one-day"
+  name_prefix         = "every-one-day"
   description         = "Fires every day"
   schedule_expression = "rate(1 day)"
 }
