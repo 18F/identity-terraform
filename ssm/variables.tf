@@ -7,9 +7,9 @@ EOM
   type        = map(map(string))
   default = {
     "default" = {
-      description = "Default login shell"
+      description = "Login shell"
       command     = "cd ; /bin/bash"
-      logging     = true
+      logging     = false
     },
   }
 }
