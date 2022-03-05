@@ -79,12 +79,13 @@ data "aws_iam_policy_document" "role_policy_doc" {
         "true",
       ]
     }
+
     condition {
-      test     = "Null"
-      variable = "aws:PrincipalTag/${var.username_tag}"
+      test     = "StringEquals"
+      variable = "aws:RequestTag/SSMSessionRunAs"
 
       values = [
-        "false",
+        "&{aws:PrincipalTag/${var.username_tag}}",
       ]
     }
   }
