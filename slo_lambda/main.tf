@@ -95,9 +95,14 @@ resource "aws_lambda_function" "windowed_slo" {
   }
 }
 
-# rule/every-one-day in CloudWatch is account-specific vs env-specific
+resource "aws_cloudwatch_event_rule" "every_one_day" {
+  name                = "every-one-day_${local.name}"
+  description         = "Fires every day"
+  schedule_expression = "rate(1 day)"
+}
+
 resource "aws_cloudwatch_event_target" "check_foo_every_one_day" {
-  rule      = var.every_one_day_rule
+  rule      = aws_cloudwatch_event_rule.every_one_day.name
   target_id = aws_lambda_function.windowed_slo.id
   arn       = aws_lambda_function.windowed_slo.arn
 }
@@ -107,10 +112,5 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_windowed_slo" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.windowed_slo.function_name
   principal     = "events.amazonaws.com"
-  source_arn = join(":", [
-    "arn:aws:events:${data.aws_region.current.name}",
-    data.aws_caller_identity.current.account_id,
-    "rule/${var.every_one_day_rule}"
-    ]
-  )
+  source_arn    = aws_cloudwatch_event_rule.every_one_day.arn
 }
