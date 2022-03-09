@@ -46,15 +46,38 @@ class BackendSuccessMetric:
     """
     Metric that combines a few others 
     """
-    def __init__(self):
-        pass
-
     def sum(self, client) -> float:
         request_count = METRICS['request_count'].sum(client)
         elb_500s = METRICS['elb_500s'].sum(client)
         target_500s = METRICS['target_500s'].sum(client)
 
-        return request_count - elb_500s - target_500s
+        return request_count - target_500s
+
+
+class ValidRequests:
+    """
+    Metric that encompasses all valid requests to the LB, including those that
+    return before selecting a target group. Excludes 4XX reponses originiating
+    from the LB.
+    """
+    def sum(self, client) -> float:
+        request_count = METRICS['request_count'].sum(client)
+        elb_500s = METRICS['elb_500s'].sum(client)
+
+        return request_count + elb_500s
+
+class GoodResponses:
+    """
+    Metric that encompasses all good reponses from the target group. Excludes
+    5XX responses and timeouts.
+    """
+    def sum(self, client) -> float:
+        responses = [
+            METRICS['target_200s'],
+            METRICS['target_300s'],
+            METRICS['target_400s'],
+        ]
+        return sum([x.sum(client) for x in responses])
 
 
 class SLI:
@@ -74,16 +97,6 @@ class SLI:
 
 
 METRICS = {
-    'target_500s': Metric(
-        namespace='AWS/ApplicationELB',
-        metric_name='HTTPCode_Target_5XX_Count',
-        dimensions=[
-            {
-                'Name': 'LoadBalancer',
-                'Value': LOAD_BALANCER_ID,
-            }
-        ]
-    ),
     'elb_500s': Metric(
         namespace='AWS/ApplicationELB',
         metric_name='HTTPCode_ELB_5XX_Count',
@@ -94,6 +107,8 @@ METRICS = {
             }
         ]
     ),
+    'valid_requests': ValidRequests(),
+    'good_responses': GoodResponses(),
     'request_count': Metric(
         namespace='AWS/ApplicationELB',
         metric_name='RequestCount',
@@ -114,21 +129,45 @@ METRICS = {
             }
         ]
     ),
+    'target_300s': Metric(
+        namespace='AWS/ApplicationELB',
+        metric_name='HTTPCode_Target_3XX_Count',
+        dimensions=[
+            {
+                'Name': 'LoadBalancer',
+                'Value': LOAD_BALANCER_ID,
+            }
+        ]
+    ),
+    'target_400s': Metric(
+        namespace='AWS/ApplicationELB',
+        metric_name='HTTPCode_Target_4XX_Count',
+        dimensions=[
+            {
+                'Name': 'LoadBalancer',
+                'Value': LOAD_BALANCER_ID,
+            }
+        ]
+    ),
+    'target_500s': Metric(
+        namespace='AWS/ApplicationELB',
+        metric_name='HTTPCode_Target_5XX_Count',
+        dimensions=[
+            {
+                'Name': 'LoadBalancer',
+                'Value': LOAD_BALANCER_ID,
+            }
+        ]
+    ),
     'backend_success': BackendSuccessMetric(),
-
 }
 
 
 SLIS = {
-    'http_200_availability': SLI(
-        "http-200-availability",
-        METRICS['target_200s'],
-        METRICS['request_count'],
-    ),
     'all_availability': SLI(
         "all-availability",
-        METRICS['backend_success'],
-        METRICS['request_count'],
+        METRICS['good_responses'],
+        METRICS['valid_requests'],
     ),
 }
 
