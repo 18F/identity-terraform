@@ -40,6 +40,7 @@ Manually-specified CloudWatch namespace in which to insert the SLI metric
 (defaults to env_name/sli if not set)
 EOM
   type        = string
+  default     = ""
 }
 
 variable "load_balancer_arn" {

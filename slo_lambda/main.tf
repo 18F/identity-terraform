@@ -98,7 +98,7 @@ resource "aws_lambda_function" "windowed_slo" {
 # rule/every-one-day in CloudWatch is account-specific vs env-specific
 resource "aws_cloudwatch_event_target" "check_foo_every_one_day" {
   rule      = var.every_one_day_rule
-  target_id = "lambda"
+  target_id = aws_lambda_function.windowed_slo.id
   arn       = aws_lambda_function.windowed_slo.arn
 }
 
