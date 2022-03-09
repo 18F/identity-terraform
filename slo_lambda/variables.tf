@@ -7,15 +7,6 @@ variable "env_name" {
   type        = string
 }
 
-variable "every_one_day_rule" {
-  description = <<EOM
-Name of a CloudWatch Event Rule with schedule_expression:rate(1 day) configured
-at the account (vs. environment) level.
-EOM
-  type        = string
-  default     = "every-one-day"
-}
-
 variable "lambda_runtime" {
   description = "Lambda runtime"
   type        = string
