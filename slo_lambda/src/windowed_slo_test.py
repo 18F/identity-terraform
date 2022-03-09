@@ -6,7 +6,7 @@ from botocore.stub import Stubber, ANY
 
 os.environ['WINDOW_DAYS'] = '24'
 os.environ['SLI_NAMESPACE'] = 'test/sli'
-os.environ['LOAD_BALANCER_ARN'] = 'arn:aws:elasticloadbalancing:us-west-2:123:loadbalancer/app/login-idp-alb-prod/1234'
+os.environ['LOAD_BALANCER_ARN'] = 'arn:aws:elasticloadbalancing:us-west-2:123:loadbalancer/app/login-idp-alb-pretend/1234'
 os.environ['SLI_PREFIX'] = 'test'
 
 from windowed_slo import create_slis, SLI, METRICS
@@ -21,7 +21,7 @@ def get_metric_statistics(metric_name, datapoints_sum):
         },
         {
             'Dimensions': [{'Name': 'LoadBalancer',
-                            'Value': 'app/login-idp-alb-prod/1234'}],
+                            'Value': 'app/login-idp-alb-pretend/1234'}],
             'EndTime': ANY,
             'MetricName': metric_name,
             'Namespace': 'AWS/ApplicationELB',
