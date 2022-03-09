@@ -53,7 +53,7 @@ def test_simple_sli():
             'http_200_availability': SLI(
                 "http-200-availability",
                 METRICS['target_200s'],
-                METRICS['total_requests'],
+                METRICS['valid_requests'],
             ),
         }
         create_slis(cw, slis)
@@ -71,7 +71,7 @@ def test_multiple_metric_sli():
             'all_availability': SLI(
                 "all-availability",
                 METRICS['backend_success'],
-                METRICS['total_requests'],
+                METRICS['valid_requests'],
             ),
         }
         create_slis(cw, slis)
