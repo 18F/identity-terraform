@@ -88,7 +88,7 @@ resource "aws_lambda_function" "windowed_slo" {
   environment {
     variables = {
       WINDOW_DAYS       = var.window_days
-      SLI_NAMESPACE     = var.sli_namespace
+      SLI_NAMESPACE     = var.namespace == "" ? "${var.env_name}/sli" : var.namespace
       LOAD_BALANCER_ARN = var.load_balancer_arn
       SLI_PREFIX        = var.sli_prefix
     }

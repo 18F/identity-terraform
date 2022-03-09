@@ -34,10 +34,12 @@ variable "window_days" {
   default     = 24
 }
 
-variable "sli_namespace" {
-  description = "CloudWatch namespace in which to insert the SLI metric"
+variable "namespace" {
+  description = <<EOM
+Manually-specified CloudWatch namespace in which to insert the SLI metric
+(defaults to env_name/sli if not set)
+EOM
   type        = string
-  default     = "prod/sli"
 }
 
 variable "load_balancer_arn" {
