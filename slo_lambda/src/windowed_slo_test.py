@@ -47,12 +47,13 @@ def test_simple_sli():
     with Stubber(cw) as stubber:
         stubber.add_response(*get_metric_statistics('HTTPCode_Target_2XX_Count', 2))
         stubber.add_response(*get_metric_statistics('RequestCount', 4))
-        stubber.add_response(*put_metric_data('test-http-200-availability', 0.5))
+        stubber.add_response(*get_metric_statistics('HTTPCode_ELB_5XX_Count', 2))
+        stubber.add_response(*put_metric_data('test-http-200-availability', 1/3))
         slis = {
             'http_200_availability': SLI(
                 "http-200-availability",
                 METRICS['target_200s'],
-                METRICS['request_count'],
+                METRICS['total_requests'],
             ),
         }
         create_slis(cw, slis)
@@ -64,12 +65,13 @@ def test_multiple_metric_sli():
         stubber.add_response(*get_metric_statistics('HTTPCode_ELB_5XX_Count', 2))
         stubber.add_response(*get_metric_statistics('HTTPCode_Target_5XX_Count', 1))
         stubber.add_response(*get_metric_statistics('RequestCount', 4))
-        stubber.add_response(*put_metric_data('test-all-availability', 0.25))
+        stubber.add_response(*get_metric_statistics('HTTPCode_ELB_5XX_Count', 2))
+        stubber.add_response(*put_metric_data('test-all-availability', 0.5))
         slis = {
             'all_availability': SLI(
                 "all-availability",
                 METRICS['backend_success'],
-                METRICS['request_count'],
+                METRICS['total_requests'],
             ),
         }
         create_slis(cw, slis)
