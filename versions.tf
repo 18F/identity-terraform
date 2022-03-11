@@ -24,13 +24,3 @@ terraform {
   }
   required_version = ">= 1.1.3"
 }
-
-provider "aws" {
-  alias  = "use1"
-  region = "us-east-1"
-}
-
-provider "aws" {
-  alias  = "usw2"
-  region = "us-west-2"
-}
