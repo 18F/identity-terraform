@@ -181,19 +181,10 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
     sid = "KMSDecryptionAccess"
     actions = [
       "kms:Decrypt",
-    ]
-    resources = [
-      aws_kms_key.kms_ssm.arn
-    ]
-  }
-
-  statement {
-    sid = "KMSDataKeyAccess"
-    actions = [
       "kms:GenerateDataKey",
     ]
     resources = [
-      "*"
+      aws_kms_key.kms_ssm.arn
     ]
   }
 }
