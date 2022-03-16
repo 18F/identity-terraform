@@ -115,7 +115,7 @@ resource "aws_s3_bucket" "ssm_logs" {
 }
 
 module "ssm_logs_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=7e11ebe24e3a9cbc34d1413cf4d20b3d71390d5b"
+  source = "github.com/18F/identity-terraform//s3_config?ref=a6261020a94b77b08eedf92a068832f21723f7a2"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = "${var.env_name}-ssm-logs"
@@ -181,19 +181,10 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
     sid = "KMSDecryptionAccess"
     actions = [
       "kms:Decrypt",
-    ]
-    resources = [
-      aws_kms_key.kms_ssm.arn
-    ]
-  }
-
-  statement {
-    sid = "KMSDataKeyAccess"
-    actions = [
       "kms:GenerateDataKey",
     ]
     resources = [
-      "*"
+      aws_kms_key.kms_ssm.arn
     ]
   }
 }
