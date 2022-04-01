@@ -9,7 +9,7 @@ class TestSnowIncident(unittest.TestCase):
         # Brittle test of environment variable handling
         stash = {}
         for e in snow_incident.REQUIRED_ENVARS:
-            stash[e] = os.environ.get(e)
+            stash[e] = os.environ.pop(e)
 
         with self.assertRaises(ValueError):
             snow_incident.get_env_settings()
@@ -17,20 +17,18 @@ class TestSnowIncident(unittest.TestCase):
         inset = {
             "url": "https://servicelater.net",
             "default_body": {
-                "contact_type": "API",
-                "caller_id": "abcd1010",
-                "u_category": "2340871320870dead",
-                "u_subcategory": "23989823cafe2",
-                "u_item": "34983498feed",
+                "category": "Ice Cream Truck",
+                "assignment_group": "Mr Frosty",
+                "item": "Issue",
+                "subcategory": "Freezer",
             },
             "parameter_base": "/the/settings",
         }
 
         os.environ["SNOW_INCIDENT_URL"] = inset["url"]
-        os.environ["SNOW_CALLER_ID"] = inset["default_body"]["caller_id"]
-        os.environ["SNOW_CATEGORY_ID"] = inset["default_body"]["u_category"]
-        os.environ["SNOW_SUBCATEGORY_ID"] = inset["default_body"]["u_subcategory"]
-        os.environ["SNOW_ITEM_ID"] = inset["default_body"]["u_item"]
+        os.environ["SNOW_CATEGORY"] = inset["default_body"]["category"]
+        os.environ["SNOW_SUBCATEGORY"] = inset["default_body"]["subcategory"]
+        os.environ["SNOW_ASSIGNMENT_GROUP"] = inset["default_body"]["assignment_group"]
         os.environ["SNOW_PARAMETER_BASE"] = inset["parameter_base"]
 
         self.assertDictEqual(snow_incident.get_env_settings(), inset)

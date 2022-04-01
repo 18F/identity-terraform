@@ -19,14 +19,13 @@ Created resources:
 module "snow_incident_topic" {
   source = "github.com/18F/identity-terraform/snow_incident?ref=main"
 
-  name                = "snow_incident_topic"
-  topic_name          = "snow-incident"
-  snow_incident_url   = "https://something.servicenowservices.com/api/now/table/incident?sysparm_fields=number%2Cincident_state%2Cshort_description%2Cu_csi%2Cassignment_group"
-  snow_caller_id      = "deadbeef000011112222"
-  snow_category_id    = "1234cafe4321"
-  snow_subcategory_id = "1234567890987654321"
-  snow_item_id        = "0987654321234567890"
-  snow_parameter_base = "/account/snow_incident"
+  name                  = "snow_incident_topic"
+  topic_name            = "snow-incident"
+  snow_incident_url     = "https://something.servicenowservices.com/api/some/path"
+  snow_category         = "SERVICENOW CATEGORY NAME"
+  snow_subcategory      = "SERVICENOW SUBCATEGORY NAME"
+  snow_assignment_group = "SERVICENOW ASSIGNMENT GROUP NAME"
+  snow_parameter_base   = "/account/snow_incident"
 }
 ~~~
 
@@ -38,10 +37,9 @@ by ServiceNow as part of integration.
 * `name` - Name of the Lambda function.
 * `topic_name` - SNS topic name
 * `snow_incident_url` - ServiceNow URL to POST to (maps to `SNOW_INCIDENT_URL` environment variable)
-* `snow_caller_id` - ServiceNow ID for Caller ID entity (maps to `SNOW_CALLER_ID` environment variable)
-* `snow_category_id` - ServiceNow ID for category (maps to `SNOW_CATEGORY_ID` environment variable)
-* `snow_subcategory_id` - ServiceNow ID for sub-category (maps to `SNOW_SUBCATEGORY_ID` environment variable)
-* `snow_item_id` - ServiceNow ID for item (maps to `SNOW_ITEM_ID` environment variable)
+* `snow_category` - ServiceNow category name (maps to `SNOW_CATEGORY` environment variable)
+* `snow_subcategory` - ServiceNow sub-category name (maps to `SNOW_SUBCATEGORY` environment variable)
+* `snow_assignment_group` - ServiceNow group to assign the issue to (maps to `SNOW_ASSIGNMENT_GROUP` environment variable)
 * `snow_parameter_base` - SSM Parameter Store base path, starting with `/` - The `snow_username` and `snow_password` should be set under this path (maps to `SNOW_PARAMETER_BASE` environment variable)
 
 ### Configuring Authentication in SSM Parameter Store
@@ -66,14 +64,21 @@ CLI access to AWS (using a valid `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 to test locally, and the SSM parameters `{snow_parameter_base}/snow_username` and `{snow_parameter_base}/snow_password`
 must be set.
 
+Alternately, to support testing, if the SNOW_USERNAME ane SNOW_PASSWORD environment
+variables are set, SSM Parameter Store access is skipped.  This is provided for testing
+and should NOT be done in production.
+
 ~~~sh
 # Set required environment variables - Replace {} templates below
 $ export SNOW_INCIDENT_URL={snow_incident_url}
-$ export SNOW_CALLER_ID={snow_caller_id}
-$ export SNOW_CATEGORY_ID={snow_category_id}
-$ export SNOW_SUBCATEGORY_ID={snow_subcategory_id}
-$ export SNOW_ITEM_ID={snow_item_id}
-$ export SNOW_PARAMETER_BASE={snow_parameter_base}
+$ export SNOW_CATEGORY={snow_category_name}
+$ export SNOW_SUBCATEGORY={snow_subcategory_name}
+$ export SNOW_ASSIGNMENT_GROUP={snow_assignment_group_name}
+$ export SNOW_PARAMETER_BASE={snow_parameter_base}  # Ignored if using SNOW_USERNAME/SNOW_PASSWORD
+
+# Optional - Use of username and password set in environment instead of SSM Parameter Store
+$ export SNOW_USERNAME={snow_username}
+$ export SNOW_PASSWORD={snow_password}
 
 # Use the Python REPL to test
 $ python3 snow_incident.py

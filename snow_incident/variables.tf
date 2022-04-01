@@ -21,23 +21,18 @@ variable "snow_incident_url" {
   type        = string
 }
 
-variable "snow_caller_id" {
-  description = "ServiceNow caller ID"
+variable "snow_category" {
+  description = "ServiceNow incident category name"
   type        = string
 }
 
-variable "snow_category_id" {
-  description = "ServiceNow incident category ID"
+variable "snow_subcategory" {
+  description = "ServiceNow incident subcategory name"
   type        = string
 }
 
-variable "snow_subcategory_id" {
-  description = "ServiceNow incident subcategory ID"
-  type        = string
-}
-
-variable "snow_item_id" {
-  description = "ServiceNow item ID for incident"
+variable "snow_assignment_group" {
+  description = "ServiceNow assignment group to assign the incident to"
   type        = string
 }
 

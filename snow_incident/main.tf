@@ -119,12 +119,11 @@ resource "aws_lambda_function" "snow_incident" {
 
   environment {
     variables = {
-      SNOW_INCIDENT_URL   = var.snow_incident_url,
-      SNOW_CALLER_ID      = var.snow_caller_id,
-      SNOW_CATEGORY_ID    = var.snow_category_id,
-      SNOW_SUBCATEGORY_ID = var.snow_subcategory_id,
-      SNOW_ITEM_ID        = var.snow_item_id,
-      SNOW_PARAMETER_BASE = var.snow_parameter_base
+      SNOW_INCIDENT_URL     = var.snow_incident_url,
+      SNOW_CATEGORY         = var.snow_category,
+      SNOW_SUBCATEGORY      = var.snow_subcategory,
+      SNOW_ASSIGNMENT_GROUP = var.snow_assignment_group
+      SNOW_PARAMETER_BASE   = var.snow_parameter_base
     }
   }
 }

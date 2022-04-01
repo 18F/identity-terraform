@@ -8,11 +8,10 @@ import urllib3
 from typing import Any
 
 REQUIRED_ENVARS = [
+    "SNOW_ASSIGNMENT_GROUP",
     "SNOW_INCIDENT_URL",
-    "SNOW_CALLER_ID",
-    "SNOW_CATEGORY_ID",
-    "SNOW_SUBCATEGORY_ID",
-    "SNOW_ITEM_ID",
+    "SNOW_CATEGORY",
+    "SNOW_SUBCATEGORY",
     "SNOW_PARAMETER_BASE",
 ]
 
@@ -25,11 +24,10 @@ def get_env_settings() -> dict:
     settings = {
         "url": os.environ["SNOW_INCIDENT_URL"],
         "default_body": {
-            "contact_type": "API",
-            "caller_id": os.environ["SNOW_CALLER_ID"],
-            "u_category": os.environ["SNOW_CATEGORY_ID"],
-            "u_subcategory": os.environ["SNOW_SUBCATEGORY_ID"],
-            "u_item": os.environ["SNOW_ITEM_ID"],
+            "assignment_group": os.environ["SNOW_ASSIGNMENT_GROUP"],
+            "category": os.environ["SNOW_CATEGORY"],
+            "subcategory": os.environ["SNOW_SUBCATEGORY"],
+            "item": "Issue"
         },
         "parameter_base": os.environ["SNOW_PARAMETER_BASE"],
     }
@@ -38,11 +36,17 @@ def get_env_settings() -> dict:
 
 
 def get_auth(parameter_base, auth_type="basic") -> Any:
+    # Allow username and password as environment variables for testing,
+    # but default to using SSM
+    if "SNOW_USERNAME" in os.environ and "SNOW_PASSWORD" in os.environ:
+        return (os.environ["SNOW_USERNAME"], os.environ["SNOW_PASSWORD"])
+
     ssm = boto3.client("ssm")
     if auth_type == "basic":
         return (
             get_ssm_param(ssm, parameter_base + "/snow_username"),
-            get_ssm_param(ssm, parameter_base + "/snow_password", encrypted=True),
+            get_ssm_param(ssm, parameter_base + "/snow_password",
+                          encrypted=True),
         )
 
     return None
@@ -72,10 +76,11 @@ def parse_event(event: dict) -> dict:
     priority level.
 
     * If the message parses as JSON, the priority key can set the priority.
-    * If not in the message, priority can be included in the subject using the format: [Px]
+    * If not in the message, priority can be included in the subject using
+      the format: [Px]
       For example, the subject: "Really bad thing [P0]" would set a priority
       of 0
-    * A default priority of 2 is used if priority is not specified in either manner
+    * A default priority of 4 is used if priority is not specified
 
     Allowed priorities are 0 (highest) to 5 (lowest)
     """
@@ -91,9 +96,10 @@ def parse_event(event: dict) -> dict:
             for i in ["Subject", "Message", "Timestamp"]
             if i not in event["Records"][0]["Sns"]
         ]
+
         raise KeyError(
-            'Malformed message: {"Records": [ {"Sns": {}: missing one of Subject, Message, Timestamp'
-        )
+              'Malformed event: {"Records": [ {"Sns": {}: missing: ' +
+              ','.join(missing))
 
     # If message is JSON, parse for additional information
     try:
@@ -115,7 +121,7 @@ def parse_event(event: dict) -> dict:
                 raise ValueError
         except ValueError:
             raise ValueError(
-                f"Invalid priority {jmessage['priority']}: Must be int between 0 and 5"
+                f"Invalid priority {jmessage['priority']}: Valid range 0 to 5"
             )
 
     return data
@@ -125,28 +131,26 @@ def create_body(
     default_body: dict,
     short_description: str,
     description: str,
-    impact: int = 2,
-    urgency: int = 2,
-    priority: int = 2,
+    priority: int = 4,
 ):
     """
     Merge defaults with parsed event elements.
 
-    default_body      - Set of defaults including caller_id, u_category, and u_item keys
+    default_body      - Set of defaults including category and subcategory
     short_description - Summary
     description       - Multiline detail of incident
-    impact            - 0 (highest) to 5 (lowest) (Default: 2)
-    urgency           - 0 (highest) to 5 (lowest) (Default: 2)
-    priority          - 0 (highest) to 5 (lowest) (Default: 2)
+    priority          - 0 (highest) to 5 (lowest) (Default: 4)
     """
+    # Truncate descriptions
+    short_description = short_description[:120]
+    description = description[:4000]
+
     body = default_body.copy()
 
     body.update(
         {
             "short_description": short_description,
             "description": description,
-            "impact": impact,
-            "urgency": urgency,
             "priority": priority,
         }
     )
@@ -156,7 +160,9 @@ def create_body(
 
 def create_incident(url: str, auth: Any, body: dict) -> str:
     headers = urllib3.make_headers(basic_auth=":".join(auth))
-    headers.update({"Content-Type": "application/json", "Accept": "application/json"})
+    headers.update(
+        {"Content-Type": "application/json", "Accept": "application/json"}
+    )
 
     encoded_body = json.dumps(body).encode("utf-8")
 
@@ -166,15 +172,13 @@ def create_incident(url: str, auth: Any, body: dict) -> str:
 
     if response.status != 201:
         full_error = (
-            f"SNOW request failed with status {response.status_code}, ",
+            f"SNOW request failed with status {response.status}, ",
             f"Headers: {response.headers}, ",
             f"Response: {response.data.decode('utf-8')}",
         )
         raise ValueError(full_error)
 
     return json.loads(response.data.decode("utf-8"))
-
-    return data["number"]
 
 
 def lambda_handler(event, context):
@@ -191,11 +195,12 @@ def lambda_handler(event, context):
     )
 
     incident = create_incident(settings["url"], auth, body)
+
     try:
         incident_id = incident["result"]["number"]
     except KeyError:
         raise ValueError(
-            f"Unexpected SNOW response - Did not find incident number in: {incident}"
+            f"Did not find incident number in ServiceNow response: {incident}"
         )
 
     print(f"Created incident: {incident_id}")
