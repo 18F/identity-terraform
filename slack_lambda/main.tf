@@ -1,117 +1,3 @@
-# -- Locals --
-
-locals {
-  slack_lambda_code = <<-EOT
-    #!/usr/bin/python3.8
-    import boto3
-    import urllib3
-    import json
-    import os
-    import re
-    import datetime
-
-    ssm = boto3.client('ssm')
-    slackChannel = os.environ['slack_channel']
-    slackUsername = os.environ['slack_username']
-    slackIcon = os.environ['slack_icon']
-    slackUrlParam = os.environ['slack_webhook_url_parameter']
-    parameter = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)
-    http = urllib3.PoolManager()
-
-    def lambda_handler(event, context):
-        url = parameter['Parameter']['Value']
-        eventmsg = event['Records'][0]['Sns']['Message']
-        blocks = None
-        try:
-          data = json.loads(eventmsg)
-          if 'detailType' in data and data['detailType'] == 'CodePipeline Pipeline Execution State Change':
-            msgtext = 'auto-terraform:  ' + data['detail']['pipeline'] + ' pipeline ' + data['detail']['state'] + ' with execution ID ' + data['detail']['execution-id']
-          elif 'AlarmName' in data and 'AlarmDescription' in data:
-            blocks = [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": f'*Alarm has gone off!*\n*{data["AlarmName"]}*',
-                },
-              },
-            ]
-
-            try:
-              iso_time = datetime.fromisoformat(data["StateChangeTime"].replace("+0000", "+00:00"))
-              formatted_time = iso_time.strftime("%Y-%m-%d %H:%M:%S %Z")
-            except:
-              formatted_time = data["StateChangeTime"]
-
-            match = re.search(r'Runbook: (https://\S+)', data["AlarmDescription"])
-            if match:
-              runbook_url = match.group(1)
-
-              blocks[0]["accessory"] = {
-                "type": "button",
-                "text": {
-                  "type": "plain_text",
-                  "text": "View Runbook :books:",
-                  "emoji": True
-                },
-                "value": "runbook-id",
-                "url": runbook_url,
-                "action_id": "button-action",
-              }
-
-              description_no_runbook = data["AlarmDescription"].split('Runbook:')[0]
-              blocks[0]["text"]["text"] += f'\n{description_no_runbook}'
-            else:
-              blocks.append({
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": data["AlarmDescription"],
-                },
-              })
-
-            blocks.append({
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": '\n'.join([
-                  data["NewStateReason"],
-                  f'*Time*: {formatted_time}',
-                  f'*Region*: {data["Region"]}'
-                ]),
-              }
-            })
-
-            msgtext = '\n'.join([
-              '*Alarm has gone off!*',
-              f'*{data["AlarmName"]}*',
-              data["AlarmDescription"],
-              data["NewStateReason"],
-              f'*Time*: {formatted_time}',
-              f'*Region*: {data["Region"]}'])
-          else:
-            msgtext = eventmsg
-        except Exception as e:
-          msgtext = eventmsg
-        msg = {
-            "channel": slackChannel,
-            "username": slackUsername,
-            "text": msgtext,
-            "icon_emoji": slackIcon,
-        }
-        if blocks:
-          msg["blocks"] = blocks
-
-        encoded_msg = json.dumps(msg).encode('utf-8')
-        resp = http.request('POST',url, body=encoded_msg)
-        print({
-            "message": event['Records'][0]['Sns']['Message'],
-            "status_code": resp.status,
-            "response": resp.data
-        })
-  EOT
-}
-
 # -- Data Sources --
 
 data "aws_region" "current" {}
@@ -156,16 +42,6 @@ data "aws_iam_policy_document" "lambda_policy" {
   }
 }
 
-data "archive_file" "lambda_function" {
-  type        = "zip"
-  output_path = "${path.module}/lambda_function.zip"
-
-  source {
-    content  = local.slack_lambda_code
-    filename = "lambda_function.py"
-  }
-}
-
 # -- Resources --
 
 resource "aws_cloudwatch_log_group" "slack_lambda" {
@@ -173,25 +49,29 @@ resource "aws_cloudwatch_log_group" "slack_lambda" {
   retention_in_days = 365
 }
 
-resource "aws_lambda_function" "slack_lambda" {
-  filename         = data.archive_file.lambda_function.output_path
-  function_name    = var.lambda_name
-  description      = var.lambda_description
-  role             = aws_iam_role.slack_lambda.arn
-  handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.6"
-  timeout          = var.lambda_timeout
-  memory_size      = var.lambda_memory
-  source_code_hash = data.archive_file.lambda_function.output_base64sha256
-  publish          = false
+module "slack_lambda" {
+  source = "github.com/18F/identity-terraform//null_lambda?ref=f423134980c52490764f1c83294b34b2572e21f2"
+  #source = "../identity-terraform/null_lambda"
 
-  environment {
-    variables = {
-      slack_webhook_url_parameter = var.slack_webhook_url_parameter
-      slack_channel               = var.slack_channel,
-      slack_username              = var.slack_username,
-      slack_icon                  = var.slack_icon
-    }
+  source_code_filename  = "lambda_function.py"
+  source_dir            = "${path.module}/src/"
+  zip_filename          = "lambda_function"
+  external_role_arn     = aws_iam_role.slack_lambda.arn
+  function_name         = var.lambda_name
+  description           = var.lambda_description
+  handler               = "lambda_function.lambda_handler"
+  memory_size           = var.lambda_memory
+  runtime               = "python3.8"
+  timeout               = var.lambda_timeout
+  perm_id               = "AllowExecutionBySNS"
+  permission_principal  = ["sns.amazonaws.com"]
+  permission_source_arn = var.slack_topic_arn
+
+  env_var_map = {
+    slack_webhook_url_parameter = var.slack_webhook_url_parameter
+    slack_channel               = var.slack_channel,
+    slack_username              = var.slack_username,
+    slack_icon                  = var.slack_icon
   }
 }
 
@@ -206,16 +86,8 @@ resource "aws_iam_role_policy" "slack_lambda" {
   policy = data.aws_iam_policy_document.lambda_policy.json
 }
 
-resource "aws_lambda_permission" "allow_sns_trigger" {
-  statement_id  = "AllowExecutionBySNS"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.slack_lambda.arn
-  principal     = "sns.amazonaws.com"
-  source_arn    = var.slack_topic_arn
-}
-
 resource "aws_sns_topic_subscription" "sns_to_lambda" {
   topic_arn = var.slack_topic_arn
   protocol  = "lambda"
-  endpoint  = aws_lambda_function.slack_lambda.arn
+  endpoint  = module.slack_lambda.lambda_arn
 }

@@ -54,7 +54,7 @@ resource "aws_lambda_function" "lambda" {
   }
 }
 
-resource "aws_lambda_permission" "config_access_key_rotation_lambda_permission" {
+resource "aws_lambda_permission" "invoke_function" {
   for_each = toset(var.permission_principal)
 
   statement_id  = local.statement_id
