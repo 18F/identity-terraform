@@ -12,3 +12,8 @@ output "lambda_id" {
   description = "ID of the Lambda function"
   value       = aws_lambda_function.lambda.id
 }
+
+output "role_id" {
+  description = "ID of the Lambda function's IAM role (if present)"
+  value       = var.external_role_arn == "" ? aws_iam_role.lambda_access_role[0].id : ""
+}

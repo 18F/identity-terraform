@@ -54,12 +54,12 @@ resource "aws_lambda_function" "lambda" {
   }
 }
 
-resource "aws_lambda_permission" "invoke_function" {
-  for_each = toset(var.permission_principal)
+resource "aws_lambda_permission" "invoke" {
+  count = length(var.permission_principal)
 
   statement_id  = local.statement_id
   function_name = aws_lambda_function.lambda.function_name
   action        = "lambda:InvokeFunction"
-  principal     = each.key
+  principal     = var.permission_principal[count.index]
   source_arn    = var.permission_source_arn
 }

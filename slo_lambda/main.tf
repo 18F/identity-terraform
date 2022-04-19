@@ -65,33 +65,31 @@ resource "aws_iam_role_policy_attachment" "windowed_slo_lambda_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_file = "${path.module}/src/windowed_slo.py"
-  output_path = "${path.module}/${var.slo_lambda_code}"
-}
+module "windowed_slo" {
+  source = "github.com/18F/identity-terraform//null_lambda?ref=aef6c906e3d298281a2d00b943aa8452a5c0e7be"
+  #source = "../identity-terraform/null_lambda"
 
-# Ignore missing XRay warning
-# tfsec:ignore:aws-lambda-enable-tracing
-resource "aws_lambda_function" "windowed_slo" {
-  description      = "Managed by Terraform"
-  filename         = "${path.module}/${var.slo_lambda_code}"
-  function_name    = local.name
-  handler          = "windowed_slo.lambda_handler"
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-  publish          = false
-  role             = aws_iam_role.windowed_slo_lambda.arn
-  runtime          = var.lambda_runtime
-  timeout          = 30
-  memory_size      = 128
+  # Ignore missing XRay warning
+  # tfsec:ignore:aws-lambda-enable-tracing
+  source_code_filename  = "windowed_slo.py"
+  source_dir            = "${path.module}/src/"
+  zip_filename          = var.slo_lambda_code
+  external_role_arn     = aws_iam_role.windowed_slo_lambda.arn
+  function_name         = local.name
+  description           = "Writes CloudWatch metrics that aggregate over WINDOW_DAYS."
+  handler               = "windowed_slo.lambda_handler"
+  memory_size           = 128
+  runtime               = var.lambda_runtime
+  timeout               = 30
+  perm_id               = "AllowExecutionFromCloudWatch"
+  permission_principal  = ["events.amazonaws.com"]
+  permission_source_arn = aws_cloudwatch_event_rule.every_one_day.arn
 
-  environment {
-    variables = {
-      WINDOW_DAYS       = var.window_days
-      SLI_NAMESPACE     = var.namespace == "" ? "${var.env_name}/sli" : var.namespace
-      LOAD_BALANCER_ARN = var.load_balancer_arn
-      SLI_PREFIX        = var.sli_prefix
-    }
+  env_var_map = {
+    WINDOW_DAYS       = var.window_days
+    SLI_NAMESPACE     = var.namespace == "" ? "${var.env_name}/sli" : var.namespace
+    LOAD_BALANCER_ARN = var.load_balancer_arn
+    SLI_PREFIX        = var.sli_prefix
   }
 }
 
@@ -103,14 +101,6 @@ resource "aws_cloudwatch_event_rule" "every_one_day" {
 
 resource "aws_cloudwatch_event_target" "check_foo_every_one_day" {
   rule      = aws_cloudwatch_event_rule.every_one_day.name
-  target_id = aws_lambda_function.windowed_slo.id
-  arn       = aws_lambda_function.windowed_slo.arn
-}
-
-resource "aws_lambda_permission" "allow_cloudwatch_to_call_windowed_slo" {
-  statement_id  = "AllowExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.windowed_slo.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_one_day.arn
+  target_id = module.windowed_slo.lambda_id
+  arn       = module.windowed_slo.lambda_arn
 }
