@@ -29,9 +29,9 @@ EOM
 
 variable "external_role_arn" {
   description = <<EOM
-(OPTIONAL) ARN of the IAM role used by the Lambda function, one with (at least) the
-sts:AssumeRole permission. If not specified, a role named function_name-lambda-role
-with that basic permission will be created and used instead.
+(OPTIONAL) ARN of an external IAM role used by the Lambda function, one with
+(at least) the sts:AssumeRole permission. If not specified, a role named
+function_name-lambda-role with said basic permission will be created and used instead.
 EOM
   type        = string
   default     = ""
