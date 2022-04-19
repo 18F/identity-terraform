@@ -88,16 +88,18 @@ EOM
 
 variable "permission_principal" {
   description = <<EOM
-(REQUIRED) Service principal for Lambda permission, usually PRINCIPAL.amazonaws.com.
-Will default to 'events.amazonaws.com' (for CloudWatch) if not otherwise specified.
+(OPTIONAL) Service principal for Lambda permission, e.g. events.amazonaws.com.
+ONLY use if desiring to create an AWS Lambda Permission. Must be in list format.
 EOM
-  type        = string
-  default     = "events.amazonaws.com"
+  type        = list(string)
+  default     = []
 }
 
 variable "permission_source_arn" {
   description = <<EOM
-(REQUIRED) ARN of resource referenced by/connected to principal for Lambda permission.
+(OPTINAL) ARN of resource referenced by/connected to principal for Lambda permission.
+ONLY use if desiring to create an AWS Lambda Permission.
 EOM
   type        = string
+  default     = ""
 }
