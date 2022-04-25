@@ -38,8 +38,12 @@ variable "elb_account_ids" {
   }
 }
 
+locals {
+  logsbucketname = "${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+}
+
 resource "aws_s3_bucket" "logs" {
-  bucket        = "${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket        = "${local.logsbucketname}"
   acl           = "log-delivery-write"
   force_destroy = var.force_destroy
 
@@ -56,7 +60,7 @@ resource "aws_s3_bucket" "logs" {
         "AWS": "arn:aws:iam::${var.elb_account_ids[var.region]}:root"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${var.bucket_name_prefix}.elb-logs.${data.aws_caller_identity.current.account_id}-${var.region}/${var.use_prefix_for_permissions ? join(
+      "Resource": "arn:aws:s3:::${local.logsbucketname}/${var.use_prefix_for_permissions ? join(
   "/",
   [
     var.log_prefix,
@@ -65,6 +69,27 @@ resource "aws_s3_bucket" "logs" {
     "*",
   ],
 ) : "*"}"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "delivery.logs.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::${local.logsbucketname}/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    },
+    {
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "delivery.logs.amazonaws.com"
+        },
+        "Action": "s3:GetBucketAcl",
+        "Resource": "arn:aws:s3:::${local.logsbucketname}"
     }
   ]
 }
