@@ -43,7 +43,7 @@ locals {
 }
 
 resource "aws_s3_bucket" "logs" {
-  bucket        = "${local.logsbucketname}"
+  bucket        = local.logsbucketname
   acl           = "log-delivery-write"
   force_destroy = var.force_destroy
 
