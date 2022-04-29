@@ -50,7 +50,7 @@ resource "aws_cloudwatch_log_group" "slack_lambda" {
 }
 
 module "slack_lambda" {
-  source = "github.com/18F/identity-terraform//null_lambda?ref=aef6c906e3d298281a2d00b943aa8452a5c0e7be"
+  source = "github.com/18F/identity-terraform//null_lambda?ref=df65cca90188b8655b52a95cc7cd4ff5fa00ad80"
   #source = "../identity-terraform/null_lambda"
 
   source_code_filename  = "lambda_function.py"

@@ -1,6 +1,7 @@
 locals {
-  zip_file     = var.zip_filename == "" ? var.function_name : var.zip_filename
-  statement_id = var.perm_id == "" ? "${var.function_name}-lambda-permission" : var.perm_id
+  zip_file        = var.zip_filename == "" ? var.function_name : var.zip_filename
+  statement_id    = var.perm_id == "" ? "${var.function_name}-lambda-permission" : var.perm_id
+  environment_map = var.env_var_map[*]
 }
 
 variable "source_code_filename" {
@@ -74,7 +75,7 @@ variable "timeout" {
 variable "env_var_map" {
   description = "(REQUIRED) Map of environment variables used by the Lambda function."
   type        = map(string)
-  default     = {}
+  default     = null
 }
 
 variable "perm_id" {
