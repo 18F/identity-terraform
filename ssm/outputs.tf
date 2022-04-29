@@ -12,3 +12,8 @@ output "ssm_cmd_logs" {
   description = "Name of the CloudWatch Log Group for SSM command logging."
   value       = aws_cloudwatch_log_group.ssm_cmd_logs.name
 }
+
+output "ssm_kms_arn" {
+  description = "ARN of the SSM KMS key."
+  value       = aws_kms_key.kms_ssm.arn
+}
