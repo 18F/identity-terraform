@@ -73,7 +73,7 @@ variable "timeout" {
 }
 
 variable "env_var_map" {
-  description = "(REQUIRED) Map of environment variables used by the Lambda function."
+  description = "(OPTIONAL) Map of environment variables used by the Lambda function, if any."
   type        = map(string)
   default     = null
 }

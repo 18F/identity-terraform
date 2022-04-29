@@ -1,3 +1,5 @@
+_(This information is pulled directly from the README for the `null_lambda` module.)_
+
 # `null_lambda`
 
 This Terraform module creates an AWS Lambda Function (from a given path and source file), but uses a `null_resource` as the trigger for compressing it into a ZIP file and passing said ZIP file's SHA to the `aws_lambda_function` resources. This is used to address a few key issues:
@@ -54,7 +56,7 @@ module "example_lambda_function" {
 `memory_size` - (REQUIRED) Memory (in MB) available to the Lambda function.
 `runtime` - (REQUIRED) Runtime used by the Lambda function.
 `timeout` - (REQUIRED) Timeout value for the Lambda function.
-`env_var_map` - (REQUIRED) Map of environment variables used by the Lambda function.
+`env_var_map` - (OPTIONAL) Map of environment variables used by the Lambda function, if any.
 `perm_id` - (OPTIONAL) ID/name of Statement identifying the permission for the function. Will default to **`function_name`-lambda-permission** if not specified here.
 `permission_principal` - (OPTIONAL) Service principal for Lambda permission, e.g. **events.amazonaws.com**. ONLY use if desiring to create an AWS Lambda Permission. _Must be in **list** format,_ as it is used with `for_each` to create the Permission on a conditional basis.
 `permission_source_arn` - (OPTINAL) ARN of resource referenced by/connected to principal for Lambda permission. ONLY use if desiring to create an AWS Lambda Permission.
