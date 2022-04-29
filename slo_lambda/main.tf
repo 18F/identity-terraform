@@ -66,7 +66,7 @@ resource "aws_iam_role_policy_attachment" "windowed_slo_lambda_execution_role" {
 }
 
 module "windowed_slo" {
-  source = "github.com/18F/identity-terraform//null_lambda?ref=df65cca90188b8655b52a95cc7cd4ff5fa00ad80"
+  source = "github.com/18F/identity-terraform//null_lambda?ref=fe70f9e07b70d1a27b7e9587a800e05711bdf5c3"
   #source = "../identity-terraform/null_lambda"
 
   # Ignore missing XRay warning
