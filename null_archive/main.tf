@@ -4,7 +4,7 @@ data "archive_file" "lambda" {
   depends_on  = [null_resource.source_hash_check]
   type        = "zip"
   source_dir  = var.source_dir
-  output_path = "${var.zip_filename}.zip"
+  output_path = "${var.zip_filename}"
 }
 
 # -- Resources --

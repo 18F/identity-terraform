@@ -65,10 +65,12 @@ resource "aws_iam_role_policy_attachment" "windowed_slo_lambda_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_file = "${path.module}/src/windowed_slo.py"
-  output_path = "${path.module}/${var.slo_lambda_code}"
+module "lambda_zip" {
+  source = "github.com/18F/identity-terraform//null_archive?ref=3229aa4247f5098ef66e0d87389992f1095a2ca7"
+
+  source_code_filename  = "windowed_slo.py"
+  source_dir            = "${path.module}/src/"
+  zip_filename          = var.slo_lambda_code
 }
 
 # Ignore missing XRay warning
