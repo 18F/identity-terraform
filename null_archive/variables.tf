@@ -14,7 +14,7 @@ EOM
 }
 
 variable "zip_filename" {
-  description = "(REQUIRED) Desired name (WITHOUT extension) of resultant output ZIP file."
+  description = "(REQUIRED) Desired name (with .zip extension) of resultant output file."
   type        = string
   default     = ""
 }
