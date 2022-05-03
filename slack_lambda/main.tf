@@ -45,9 +45,9 @@ data "aws_iam_policy_document" "lambda_policy" {
 module "lambda_code" {
   source = "github.com/18F/identity-terraform//null_archive?ref=aa0f4c1aaa13a6a46e9de2f9b7d8da430ce59527"
 
-  source_code_filename = "lambda_function.py"
+  source_code_filename = "slack_lambda.py"
   source_dir           = "${path.module}/src/"
-  zip_filename         = "lambda_function.zip"
+  zip_filename         = "slack_lambda.zip"
 }
 
 # -- Resources --
@@ -62,7 +62,7 @@ resource "aws_lambda_function" "slack_lambda" {
   function_name    = var.lambda_name
   description      = var.lambda_description
   role             = aws_iam_role.slack_lambda.arn
-  handler          = "lambda_function.lambda_handler"
+  handler          = "slack_lambda.lambda_handler"
   runtime          = "python3.6"
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory
