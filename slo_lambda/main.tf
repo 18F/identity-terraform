@@ -65,20 +65,22 @@ resource "aws_iam_role_policy_attachment" "windowed_slo_lambda_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_file = "${path.module}/src/windowed_slo.py"
-  output_path = "${path.module}/${var.slo_lambda_code}"
+module "lambda_zip" {
+  source = "github.com/18F/identity-terraform//null_archive?ref=aa0f4c1aaa13a6a46e9de2f9b7d8da430ce59527"
+
+  source_code_filename = "windowed_slo.py"
+  source_dir           = "${path.module}/src/"
+  zip_filename         = var.slo_lambda_code
 }
 
 # Ignore missing XRay warning
 # tfsec:ignore:aws-lambda-enable-tracing
 resource "aws_lambda_function" "windowed_slo" {
   description      = "Managed by Terraform"
-  filename         = "${path.module}/${var.slo_lambda_code}"
+  filename         = module.lambda_zip.zip_output_path
   function_name    = local.name
   handler          = "windowed_slo.lambda_handler"
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  source_code_hash = module.lambda_zip.zip_output_base64sha256
   publish          = false
   role             = aws_iam_role.windowed_slo_lambda.arn
   runtime          = var.lambda_runtime

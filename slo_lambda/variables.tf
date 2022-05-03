@@ -15,8 +15,8 @@ variable "lambda_runtime" {
 
 variable "slo_lambda_code" {
   type        = string
-  description = "Path of the compressed lambda source code."
-  default     = "src/windowed_slo.zip"
+  description = "Filename of the compressed lambda source code."
+  default     = "windowed_slo.zip"
 }
 
 variable "window_days" {
