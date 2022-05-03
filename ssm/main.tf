@@ -211,8 +211,8 @@ inputs:
   cloudWatchEncryptionEnabled: false%{endif}
   kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-  runAsEnabled: true
-  runAsDefaultUser: ''
+  %{if each.value["use_root"] == false}runAsEnabled: true
+  runAsDefaultUser: ''%{endif}
   shellProfile:
     linux: 'trap "exit 0" INT; ${each.value["command"]} ; exit'
   DOC
