@@ -51,7 +51,7 @@ resource "aws_lambda_function" "sample_lambda" {
 
 `source_code_filename` - (REQUIRED) Name (with extension) of file containing function source code.
 `source_dir` - (REQUIRED) Name of directory where source_code_filename + any other files to be added to the ZIP file reside.
-`zip_filename` - (REQUIRED) Desired name (WITHOUT extension) of resultant output ZIP file.
+`zip_filename` - (REQUIRED) Desired name (with .zip extension) of resultant output file.
 
 ## Outputs
 
