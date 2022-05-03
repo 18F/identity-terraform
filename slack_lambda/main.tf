@@ -43,7 +43,7 @@ data "aws_iam_policy_document" "lambda_policy" {
 }
 
 module "lambda_code" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=aa0f4c1aaa13a6a46e9de2f9b7d8da430ce59527"
+  source = "github.com/18F/identity-terraform//null_archive?ref=a952f2203f6a12610e847404939eefc3c23a1f02"
 
   source_code_filename = "slack_lambda.py"
   source_dir           = "${path.module}/src/"
