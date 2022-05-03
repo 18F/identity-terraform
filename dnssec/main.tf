@@ -149,9 +149,12 @@ resource "aws_route53_key_signing_key" "dnssec" {
 }
 
 resource "aws_route53_hosted_zone_dnssec" "dnssec" {
+  # if removing/disabling DNSSEC, verify that ALL KSKs/KMS keys are gone first
   depends_on = [
-    aws_route53_key_signing_key.dnssec
+    aws_route53_key_signing_key.dnssec,
+    aws_kms_key.dnssec
   ]
+
   hosted_zone_id = var.dnssec_zone_id
 
   #lifecycle {

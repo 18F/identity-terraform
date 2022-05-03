@@ -118,13 +118,13 @@ module "ssm_logs_bucket_config" {
   source = "github.com/18F/identity-terraform//s3_config?ref=a6261020a94b77b08eedf92a068832f21723f7a2"
 
   bucket_name_prefix   = var.bucket_name_prefix
-  bucket_name          = "${var.env_name}-ssm-logs"
+  bucket_name          = aws_s3_bucket.ssm_logs.id
   region               = var.region
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
 }
 
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {
-  name              = "aws-ssm-sessions-${var.env_name}" #stream name must start with "aws-ssm-logs"
+  name              = "aws-ssm-sessions-${var.env_name}" #stream name must start with "aws-ssm-sessions"
   retention_in_days = 365
   kms_key_id        = aws_kms_key.kms_ssm.arn
 }
