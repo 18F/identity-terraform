@@ -117,10 +117,9 @@ resource "aws_s3_bucket" "ssm_logs" {
 module "ssm_logs_bucket_config" {
   source = "github.com/18F/identity-terraform//s3_config?ref=a6261020a94b77b08eedf92a068832f21723f7a2"
 
-  bucket_name_prefix   = var.bucket_name_prefix
-  bucket_name          = "${var.env_name}-ssm-logs"
-  region               = var.region
+  bucket_name_override = aws_s3_bucket.ssm_logs.id
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
+  depends_on           = [aws_s3_bucket.ssm_logs.arn]
 }
 
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {
