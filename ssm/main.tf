@@ -121,6 +121,7 @@ module "ssm_logs_bucket_config" {
   bucket_name          = aws_s3_bucket.ssm_logs.id
   region               = var.region
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
+  depends_on           = [aws_s3_bucket.ssm_logs]
 }
 
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {
