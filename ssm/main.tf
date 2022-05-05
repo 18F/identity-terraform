@@ -119,7 +119,7 @@ module "ssm_logs_bucket_config" {
 
   bucket_name_override = aws_s3_bucket.ssm_logs.id
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
-  depends_on           = [aws_s3_bucket.ssm_logs.arn]
+  depends_on           = [aws_s3_bucket.ssm_logs]
 }
 
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {
