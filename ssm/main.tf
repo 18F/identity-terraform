@@ -119,7 +119,7 @@ module "ssm_logs_bucket_config" {
 
   bucket_name_override = aws_s3_bucket.ssm_logs.id
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
-  depends_on           = [aws_s3_bucket.ssm_logs.arn]
+  depends_on           = [aws_s3_bucket.ssm_logs]
 }
 
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {
@@ -210,7 +210,7 @@ inputs:
   cloudWatchEncryptionEnabled: false%{endif}
   kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-  %{if each.value["use_root"] == false}runAsEnabled: true
+  %{if each.value["use_root"] == "false"}runAsEnabled: true
   runAsDefaultUser: ''%{endif}
   shellProfile:
     linux: 'trap "exit 0" INT; ${each.value["command"]} ; exit'
