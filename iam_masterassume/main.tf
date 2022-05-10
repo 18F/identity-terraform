@@ -1,4 +1,9 @@
 # -- Variables --
+variable "partition" {
+  description = "which aws partition this is deployed in"
+  type = string
+  default = "aws"
+}
 
 variable "aws_account_types" {
   description = "Mapping of account types to lists of AWS account numbers."
@@ -25,7 +30,7 @@ locals {
   role_expansion = {
     for rolepair in setproduct(keys(var.aws_account_types), var.role_list) : join("", [rolepair[0], "Assume", rolepair[1]]) => [
       for pair in setproduct(var.aws_account_types[rolepair[0]], [rolepair[1]]) :
-      join("", ["arn:aws:iam::", pair[0], ":role/", pair[1]])
+      join("", ["arn:${var.partition}:iam::", pair[0], ":role/", pair[1]])
     ]
   }
 }

@@ -1,4 +1,9 @@
 # -- Variables --
+variable "partition" {
+  description = "which aws partition this is deployed in"
+  type = string
+  default = "aws"
+}
 
 variable "user_map" {
   description = "Map of users to group memberships."
@@ -116,7 +121,7 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:ListGroupsForUser",
     ]
     resources = [
-      "arn:aws:iam::*:user/$${aws:username}",
+      "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
   statement {
@@ -126,8 +131,8 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:ListMFADevices",
     ]
     resources = [
-      "arn:aws:iam::*:mfa/*",
-      "arn:aws:iam::*:user/$${aws:username}",
+      "arn:${var.partition}:iam::*:mfa/*",
+      "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
   statement {
@@ -140,8 +145,8 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:ResyncMFADevice",
     ]
     resources = [
-      "arn:aws:iam::*:mfa/$${aws:username}",
-      "arn:aws:iam::*:user/$${aws:username}",
+      "arn:${var.partition}:iam::*:mfa/$${aws:username}",
+      "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
   statement {
@@ -151,8 +156,8 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:DeactivateMFADevice",
     ]
     resources = [
-      "arn:aws:iam::*:mfa/$${aws:username}",
-      "arn:aws:iam::*:user/$${aws:username}",
+      "arn:${var.partition}:iam::*:mfa/$${aws:username}",
+      "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
     condition {
       test     = "Bool"
