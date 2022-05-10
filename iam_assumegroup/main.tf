@@ -1,4 +1,9 @@
 # -- Variables --
+variable "partition" {
+  description = "which aws partition this is deployed in"
+  type = string
+  default = "aws"
+}
 
 variable "master_account_id" {
   description = "AWS account ID for the master account."
@@ -44,7 +49,7 @@ resource "aws_iam_policy_attachment" "group_policy" {
 
   name       = each.key
   groups     = each.value
-  policy_arn = "arn:aws:iam::${var.master_account_id}:policy/${each.key}"
+  policy_arn = "arn:${var.partition}:iam::${var.master_account_id}:policy/${each.key}"
 
   depends_on = [
     var.policy_depends_on,
