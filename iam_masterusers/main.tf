@@ -1,8 +1,8 @@
 # -- Variables --
 variable "partition" {
   description = "which aws partition this is deployed in"
-  type = string
-  default = "aws"
+  type        = string
+  default     = "aws"
 }
 
 variable "user_map" {
