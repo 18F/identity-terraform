@@ -8,7 +8,7 @@ output "zip_output_base64sha256" {
   value       = data.archive_file.lambda.output_base64sha256
 }
 
-output "null_resource_check" {
+output "resource_check" {
   description = "ID of null_resource (changes when triggered)."
   value       = null_resource.source_hash_check.id
 }
