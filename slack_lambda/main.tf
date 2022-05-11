@@ -43,7 +43,7 @@ data "aws_iam_policy_document" "lambda_policy" {
 }
 
 module "lambda_code" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=a952f2203f6a12610e847404939eefc3c23a1f02"
+  source = "github.com/18F/identity-terraform//null_archive?ref=b4eb8ffd4f46539b35b31833237d7a0413adc029"
 
   source_code_filename = "slack_lambda.py"
   source_dir           = "${path.module}/src/"
@@ -77,6 +77,8 @@ resource "aws_lambda_function" "slack_lambda" {
       slack_icon                  = var.slack_icon
     }
   }
+
+  depends_on = [module.lambda_code.resource_check]
 }
 
 resource "aws_iam_role" "slack_lambda" {

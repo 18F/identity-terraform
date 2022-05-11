@@ -66,7 +66,7 @@ resource "aws_iam_role_policy_attachment" "windowed_slo_lambda_execution_role" {
 }
 
 module "lambda_zip" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=a952f2203f6a12610e847404939eefc3c23a1f02"
+  source = "github.com/18F/identity-terraform//null_archive?ref=b4eb8ffd4f46539b35b31833237d7a0413adc029"
 
   source_code_filename = "windowed_slo.py"
   source_dir           = "${path.module}/src/"
@@ -95,6 +95,8 @@ resource "aws_lambda_function" "windowed_slo" {
       SLI_PREFIX        = var.sli_prefix
     }
   }
+
+  depends_on = [module.lambda_zip.resource_check]
 }
 
 resource "aws_cloudwatch_event_rule" "every_one_day" {
