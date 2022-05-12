@@ -15,6 +15,8 @@ This Terraform module uses a `null_resource` as a trigger for compressing the co
 
 `null_resource.source_hash_check` is used to monitor the Base64-encoded SHA256 hash of the main source code file, and will cause the `archive_file` resource to _always_ create a new ZIP file -- but only if updates are _actually_ made to the function's source code file.
 
+For maximum compatibility, a `depends_on` statement/list item should be used in the accompanying `aws_lambda_function` resource, pointing to the `resource_check` output, ensuring that the function _only_ updates if the `null_resource.source_hash_check` resource is triggered/replaced.
+
 ## Example
 
 ```hcl
@@ -44,6 +46,8 @@ resource "aws_lambda_function" "sample_lambda" {
       region          = data.aws_region.current.name
     }
   }
+
+  depends_on = [module.smart_archive_file.resource_check]
 }
 ```
 
@@ -57,3 +61,4 @@ resource "aws_lambda_function" "sample_lambda" {
 
 `zip_output_path` - Output path/filename of ZIP file created from source code filename.
 `zip_output_base64sha256` - base64-encoded SHA256 checksum of ZIP file.
+`resource_check` - ID (in Terraform state) of the `null_resource.source_hash_check` resource. Use with a `depends_on` block to ensure that a parent resource (e.g. a Lambda function) _only_ updates when the source code changes.
