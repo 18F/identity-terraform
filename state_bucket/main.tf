@@ -115,6 +115,7 @@ resource "aws_s3_bucket" "s3-access-logs" {
 
   versioning {
     enabled = true
+    mfa_delete = var.s3_env
   }
 
   lifecycle_rule {
@@ -159,6 +160,7 @@ resource "aws_s3_bucket" "tf-state" {
   policy = ""
   versioning {
     enabled = true
+    mfa_delete = var.s3_env
   }
 
   logging {
