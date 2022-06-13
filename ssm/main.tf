@@ -138,7 +138,12 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
       "ssmmessages:CreateControlChannel",
       "ssmmessages:CreateDataChannel",
       "ssmmessages:OpenControlChannel",
-      "ssmmessages:OpenDataChannel"
+      "ssmmessages:OpenDataChannel",
+      "ec2messages:GetMessages",
+      "ec2messages:AcknowledgeMessage",
+      "ec2messages:SendReply",
+      "ssm:ListAssociations",
+      "ssm:ListInstanceAssociations"
     ]
     resources = [
       "*",
