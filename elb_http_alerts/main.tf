@@ -34,14 +34,14 @@ variable "target_threshold" {
 locals {
   elb_type_data = {
     ALB = {
-      namespace     = "AWS/ApplicationELB",
-      lb_metric     = "HTTPCode_ELB_5XX_Count",
-      target_metric = "HTTPCode_Target_5XX_Count"
+      "namespace"     = "AWS/ApplicationELB",
+      "lb_metric"     = "HTTPCode_ELB_5XX_Count",
+      "target_metric" = "HTTPCode_Target_5XX_Count"
     },
     ELB = {
-      namespace     = "AWS/ELB",
-      b_metric      = "HTTPCode_ELB_5XX",
-      target_metric = "HTTPCode_Backend_5XX"
+      "namespace"     = "AWS/ELB",
+      "lb_metric"     = "HTTPCode_ELB_5XX",
+      "target_metric" = "HTTPCode_Backend_5XX"
     }
   }
 }
@@ -67,6 +67,10 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
   treat_missing_data = "missing"
 
   alarm_actions = var.alarm_actions
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
@@ -87,5 +91,9 @@ resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
   treat_missing_data = "notBreaching"
 
   alarm_actions = var.alarm_actions
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
