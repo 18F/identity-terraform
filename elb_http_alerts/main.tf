@@ -11,23 +11,24 @@ variable "lb_name" {
 }
 
 variable "lb_type" {
-  description = "Type of Load Balancer (ELB, ALB, or NLB)"
+  description = "Type of Load Balancer (ELB or ALB)"
   type        = string
-  default     = "ELB"
 }
 
 variable "alarm_actions" {
-  type        = list(string)
   description = "A list of ARNs to notify when the LB alarms fire"
+  type        = list(string)
 }
 
 variable "lb_threshold" {
   description = "Number of errors to trigger LB 5xx alarm"
+  type        = number
   default     = 30
 }
 
 variable "target_threshold" {
   description = "Number of errors to trigger targets/instances 5xx alarm"
+  type        = number
   default     = 150
 }
 
