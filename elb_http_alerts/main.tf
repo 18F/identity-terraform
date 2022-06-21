@@ -33,7 +33,7 @@ variable "target_threshold" {
 }
 
 locals {
-  elb_type_data = {
+  lb_type_data = {
     ALB = {
       "namespace"     = "AWS/ApplicationELB",
       "lb_metric"     = "HTTPCode_ELB_5XX_Count",
@@ -51,9 +51,11 @@ locals {
 
 resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
   alarm_name        = "${var.lb_name} ${var.lb_type} HTTP 5XX"
-  alarm_description = "HTTP 5XX errors served by ${var.lb_type} without hosts [TF]"
-  namespace         = lookup(local.elb_type_data, var.lb_type)["namespace"]
-  metric_name       = lookup(local.elb_type_data, var.lb_type)["lb_metric"]
+  alarm_description = <<EOM
+HTTP 5XX errors served by the ${var.lb_name} ${var.lb_type} without hosts
+EOM
+  namespace         = lookup(local.lb_type_data, var.lb_type)["namespace"]
+  metric_name       = lookup(local.lb_type_data, var.lb_type)["lb_metric"]
   dimensions = {
     LoadBalancer = var.lb_name
   }
@@ -76,9 +78,11 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
 
 resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
   alarm_name        = "${var.lb_name} Target HTTP 5XX"
-  alarm_description = "HTTP 5XX errors served by hosts in ${var.lb_type} [TF]"
-  namespace         = lookup(local.elb_type_data, var.lb_type)["namespace"]
-  metric_name       = lookup(local.elb_type_data, var.lb_type)["target_metric"]
+  alarm_description = <<EOM
+HTTP 5XX errors served by hosts in ${var.lb_name} ${var.lb_type}
+EOM
+  namespace         = lookup(local.lb_type_data, var.lb_type)["namespace"]
+  metric_name       = lookup(local.lb_type_data, var.lb_type)["target_metric"]
   dimensions = {
     LoadBalancer = var.lb_name
   }
