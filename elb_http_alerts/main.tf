@@ -1,38 +1,68 @@
+# -- Variables --
+
 variable "env_name" {
   description = "Environment name, for prefixing the generated metric names"
+  type        = string
 }
 
-variable "load_balancer_id" {
-  description = "ID of the IDP load balancer"
+variable "lb_name" {
+  description = "Name of the Load Balancer"
+  type        = string
+}
+
+variable "lb_type" {
+  description = "Type of Load Balancer (ELB or ALB)"
+  type        = string
 }
 
 variable "alarm_actions" {
+  description = "A list of ARNs to notify when the LB alarms fire"
   type        = list(string)
-  description = "A list of ARNs to notify when the ELB alarms fire"
 }
 
-variable "elb_threshold" {
-  description = "Number of errors to trigger ELB 5xx alarm"
+variable "lb_threshold" {
+  description = "Number of errors to trigger LB 5xx alarm"
+  type        = number
   default     = 30
 }
 
 variable "target_threshold" {
-  description = "Number of errors to trigger target 5xx alarm"
+  description = "Number of errors to trigger targets/instances 5xx alarm"
+  type        = number
   default     = 150
 }
 
+locals {
+  lb_type_data = {
+    ALB = {
+      "namespace"     = "AWS/ApplicationELB",
+      "lb_metric"     = "HTTPCode_ELB_5XX_Count",
+      "target_metric" = "HTTPCode_Target_5XX_Count"
+    },
+    ELB = {
+      "namespace"     = "AWS/ELB",
+      "lb_metric"     = "HTTPCode_ELB_5XX",
+      "target_metric" = "HTTPCode_Backend_5XX"
+    }
+  }
+}
+
+# -- Resources --
+
 resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
-  alarm_name        = "${var.env_name} IDP ELB HTTP 5XX"
-  alarm_description = "HTTP 5XX errors served by the ELB without the IDP [TF]"
-  namespace         = "AWS/ApplicationELB"
-  metric_name       = "HTTPCode_ELB_5XX_Count"
+  alarm_name        = "${var.lb_name} ${var.lb_type} HTTP 5XX"
+  alarm_description = <<EOM
+HTTP 5XX errors served by the ${var.lb_name} ${var.lb_type} without hosts
+EOM
+  namespace         = lookup(local.lb_type_data, var.lb_type)["namespace"]
+  metric_name       = lookup(local.lb_type_data, var.lb_type)["lb_metric"]
   dimensions = {
-    LoadBalancer = var.load_balancer_id
+    LoadBalancer = var.lb_name
   }
 
   statistic           = "Sum"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = var.elb_threshold
+  threshold           = var.lb_threshold
   period              = 60
   datapoints_to_alarm = 1
   evaluation_periods  = 1
@@ -40,15 +70,21 @@ resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
   treat_missing_data = "missing"
 
   alarm_actions = var.alarm_actions
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
-  alarm_name        = "${var.env_name} IDP Target HTTP 5XX"
-  alarm_description = "HTTP 5XX errors served by IDP [TF]"
-  namespace         = "AWS/ApplicationELB"
-  metric_name       = "HTTPCode_Target_5XX_Count"
+  alarm_name        = "${var.lb_name} Target HTTP 5XX"
+  alarm_description = <<EOM
+HTTP 5XX errors served by hosts in ${var.lb_name} ${var.lb_type}
+EOM
+  namespace         = lookup(local.lb_type_data, var.lb_type)["namespace"]
+  metric_name       = lookup(local.lb_type_data, var.lb_type)["target_metric"]
   dimensions = {
-    LoadBalancer = var.load_balancer_id
+    LoadBalancer = var.lb_name
   }
 
   statistic           = "Sum"
@@ -60,5 +96,9 @@ resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
   treat_missing_data = "notBreaching"
 
   alarm_actions = var.alarm_actions
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
