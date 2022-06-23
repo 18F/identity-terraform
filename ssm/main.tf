@@ -95,7 +95,7 @@ resource "aws_s3_bucket_logging" "ssm_logs" {
 }
 
 resource "aws_s3_bucket_versioning" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.bucket
+  bucket = aws_s3_bucket.ssm_logs.id
 
   versioning_configuration {
     status = "Enabled"

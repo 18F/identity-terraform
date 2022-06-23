@@ -67,61 +67,102 @@ locals {
 
 # -- Resources --
 
-# Deprecated bucket 
-# Delete this block
-# Bucket used for storing S3 access logs
+######## Deprecated bucket ! Delete these blocks ########
 resource "aws_s3_bucket" "s3-logs" {
   bucket = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  acl    = "log-delivery-write"
-  policy = ""
-
-  versioning {
-    enabled = false
-  }
-
-  lifecycle_rule {
-    id      = "expirelogs"
-    enabled = true
-
-    prefix = "/"
-
-    expiration {
-      days = 1
-    }
-    noncurrent_version_expiration {
-      days = 1
-    }
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
-      }
-    }
-  }
 
   lifecycle {
     prevent_destroy = false
   }
 }
 
+resource "aws_s3_bucket_acl" "s3-logs" {
+  bucket = aws_s3_bucket.s3-logs.id
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3-logs" {
+  bucket = aws_s3_bucket.s3-logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "s3-logs" {
+  bucket = aws_s3_bucket.s3-logs.id
+
+  versioning_configuration {
+    status = "Disabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "s3-logs" {
+  bucket = aws_s3_bucket.s3-logs.id
+
+  rule {
+    id     = "expirelogs"
+    status = "Enabled"
+
+    filter {
+      prefix = "/"
+    }
+
+    expiration {
+      days = 1
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 1
+    }
+  }
+}
+######## Deprecated bucket ! Delete these blocks ########
+
 # Bucket used for storing S3 access logs
 # do not enable logging on this bucket
 resource "aws_s3_bucket" "s3-access-logs" {
   bucket = local.log_bucket
-  acl    = "log-delivery-write"
-  policy = ""
 
-  versioning {
-    enabled = true
+  lifecycle {
+    prevent_destroy = true
   }
+}
 
-  lifecycle_rule {
-    id      = "expirelogs"
-    enabled = true
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3-access-logs" {
+  bucket = aws_s3_bucket.s3-access-logs.id
 
-    prefix = "/"
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "s3-access-logs" {
+  bucket = aws_s3_bucket.s3-access-logs.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_acl" "s3-access-logs" {
+  bucket = aws_s3_bucket.s3-access-logs.id
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
+  bucket = aws_s3_bucket.s3-access-logs.id
+
+  rule {
+    id     = "expirelogs"
+    status = "Enabled"
+
+    filter {
+      prefix = "/"
+    }
 
     transition {
       storage_class = "INTELLIGENT_TIERING"
@@ -134,49 +175,58 @@ resource "aws_s3_bucket" "s3-access-logs" {
       days = 1825
     }
     noncurrent_version_expiration {
-      days = 1825
+      noncurrent_days = 1825
     }
   }
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
+resource "aws_s3_bucket" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = local.state_bucket
 
   lifecycle {
     prevent_destroy = true
   }
 }
 
-resource "aws_s3_bucket" "tf-state" {
-  count = var.remote_state_enabled
+resource "aws_s3_bucket_server_side_encryption_configuration" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = aws_s3_bucket.tf-state[count.index].id
 
-  bucket = local.state_bucket
-  acl    = "private"
-  policy = ""
-  versioning {
-    enabled = true
-  }
-
-  logging {
-    target_bucket = aws_s3_bucket.s3-access-logs.id
-    target_prefix = "${local.state_bucket}/"
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "aws:kms"
-      }
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
     }
   }
+}
 
-  lifecycle {
-    prevent_destroy = true
+resource "aws_s3_bucket_versioning" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = aws_s3_bucket.tf-state[count.index].id
+
+  versioning_configuration {
+    status = "Enabled"
   }
+}
+
+resource "aws_s3_bucket_acl" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = aws_s3_bucket.tf-state[count.index].id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_logging" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = aws_s3_bucket.tf-state[count.index].id
+
+  target_bucket = aws_s3_bucket.s3-access-logs.id
+  target_prefix = "${local.state_bucket}/"
+}
+
+resource "aws_s3_bucket_policy" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = aws_s3_bucket.tf-state[count.index].id
+  policy = data.aws_iam_policy_document.inventory_bucket_policy.json
 }
 
 resource "aws_dynamodb_table" "tf-lock-table" {
@@ -205,24 +255,36 @@ resource "aws_dynamodb_table" "tf-lock-table" {
 resource "aws_s3_bucket" "inventory" {
   bucket        = local.inventory_bucket
   force_destroy = true
-  policy        = data.aws_iam_policy_document.inventory_bucket_policy.json
+}
 
-  logging {
-    target_bucket = aws_s3_bucket.s3-access-logs.id
-    target_prefix = "${local.inventory_bucket}/"
-  }
+resource "aws_s3_bucket_server_side_encryption_configuration" "inventory" {
+  bucket = aws_s3_bucket.inventory.id
 
-  versioning {
-    enabled = true
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = var.sse_algorithm
-      }
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = var.sse_algorithm
     }
   }
+}
+
+resource "aws_s3_bucket_versioning" "inventory" {
+  bucket = aws_s3_bucket.inventory.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_logging" "inventory" {
+  bucket = aws_s3_bucket.inventory.id
+
+  target_bucket = aws_s3_bucket.s3-access-logs.id
+  target_prefix = "${local.inventory_bucket}/"
+}
+
+resource "aws_s3_bucket_policy" "inventory" {
+  bucket = aws_s3_bucket.inventory.id
+  policy = data.aws_iam_policy_document.inventory_bucket_policy.json
 }
 
 resource "aws_s3_bucket_public_access_block" "inventory" {
