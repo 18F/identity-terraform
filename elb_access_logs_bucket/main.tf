@@ -44,9 +44,30 @@ locals {
 
 resource "aws_s3_bucket" "logs" {
   bucket        = local.logsbucketname
-  acl           = "log-delivery-write"
   force_destroy = var.force_destroy
 
+  tags = {
+    Environment = "All"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail" {
+  bucket = aws_s3_bucket.cloudtrail.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_acl" "logs" {
+  bucket = aws_s3_bucket.logs.id
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket_policy" "logs" {
+  bucket = aws_s3_bucket.logs.id
   # Allow the ELB account in the current region to put objects.
   policy = <<EOF
 {
@@ -94,67 +115,70 @@ resource "aws_s3_bucket" "logs" {
   ]
 }
 EOF
-
-
-tags = {
-  Environment = "All"
 }
 
-# In theory we should only put one copy of every file, so I don't think this
-# will increase space, just give us history in case we accidentally
-# delete/modify something.
-versioning {
-  enabled = true
+resource "aws_s3_bucket_versioning" "logs" {
+  bucket = aws_s3_bucket.logs.id
+
+  # In theory we should only put one copy of every file, so I don't think this
+  # will increase space, just give us history in case we accidentally
+  # delete/modify something.
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
-server_side_encryption_configuration {
+resource "aws_s3_bucket_lifecycle_configuration" "logs" {
+  bucket = aws_s3_bucket.logs.id
+
+  # Lifecycle rules: configure a sliding window for moving logs from standard
+  # storage to standard Infrequent Access, then to glacier, then deleting them.
+  # The rules will only be enabled if the lifecycle day threshold is set to a
+  # positive number.
+
   rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
+    id     = "log_aging_ia"
+    status = var.lifecycle_days_standard_ia > 0 ? "Enabled" : "Disabled"
+
+    filter {
+      prefix = "/"
+    }
+
+    transition {
+      days          = var.lifecycle_days_standard_ia
+      storage_class = "STANDARD_IA"
+    }
+  }
+
+  rule {
+    id     = "log_aging_glacier"
+    status = var.lifecycle_days_glacier > 0 ? "Enabled" : "Disabled"
+
+    filter {
+      prefix = "/"
+    }
+
+    transition {
+      days          = var.lifecycle_days_glacier
+      storage_class = "GLACIER"
+    }
+  }
+
+  rule {
+    id     = "log_aging_expire"
+    status = var.lifecycle_days_expire > 0 ? "Enabled" : "Disabled"
+
+    filter {
+      prefix = "/"
+    }
+
+    expiration {
+      days = var.lifecycle_days_expire
     }
   }
 }
 
-# Lifecycle rules: configure a sliding window for moving logs from standard
-# storage to standard Infrequent Access, then to glacier, then deleting them.
-# The rules will only be enabled if the lifecycle day threshold is set to a
-# positive number.
 
-lifecycle_rule {
-  id      = "log_aging_ia"
-  enabled = var.lifecycle_days_standard_ia > 0 ? true : false
-
-  prefix = "/"
-
-  transition {
-    days          = var.lifecycle_days_standard_ia
-    storage_class = "STANDARD_IA"
-  }
-}
-
-lifecycle_rule {
-  id      = "log_aging_glacier"
-  enabled = var.lifecycle_days_glacier > 0 ? true : false
-
-  prefix = "/"
-
-  transition {
-    days          = var.lifecycle_days_glacier
-    storage_class = "GLACIER"
-  }
-}
-
-lifecycle_rule {
-  id      = "log_aging_expire"
-  enabled = var.lifecycle_days_expire > 0 ? true : false
-
-  prefix = "/"
-
-  expiration {
-    days = var.lifecycle_days_expire
-  }
-}
-}
 
 module "s3_config" {
   source = "github.com/18F/identity-terraform//s3_config?ref=5d338480d96af4c5123fcbebb0d0a189e31496b4"
