@@ -70,34 +70,53 @@ resource "aws_kms_alias" "kms_ssm" {
 # S3 bucket w/KMS key encryption for SSM access logs
 resource "aws_s3_bucket" "ssm_logs" {
   bucket = local.s3_bucket_name
-  acl    = "private"
-
-  logging {
-    target_bucket = local.log_bucket
-    target_prefix = "${local.s3_bucket_name}/"
-  }
 
   tags = {
     environment = var.env_name
   }
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.kms_ssm.key_id
-        sse_algorithm     = "aws:kms"
-      }
+resource "aws_s3_bucket_server_side_encryption_configuration" "ssm_logs" {
+  bucket = aws_s3_bucket.ssm_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.kms_ssm.key_id
+      sse_algorithm     = "aws:kms"
     }
   }
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_logging" "ssm_logs" {
+  bucket = aws_s3_bucket.ssm_logs.id
+
+  target_bucket = local.log_bucket
+  target_prefix = "${local.s3_bucket_name}/"
+}
+
+resource "aws_s3_bucket_versioning" "ssm_logs" {
+  bucket = aws_s3_bucket.ssm_logs.bucket
+
+  versioning_configuration {
+    status = "Enabled"
   }
+}
 
-  lifecycle_rule {
-    id      = "expire"
-    prefix  = "/"
-    enabled = true
+resource "aws_s3_bucket_acl" "ssm_logs" {
+  bucket = aws_s3_bucket.ssm_logs.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {
+  bucket = aws_s3_bucket.ssm_logs.id
+
+  rule {
+    id     = "expire"
+    status = "Enabled"
+
+    filter {
+      prefix  = "/"
+    }
 
     transition {
       storage_class = "INTELLIGENT_TIERING"
