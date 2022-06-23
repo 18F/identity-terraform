@@ -115,7 +115,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {
     status = "Enabled"
 
     filter {
-      prefix  = "/"
+      prefix = "/"
     }
 
     transition {
@@ -128,7 +128,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {
       days = 2190
     }
     noncurrent_version_expiration {
-      days = 2190
+      noncurrent_days = 2190
     }
   }
 }
