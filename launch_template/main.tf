@@ -30,7 +30,6 @@ resource "aws_launch_template" "template" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = var.metadata_response_hop_limit
-    instance_metadata_tags      = "enabled"
   }
 
   monitoring {
