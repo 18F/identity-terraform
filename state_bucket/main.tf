@@ -95,7 +95,7 @@ resource "aws_s3_bucket_versioning" "s3-logs" {
   bucket = aws_s3_bucket.s3-logs.id
 
   versioning_configuration {
-    status = "Disabled"
+    status = "Suspended"
   }
 }
 
