@@ -180,18 +180,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
   }
 }
 
-resource "aws_s3_bucket" "tf-state" {
+data "aws_s3_bucket" "tf-state" {
   count  = var.remote_state_enabled
   bucket = local.state_bucket
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -202,7 +198,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tf-state" {
 
 resource "aws_s3_bucket_versioning" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
 
   versioning_configuration {
     status = "Enabled"
@@ -211,44 +207,16 @@ resource "aws_s3_bucket_versioning" "tf-state" {
 
 resource "aws_s3_bucket_acl" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
   acl    = "private"
 }
 
 resource "aws_s3_bucket_logging" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
 
   target_bucket = aws_s3_bucket.s3-access-logs.id
   target_prefix = "${local.state_bucket}/"
-}
-
-resource "aws_s3_bucket_policy" "tf-state" {
-  count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
-  policy = data.aws_iam_policy_document.inventory_bucket_policy.json
-}
-
-resource "aws_dynamodb_table" "tf-lock-table" {
-  count = var.remote_state_enabled
-
-  name           = var.state_lock_table
-  read_capacity  = 2
-  write_capacity = 1
-  hash_key       = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  server_side_encryption {
-    enabled = true
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # bucket to collect S3 Inventory reports
@@ -296,7 +264,6 @@ resource "aws_s3_bucket_public_access_block" "inventory" {
   restrict_public_buckets = true
 }
 
-
 module "s3_config" {
   for_each   = var.remote_state_enabled == 1 ? toset(["s3-access-logs", "tf-state"]) : toset(["s3-access-logs"])
   source     = "github.com/18F/identity-terraform//s3_config?ref=682105726e7212eaf58cc1a9b1d2ed6ee3a7b6e0"
@@ -306,6 +273,28 @@ module "s3_config" {
   bucket_name          = each.key
   region               = var.region
   inventory_bucket_arn = aws_s3_bucket.inventory.arn
+}
+
+resource "aws_dynamodb_table" "tf-lock-table" {
+  count = var.remote_state_enabled
+
+  name           = var.state_lock_table
+  read_capacity  = 2
+  write_capacity = 1
+  hash_key       = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # -- Outputs --
