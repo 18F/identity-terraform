@@ -67,59 +67,6 @@ locals {
 
 # -- Resources --
 
-######## Deprecated bucket ! Delete these blocks ########
-resource "aws_s3_bucket" "s3-logs" {
-  bucket = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
-resource "aws_s3_bucket_acl" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
-    }
-  }
-}
-
-resource "aws_s3_bucket_versioning" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-
-  versioning_configuration {
-    status = "Suspended"
-  }
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-
-  rule {
-    id     = "expirelogs"
-    status = "Enabled"
-
-    filter {
-      prefix = "/"
-    }
-
-    expiration {
-      days = 1
-    }
-    noncurrent_version_expiration {
-      noncurrent_days = 1
-    }
-  }
-}
-######## Deprecated bucket ! Delete these blocks ########
-
 # Bucket used for storing S3 access logs
 # do not enable logging on this bucket
 resource "aws_s3_bucket" "s3-access-logs" {
