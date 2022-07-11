@@ -584,8 +584,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 
   lifecycle {
     ignore_changes = [
-      s3_key,
-      last_modified,
+      s3_key
     ]
   }
 
@@ -773,8 +772,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 
   lifecycle {
     ignore_changes = [
-      s3_key,
-      last_modified,
+      s3_key
     ]
   }
 
@@ -916,8 +914,7 @@ resource "aws_lambda_function" "event_processor" {
 
   lifecycle {
     ignore_changes = [
-      s3_key,
-      last_modified,
+      s3_key
     ]
   }
 

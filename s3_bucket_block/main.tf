@@ -41,25 +41,61 @@ resource "aws_s3_bucket" "bucket" {
   for_each = var.bucket_data
 
   bucket        = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}"
-  acl           = lookup(each.value, "acl", "private")
-  policy        = lookup(each.value, "policy", "")
   force_destroy = lookup(each.value, "force_destroy", true)
+}
 
-  logging {
-    target_bucket = var.log_bucket
-    target_prefix = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}/"
+resource "aws_s3_bucket_acl" "bucket" {
+  for_each = var.bucket_data
+  bucket   = aws_s3_bucket.bucket[each.key]
+  acl      = lookup(each.value, "acl", "private")
+}
+
+resource "aws_s3_bucket_policy" "bucket" {
+  for_each = var.bucket_data
+  bucket   = aws_s3_bucket.bucket[each.key]
+  policy   = lookup(each.value, "policy", "")
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "bucket" {
+  for_each = var.bucket_data
+  bucket   = aws_s3_bucket.bucket[each.key]
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = var.sse_algorithm
+    }
   }
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "bucket" {
+  for_each = var.bucket_data
+  bucket   = aws_s3_bucket.bucket[each.key]
+
+  versioning_configuration {
+    status = "Enabled"
   }
+}
 
-  dynamic "lifecycle_rule" {
+resource "aws_s3_bucket_logging" "bucket" {
+  for_each = var.bucket_data
+  bucket   = aws_s3_bucket.bucket[each.key]
+
+  target_bucket = var.log_bucket
+  target_prefix = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}/"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
+  for_each = var.bucket_data
+  bucket   = aws_s3_bucket.bucket[each.key]
+
+  dynamic "rule" {
     for_each = can(each.value.lifecycle_rules) ? each.value.lifecycle_rules : []
     content {
-      id      = lifecycle_rule.value["id"]
-      enabled = lifecycle_rule.value["enabled"]
-      prefix  = lifecycle_rule.value["prefix"]
+      id     = lifecycle_rule.value["id"]
+      status = lifecycle_rule.value["status"]
+      filter {
+        prefix = lifecycle_rule.value["prefix"]
+      }
       dynamic "transition" {
         for_each = lifecycle_rule.value["transitions"]
         content {
@@ -75,15 +111,6 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = var.sse_algorithm
-      }
-    }
-  }
-
 }
 
 module "bucket_config" {

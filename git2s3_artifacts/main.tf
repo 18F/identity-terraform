@@ -84,29 +84,41 @@ resource "aws_cloudformation_stack" "git2s3" {
 
 resource "aws_s3_bucket" "artifact_bucket" {
   bucket        = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
-  acl           = "private"
   force_destroy = true
-
-  versioning {
-    enabled = true
-  }
-
-  logging {
-    target_bucket = local.log_bucket
-    target_prefix = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = var.sse_algorithm
-      }
-    }
-  }
 
   lifecycle {
     prevent_destroy = true
   }
+}
+
+resource "aws_s3_bucket_acl" "artifact_bucket" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = var.sse_algorithm
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "artifact_bucket" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_logging" "artifact_bucket" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  target_bucket = local.log_bucket
+  target_prefix = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
 }
 
 module "s3_config" {
@@ -127,7 +139,7 @@ resource "aws_s3_bucket_policy" "artifact_bucket" {
   policy = data.aws_iam_policy_document.artifact_bucket.json
 }
 
-resource "aws_s3_bucket_object" "git2s3_output_bucket_name" {
+resource "aws_s3_object" "git2s3_output_bucket_name" {
   bucket       = aws_s3_bucket.artifact_bucket.id
   key          = "git2s3/OutputBucketName"
   content      = local.git2s3_output_bucket
