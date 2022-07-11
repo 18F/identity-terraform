@@ -1,4 +1,13 @@
+# -- Locals --
+
+locals {
+  log_bucket       = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
+  inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
+}
+
 # -- Variables --
+
 variable "bucket_name_prefix" {
   description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
   type        = string
@@ -10,8 +19,8 @@ variable "region" {
 
 variable "remote_state_enabled" {
   description = <<EOM
-Whether to manage the TF remote state bucket and lock table.
-Set this to false if you want to skip this for bootstrapping.
+Whether to manage the remote state bucket
+and DynamoDB lock table (1 for true, 0 for false).
 EOM
   default     = 1
 }
@@ -28,6 +37,7 @@ variable "sse_algorithm" {
 }
 
 # -- Data Sources --
+
 data "aws_caller_identity" "current" {
 }
 
@@ -55,14 +65,6 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
       values   = ["bucket-owner-full-control"]
     }
   }
-}
-
-# -- Locals --
-
-locals {
-  log_bucket       = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
-  inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
 }
 
 # -- Resources --
@@ -245,9 +247,6 @@ resource "aws_dynamodb_table" "tf-lock-table" {
 }
 
 # -- Outputs --
-output "s3_log_bucket" {
-  value = aws_s3_bucket.s3-logs.id
-}
 
 output "s3_access_log_bucket" {
   value = aws_s3_bucket.s3-access-logs.id
