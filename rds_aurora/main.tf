@@ -11,7 +11,13 @@ data "aws_rds_engine_version" "family" {
   version = var.db_engine_version
 }
 
-data "aws_iam_policy_document" "db" {
+# use aws/rds KMS key for performance insights
+data "aws_kms_key" "insights" {
+  key_id = "alias/aws/rds"
+}
+
+# policy for KMS key used with actual database
+data "aws_iam_policy_document" "db_kms_key" {
   statement {
     sid    = "Enable IAM User Permissions"
     effect = "Allow"
@@ -54,7 +60,10 @@ data "aws_iam_policy_document" "db" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.key_admin_role_name}"
+        join(":", [
+          "arn:aws:iam", "", data.aws_caller_identity.current.account_id,
+          "role/${var.key_admin_role_name}"
+        ])
       ]
     }
   }
@@ -75,7 +84,10 @@ data "aws_iam_policy_document" "db" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+        join(":", [
+          "arn:aws:iam", "", data.aws_caller_identity.current.account_id,
+          "role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS"
+        ])
       ]
     }
   }
@@ -94,7 +106,10 @@ data "aws_iam_policy_document" "db" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+        join(":", [
+          "arn:aws:iam", "", data.aws_caller_identity.current.account_id,
+          "role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS"
+        ])
       ]
     }
     condition {
@@ -121,11 +136,13 @@ resource "aws_subnet" "db" {
 
   tags = {
     Name = join("-", [
-      var.name, "db${index(keys(local.db_subnets), each.key) + 1}_subnet", var.env_name
+      var.name_prefix,
+      "db${index(keys(local.db_subnets), each.key) + 1}_subnet",
+      var.env_name
     ])
   }
 
-  vpc_id = var.vpc_id
+  vpc_id = var.db_vpc_id
 }
 
 resource "aws_db_subnet_group" "db" {
@@ -140,7 +157,8 @@ resource "aws_db_subnet_group" "db" {
 resource "aws_security_group" "db" {
   count       = var.db_security_group == "" ? 1 : 0
   description = <<EOM
-Allow inbound and outbound ${var.db_engine} traffic with ${var.db_id} subnet in VPC.
+Allow inbound/outbound ${var.db_engine} traffic
+within ${local.db_name} subnet in ${var.db_vpc_id} VPC.
 EOM
 
   egress = []
@@ -158,32 +176,84 @@ EOM
     Name = "${var.name_prefix}-db_security_group-${var.env_name}"
   }
 
-  vpc_id = var.vpc_id
+  vpc_id = var.db_vpc_id
 }
+
+# DNS / Route53
+
+resource "aws_route53_record" "writer_endpoint" {
+  count   = var.enable_dns ? 1 : 0
+  zone_id = var.internal_zone_id
+  name    = "${var.db_identifier}-${var.db_engine}-writer-${var.region}"
+
+  type    = "CNAME"
+  ttl     = var.route53_ttl
+  records = [replace(aws_rds_cluster.aurora.endpoint, ":var${db_port}", "")]
+}
+
+resource "aws_route53_record" "reader_endpoint" {
+  count   = var.enable_dns ? 1 : 0
+  zone_id = var.internal_zone_id
+  name    = "${var.db_identifier}-${var.db_engine}-reader-${var.region}"
+
+  type    = "CNAME"
+  ttl     = var.route53_ttl
+  records = [replace(aws_rds_cluster.aurora.reader_endpoint, ":var${db_port}", "")]
+}
+
 
 # KMS (if not importing)
 
 resource "aws_kms_key" "db" {
-  count = var.db_kms_key == "" ? 1 : 0
+  count = var.db_kms_key_id == "" ? 1 : 0
 
-  description             = "${var.name_prefix}-${var.env_name}-${var.db_id} DB Key"
+  description             = "${local.db_name} DB Key"
   deletion_window_in_days = 30
   enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.db.json
+  policy                  = data.aws_iam_policy_document.db_kms_key.json
 }
 
 resource "aws_kms_alias" "db" {
-  count = var.db_kms_key == "" ? 1 : 0
+  count = var.db_kms_key_id == "" ? 1 : 0
 
-  name          = "alias/${var.name_prefix}-${var.env_name}-${var.db_id}-db"
+  name          = "alias/${local.db_name}-db"
   target_key_id = aws_kms_key.db[count.index].key_id
 }
 
+# Monitoring role (if not importing)
+
+resource "aws_iam_role" "rds_monitoring" {
+  count = var.monitoring_role == "" ? 1 : 0
+  name  = "rds-monitoring-role"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "monitoring.rds.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+EOF
+
+}
+
+resource "aws_iam_role_policy_attachment" "rds_monitoring" {
+  count      = var.monitoring_role == "" ? 1 : 0
+  role       = aws_iam_role.rds_monitoring.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+}
 
 # AuroraDB Cluster + Instances
 
 resource "aws_rds_cluster" "aurora" {
-  cluster_identifier   = "${var.name_prefix}-${var.env_name}-${var.db_id}"
+  cluster_identifier   = local.db_name
   engine               = var.db_engine
   engine_version       = var.db_engine_version
   port                 = var.db_port
@@ -202,8 +272,8 @@ resource "aws_rds_cluster" "aurora" {
   allow_major_version_upgrade  = var.major_upgrades
   apply_immediately            = true
 
-  storage_encrypted = true
-  kms_key_id        = var.db_kms_key == "" ? aws_kms_key.db.key_id : var.db_kms_key
+  storage_encrypted = var.storage_encrypted
+  kms_key_id        = var.db_kms_key_id == "" ? aws_kms_key.db.key_id : var.db_kms_key_id
 
   # must specify password and username unless using a replication_source_identifier
   master_password               = var.rds_password
@@ -216,7 +286,7 @@ resource "aws_rds_cluster" "aurora" {
   ) : var.cw_logs_exports
 
   tags = {
-    Name = "${var.name_prefix}-${var.env_name}-${var.db_id}"
+    Name = local.db_name
   }
 
   #lifecycle {
@@ -237,10 +307,9 @@ resource "aws_rds_cluster" "aurora" {
 }
 
 resource "aws_rds_cluster_instance" "aurora" {
-  count = var.primary_cluster_instances # must be 1 on first creation
-  identifier = join("-", [
-    var.name_prefix, var.env_name, var.db_id, "${count.index + 1}"
-  ])
+  count      = var.primary_cluster_instances # must be 1 on first creation
+  identifier = "${local.db_name}-${count.index + 1}"
+
   cluster_identifier = aws_rds_cluster.aurora.id
   engine             = var.db_engine
   engine_version     = var.db_engine_version
@@ -250,31 +319,64 @@ resource "aws_rds_cluster_instance" "aurora" {
   db_parameter_group_name = aws_db_parameter_group.aurora.id
 
   tags = {
-    Name = "${var.name_prefix}-${var.env_name}-${var.db_id}"
+    Name = local.db_name
   }
 
   auto_minor_version_upgrade = var.auto_minor_upgrades
   apply_immediately          = true
 
   # enhanced monitoring
-  monitoring_interval             = var.rds_enhanced_monitoring_interval
-  monitoring_role_arn             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.rds_monitoring_role_name}"
-  performance_insights_enabled    = var.performance_insights_enabled
-  performance_insights_kms_key_id = var.performance_insights_enabled ? data.aws_kms_key.rds_alias.arn : ""
+  monitoring_interval = var.monitoring_interval
+  monitoring_role_arn = var.monitoring_role == "" ? aws_iam_role.rds_monitoring.arn : var.monitoring_role
 
+  # performance insights
+  performance_insights_enabled    = var.pi_enabled
+  performance_insights_kms_key_id = var.pi_enabled ? data.aws_kms_key.insights.arn : ""
+
+}
+
+# Application Auto Scaling (if desired)
+
+resource "aws_appautoscaling_target" "db_replicas" {
+  count = var.enable_autoscaling && var.primary_cluster_instances > 1 ? 1 : 0
+
+  max_capacity       = var.max_cluster_instances
+  min_capacity       = var.primary_cluster_instances
+  resource_id        = "cluster:${aws_rds_cluster.id}"
+  scalable_dimension = "rds:cluster:ReadReplicaCount"
+  service_namespace  = "rds"
+}
+
+resource "aws_appautoscaling_policy" "db_replicas" {
+  count = var.enable_autoscaling && var.primary_cluster_instances > 1 ? 1 : 0
+  name = join(":", [
+    aws_appautoscaling_target.db_replicas.resource_id,
+    replace(var.autoscaling_metric_name, "RDSReaderAverage", ""),
+    "ReplicaScalingPolicy"
+  ])
+
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.db_replicas.resource_id
+  scalable_dimension = aws_appautoscaling_target.db_replicas.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.db_replicas.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = var.autoscaling_metric_name
+    }
+
+    target_value = var.autoscaling_metric_value
+  }
 }
 
 # Parameter Groups
 
 resource "aws_rds_cluster_parameter_group" "aurora" {
-  name = join("-", [
-    var.name_prefix, var.env_name, var.db_id,
-    "${var.db_engine}${replace(local.rds_engine_version_short, ".", "")}", "cluster"
-  ])
-  family      = "${var.db_engine}${local.db_engine_version_short}"
+  name        = "${local.db_name}-${local.parameter_group_family}-cluster"
+  family      = local.parameter_group_family
   description = <<EOM
-${var.db_engine}${local.db_engine_version_short} parameter group
-for ${var.name_prefix}-${var.env_name}-${var.db_id} Aurora RDS cluster
+${local.parameter_group_family} parameter group
+for ${local.db_name} Aurora cluster
 EOM
 
   dynamic "parameter" {
@@ -293,14 +395,11 @@ EOM
 }
 
 resource "aws_db_parameter_group" "aurora" {
-  name = join("-", [
-    var.name_prefix, var.env_name, var.db_id,
-    "${var.db_engine}${replace(local.rds_engine_version_short, ".", "")}", "db"
-  ])
-  family      = "${var.db_engine}${local.db_engine_version_short}"
+  name        = "${local.db_name}-${local.parameter_group_family}-db"
+  family      = local.parameter_group_family
   description = <<EOM
-${var.db_engine}${local.db_engine_version_short} parameter group
-for ${var.name_prefix}-${var.env_name}-${var.db_id} Aurora DB instances
+${local.parameter_group_family} parameter group
+for ${local.db_name} Aurora DB instances
 EOM
 
   dynamic "parameter" {
