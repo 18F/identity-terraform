@@ -3,10 +3,10 @@
 locals {
   db_name    = "${var.name_prefix}-${var.env_name}-${var.db_identifier}-${var.region}"
   db_subnets = var.db_subnet_ids == [] ? {} : var.az_cidr_map
-  parameter_group_family = join("", [
+  pgroup_family = join("", [
     var.db_engine,
     can(regex(
-      "postgresql", var.db_engine_version
+      "postgresql", var.db_engine
     )) ? split(".", var.db_engine_version)[0] : regex("\\d+\\.\\d+", var.db_engine_version)
   ])
 
@@ -96,14 +96,16 @@ variable "autoscaling_metric_name" {
   description = "Name of the predefined metric used by the Autoscaling policy."
   default     = ""
 
-  condition = var.autoscaling_metric_name == "" || contains(
-    [
-      "RDSReaderAverageCPUUtilization", "RDSReaderAverageDatabaseConnections"
-  ], var.autoscaling_metric_name)
-  error_message = <<EOM
+  validation {
+    condition = var.autoscaling_metric_name == "" || contains(
+      [
+        "RDSReaderAverageCPUUtilization", "RDSReaderAverageDatabaseConnections"
+    ], var.autoscaling_metric_name)
+    error_message = <<EOM
 var.autoscaling_metric_name must be left blank, or be one of:
 RDSReaderAverageCPUUtilization, RDSReaderAverageDatabaseConnections
 EOM
+  }
 }
 
 variable "autoscaling_metric_value" {
@@ -263,7 +265,7 @@ variable "db_kms_key_id" {
 (OPTIONAL) ID of an already-existing KMS Key used to encrypt the database.
 If left blank, will create the aws_kms_key.db resource and use that for encryption.
 EOM
-  default = ""
+  default     = ""
 }
 
 variable "key_admin_role_name" {
@@ -319,20 +321,11 @@ variable "internal_zone_id" {
 ID of the Route53 hosted zone to create records in. Leave blank
 if not configuring DNS/Route53 records for the Aurora cluster/instances.
 EOM
-  default = ""
+  default     = ""
 }
 
 variable "route53_ttl" {
   type        = number
   description = "TTL for the Route53 DNS records for the writer/reader endpoints."
   default     = 300
-}
-
-variable "enable_dns" {
-  type        = bool
-  description = <<EOM
-Whether or not to create Route53 CNAME records for the
-writer/reader endpoints. Defaults to true.
-EOM
-  default     = true
 }

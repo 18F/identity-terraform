@@ -148,7 +148,7 @@ resource "aws_subnet" "db" {
 resource "aws_db_subnet_group" "db" {
   count      = var.db_subnet_group == "" ? 1 : 0
   name       = local.subnet_group
-  subnet_ids = var.db_subnet_ids == [] ? [aws_subnet.db[*].id] : var.db_subnet_ids
+  subnet_ids = var.db_subnet_ids == [] ? aws_subnet.db[*].id : var.db_subnet_ids
   tags = {
     Name = "${var.name_prefix}-${var.env_name} AuroraDB subnet group"
   }
@@ -182,25 +182,24 @@ EOM
 # DNS / Route53
 
 resource "aws_route53_record" "writer_endpoint" {
-  count   = var.enable_dns ? 1 : 0
+  count   = var.internal_zone_id == "" ? 0 : 1
   zone_id = var.internal_zone_id
   name    = "${var.db_identifier}-${var.db_engine}-writer-${var.region}"
 
   type    = "CNAME"
   ttl     = var.route53_ttl
-  records = [replace(aws_rds_cluster.aurora.endpoint, ":var${db_port}", "")]
+  records = [replace(aws_rds_cluster.aurora.endpoint, ":${var.db_port}", "")]
 }
 
 resource "aws_route53_record" "reader_endpoint" {
-  count   = var.enable_dns ? 1 : 0
+  count   = var.internal_zone_id == "" ? 0 : 1
   zone_id = var.internal_zone_id
   name    = "${var.db_identifier}-${var.db_engine}-reader-${var.region}"
 
   type    = "CNAME"
   ttl     = var.route53_ttl
-  records = [replace(aws_rds_cluster.aurora.reader_endpoint, ":var${db_port}", "")]
+  records = [replace(aws_rds_cluster.aurora.reader_endpoint, ":${var.db_port}", "")]
 }
-
 
 # KMS (if not importing)
 
@@ -246,7 +245,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "rds_monitoring" {
   count      = var.monitoring_role == "" ? 1 : 0
-  role       = aws_iam_role.rds_monitoring.name
+  role       = aws_iam_role.rds_monitoring[count.index].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 }
 
@@ -260,7 +259,7 @@ resource "aws_rds_cluster" "aurora" {
   availability_zones   = data.aws_availability_zones.region.names
   db_subnet_group_name = local.subnet_group
   vpc_security_group_ids = [
-    var.db_security_group == "" ? aws_security_group.db.id : var.db_security_group
+    var.db_security_group == "" ? aws_security_group.db[0].id : var.db_security_group
   ]
 
   db_cluster_parameter_group_name  = aws_rds_cluster_parameter_group.aurora.id
@@ -273,7 +272,7 @@ resource "aws_rds_cluster" "aurora" {
   apply_immediately            = true
 
   storage_encrypted = var.storage_encrypted
-  kms_key_id        = var.db_kms_key_id == "" ? aws_kms_key.db.key_id : var.db_kms_key_id
+  kms_key_id        = var.db_kms_key_id == "" ? aws_kms_key.db[0].key_id : var.db_kms_key_id
 
   # must specify password and username unless using a replication_source_identifier
   master_password               = var.rds_password
@@ -327,7 +326,7 @@ resource "aws_rds_cluster_instance" "aurora" {
 
   # enhanced monitoring
   monitoring_interval = var.monitoring_interval
-  monitoring_role_arn = var.monitoring_role == "" ? aws_iam_role.rds_monitoring.arn : var.monitoring_role
+  monitoring_role_arn = var.monitoring_role == "" ? aws_iam_role.rds_monitoring[0].arn : var.monitoring_role
 
   # performance insights
   performance_insights_enabled    = var.pi_enabled
@@ -342,7 +341,7 @@ resource "aws_appautoscaling_target" "db_replicas" {
 
   max_capacity       = var.max_cluster_instances
   min_capacity       = var.primary_cluster_instances
-  resource_id        = "cluster:${aws_rds_cluster.id}"
+  resource_id        = "cluster:${aws_rds_cluster.aurora.id}"
   scalable_dimension = "rds:cluster:ReadReplicaCount"
   service_namespace  = "rds"
 }
@@ -350,15 +349,15 @@ resource "aws_appautoscaling_target" "db_replicas" {
 resource "aws_appautoscaling_policy" "db_replicas" {
   count = var.enable_autoscaling && var.primary_cluster_instances > 1 ? 1 : 0
   name = join(":", [
-    aws_appautoscaling_target.db_replicas.resource_id,
+    aws_appautoscaling_target.db_replicas[count.index].resource_id,
     replace(var.autoscaling_metric_name, "RDSReaderAverage", ""),
     "ReplicaScalingPolicy"
   ])
 
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.db_replicas.resource_id
-  scalable_dimension = aws_appautoscaling_target.db_replicas.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.db_replicas.service_namespace
+  resource_id        = aws_appautoscaling_target.db_replicas[count.index].resource_id
+  scalable_dimension = aws_appautoscaling_target.db_replicas[count.index].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.db_replicas[count.index].service_namespace
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
@@ -372,12 +371,9 @@ resource "aws_appautoscaling_policy" "db_replicas" {
 # Parameter Groups
 
 resource "aws_rds_cluster_parameter_group" "aurora" {
-  name        = "${local.db_name}-${local.parameter_group_family}-cluster"
-  family      = local.parameter_group_family
-  description = <<EOM
-${local.parameter_group_family} parameter group
-for ${local.db_name} Aurora cluster
-EOM
+  name        = "${local.db_name}-${replace(local.pgroup_family, ".", "")}-cluster"
+  family      = local.pgroup_family
+  description = "${local.pgroup_family} parameter group for ${local.db_name} cluster"
 
   dynamic "parameter" {
     for_each = var.apg_cluster_pgroup_params
@@ -395,12 +391,9 @@ EOM
 }
 
 resource "aws_db_parameter_group" "aurora" {
-  name        = "${local.db_name}-${local.parameter_group_family}-db"
-  family      = local.parameter_group_family
-  description = <<EOM
-${local.parameter_group_family} parameter group
-for ${local.db_name} Aurora DB instances
-EOM
+  name        = "${local.db_name}-${replace(local.pgroup_family, ".", "")}-db"
+  family      = local.pgroup_family
+  description = "${local.pgroup_family} parameter group for ${local.db_name} instances"
 
   dynamic "parameter" {
     for_each = var.apg_db_pgroup_params
