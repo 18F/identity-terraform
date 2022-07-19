@@ -1,36 +1,18 @@
 # Locals
 
 locals {
-  db_name    = "${var.name_prefix}-${var.env_name}-${var.db_identifier}-${var.region}"
-  db_subnets = var.db_subnet_ids == [] ? {} : var.az_cidr_map
+  db_name = "${var.name_prefix}-${var.env_name}-${var.db_identifier}-${var.region}"
   pgroup_family = join("", [
     var.db_engine,
     can(regex(
       "postgresql", var.db_engine
     )) ? split(".", var.db_engine_version)[0] : regex("\\d+\\.\\d+", var.db_engine_version)
   ])
-
-  subnet_group = var.db_subnet_group == "" ? join("-", [
+  subnet_group_name = var.db_subnet_group == "" ? join("-", [
   var.name_prefix, var.env_name, "db"]) : var.db_subnet_group
 }
 
-variable "db_engine" {
-  type        = string
-  description = "AuroraDB engine name (aurora, aurora-mysql or aurora-postgresql)"
-  default     = "aurora-postgresql"
-}
-
-variable "db_engine_version" {
-  type        = string
-  description = "Version number (e.g. ##.#) of db_engine to use"
-  default     = "13.5"
-}
-
-variable "db_port" {
-  type        = number
-  description = "Database port number"
-  default     = 5432
-}
+# Identifiers
 
 variable "region" {
   type        = string
@@ -49,23 +31,65 @@ variable "env_name" {
   description = "Environment name"
 }
 
-# RDS information
-
 variable "db_identifier" {
   type        = string
-  description = "Unique identifier for the database, e.g. default, master"
+  description = "Unique identifier for the database (e.g. default/primary/etc.)"
 }
 
 variable "rds_db_arn" {
   type        = string
   description = <<EOM
-(OPTIONAL) ARN of RDS DB used as replication source for the Aurora cluster.
-Leave blank if not using an RDS replication source / creating a standalone cluster. 
+(OPTIONAL) ARN of RDS DB used as replication source for the Aurora cluster;
+leave blank if not using an RDS replication source / creating a standalone cluster
 EOM
   default     = ""
 }
 
-# Read Replicas / Autoscaling
+# DB Engine/Parameter Config
+
+variable "db_engine" {
+  type        = string
+  description = "AuroraDB engine name (aurora / aurora-mysql / aurora-postgresql)"
+  default     = "aurora-postgresql"
+}
+
+variable "db_engine_version" {
+  type        = string
+  description = "Version number (e.g. ##.#) of db_engine to use"
+  default     = "13.5"
+}
+
+variable "db_port" {
+  type        = number
+  description = "Database port number"
+  default     = 5432
+}
+
+variable "db_instance_class" {
+  type        = string
+  description = "Instance class to use in AuroraDB cluster"
+  default     = "db.r5.large"
+}
+
+variable "apg_cluster_pgroup_params" {
+  type        = list(any)
+  description = <<EOM
+List of parameters to configure for the AuroraDB cluster parameter group.
+Include name, value, and apply method (will default to 'immediate' if not set).
+EOM
+  default     = []
+}
+
+variable "apg_db_pgroup_params" {
+  type        = list(any)
+  description = <<EOM
+List of parameters to configure for the AuroraDB instance parameter group.
+Include name, value, and apply method (will default to 'immediate' if not set).
+EOM
+  default     = []
+}
+
+# Read Replicas / Auto Scaling
 
 variable "primary_cluster_instances" {
   type        = number
@@ -78,22 +102,25 @@ EOM
 
 variable "enable_autoscaling" {
   type        = bool
-  description = "Whether or not to enable Autoscaling of read replica instances"
+  description = "Whether or not to enable Auto Scaling of read replica instances"
   default     = false
 }
 
 variable "max_cluster_instances" {
   type        = number
   description = <<EOM
-Maximum number of read replica instances to scale up to,
-if enabling Application AutoScaling for the Aurora cluster.
+Maximum number of read replica instances to scale up to
+(if enabling Auto Scaling for the Aurora cluster)
 EOM
   default     = 5
 }
 
 variable "autoscaling_metric_name" {
   type        = string
-  description = "Name of the predefined metric used by the Autoscaling policy."
+  description = <<EOM
+Name of the predefined metric used by the Auto Scaling policy
+(if enabling Auto Scaling for the Aurora cluster)
+EOM
   default     = ""
 
   validation {
@@ -110,183 +137,23 @@ EOM
 
 variable "autoscaling_metric_value" {
   type        = number
-  description = "Desired target value of Autoscaling policy's predefined metric."
+  description = <<EOM
+Desired target value of Auto Scaling policy's predefined metric
+(if enabling Auto Scaling for the Aurora cluster)
+EOM
   default     = 40
 }
 
-variable "db_instance_class" {
-  type        = string
-  description = "Instance class to use in AuroraDB cluster"
-  default     = "db.r5.large"
-}
+# Logging/Monitoring
 
 variable "cw_logs_exports" {
   type        = list(string)
   description = <<EOM
-(REQUIRED) List of log types to export to CloudWatch. Will use 'general'
-if not specified, or 'postgresql' if var.db_engine is 'aurora-postgresql'.
+List of log types to export to CloudWatch (will use ["general"] if not specified
+or ["postgresql"] if var.db_engine is "aurora-postgresql".
 EOM
   default     = []
 }
-
-variable "retention_period" {
-  type        = number
-  description = "Number of days to retain backups for"
-  default     = 34
-}
-
-variable "backup_window" {
-  type        = string
-  description = "Daily time range (in UTC) for automated backups"
-  default     = "08:00-08:34"
-}
-
-variable "maintenance_window" {
-  type        = string
-  description = "Weekly time range (in UTC) for scheduled/system maintenance"
-  default     = "Sun:08:34-Sun:09:08"
-}
-
-variable "auto_minor_upgrades" {
-  type        = bool
-  description = <<EOM
-Whether or not to perform minor engine upgrades automatically during the
-specified in the maintenance window. Defaults to false.
-EOM
-  default     = false
-}
-
-variable "major_upgrades" {
-  type        = bool
-  description = <<EOM
-Whether or not to allow performing major version upgrades when
-changing engine versions. Defaults to true.
-EOM
-  default     = true
-}
-
-variable "apg_cluster_pgroup_params" {
-  type = list(object({
-    name   = string
-    value  = string
-    method = string
-  }))
-  description = <<EOM
-List of parameters to configure for the AuroraDB cluster parameter group.
-Include name, value, and apply method (will default to 'immediate' if not set).
-EOM
-  default     = []
-}
-
-variable "apg_db_pgroup_params" {
-  type = list(object({
-    name   = string
-    value  = string
-    method = string
-  }))
-  description = <<EOM
-List of parameters to configure for the AuroraDB instance parameter group.
-Include name, value, and apply method (will default to 'immediate' if not set).
-EOM
-  default     = []
-}
-
-# Networking
-
-variable "db_subnet_group" {
-  type        = string
-  description = <<EOM
-(OPTIONAL) Name of private subnet group in the var.region VPC. If left empty,
-will generate aws_db_subnet_group.db resource and use that.
-EOM
-  default     = ""
-}
-
-variable "db_subnet_ids" {
-  type        = list(string)
-  description = <<EOM
-(OPTIONAL) List of private subnet IDs in the var.region VPC. If left empty,
-will generate aws_subnet.db* resources and use those.
-EOM
-  default     = []
-}
-
-variable "db_security_group" {
-  type        = string
-  description = <<EOM
-VPC Security Group ID used by the AuroraDB cluster. If left blank, will generate
-an aws_security_group.db resource and use it instead.
-EOM
-  default     = ""
-}
-
-variable "ingress_security_group_ids" {
-  type        = list(string)
-  description = <<EOM
-VPC Security Group ID used by the AuroraDB cluster. If left empty, will generate
-an aws_security_group.db resource and use it instead.
-EOM
-  default     = []
-}
-
-variable "az_cidr_map" {
-  type        = map(string)
-  description = <<EOM
-(OPTIONAL) Map of AZs:CIDR ranges for AuroraDB subnets. Will ignore if
-var.db_subnet_ids is set (i.e. imported). REQUIRES that db_vpc_id be set, if using.
-EOM  
-  default = {
-    "a" = "172.16.33.32/28"
-    "b" = "172.16.33.48/28"
-    "c" = "172.16.33.64/28"
-  }
-}
-
-variable "db_vpc_id" {
-  type        = string
-  description = <<EOM
-(OPTIONAL) ID of the VPC in which to create the aws_subnet.db* resources. Will ignore
-if var.db_subnet_ids is set; REQUIRED if using var.az_cidr_map.
-EOM
-  default     = ""
-}
-
-# Security/KMS
-
-variable "storage_encrypted" {
-  type        = bool
-  description = "Whether or not to encrypt the underlying Aurora storage layer"
-  default     = true
-}
-
-variable "db_kms_key_id" {
-  type        = string
-  description = <<EOM
-(OPTIONAL) ID of an already-existing KMS Key used to encrypt the database.
-If left blank, will create the aws_kms_key.db resource and use that for encryption.
-EOM
-  default     = ""
-}
-
-variable "key_admin_role_name" {
-  type        = string
-  description = <<EOM
-(REQUIRED) Name of an external IAM role to be granted permissions to interact with
-the KMS key used for encrypting the database.
-EOM
-}
-
-variable "rds_password" {
-  type        = string
-  description = "Password for the RDS master user account"
-}
-
-variable "rds_username" {
-  type        = string
-  description = "Username for the RDS master user account"
-}
-
-# Monitoring
 
 variable "pi_enabled" {
   type        = bool
@@ -313,19 +180,154 @@ EOM
   default     = ""
 }
 
+# Maintenance/Upgrades
+
+variable "auto_minor_upgrades" {
+  type        = bool
+  description = <<EOM
+Whether or not to perform minor engine upgrades automatically during the
+specified in the maintenance window. Defaults to false.
+EOM
+  default     = false
+}
+
+variable "major_upgrades" {
+  type        = bool
+  description = <<EOM
+Whether or not to allow performing major version upgrades when
+changing engine versions. Defaults to true.
+EOM
+  default     = true
+}
+
+variable "retention_period" {
+  type        = number
+  description = "Number of days to retain backups for"
+  default     = 34
+}
+
+variable "backup_window" {
+  type        = string
+  description = "Daily time range (in UTC) for automated backups"
+  default     = "08:00-08:34"
+}
+
+variable "maintenance_window" {
+  type        = string
+  description = "Weekly time range (in UTC) for scheduled/system maintenance"
+  default     = "Sun:08:34-Sun:09:08"
+}
+
+# Networking
+
+variable "db_security_group" {
+  type        = string
+  description = <<EOM
+(OPTIONAL) VPC Security Group ID used by the AuroraDB cluster; will generate an
+aws_security_group.db resource and use it instead if left blank.
+var.ingress_security_group_ids CANNOT be empty if this value is left blank
+EOM
+  default     = ""
+}
+
+variable "ingress_security_group_ids" {
+  type        = list(string)
+  description = <<EOM
+(OPTIONAL) List of Security Group IDs to be provided ingress from/to var.db_port via
+the aws_security_group.db resource; CANNOT be empty if var.db_security_group is blank
+EOM
+  default     = []
+}
+
+variable "db_subnet_group" {
+  type        = string
+  description = <<EOM
+(OPTIONAL) Name of private subnet group in the var.region VPC;
+will generate aws_db_subnet_group.db resource and use that if left blank
+EOM
+  default     = ""
+}
+
+variable "db_subnet_ids" {
+  type        = list(string)
+  description = <<EOM
+(OPTIONAL) List of private subnet IDs in the var.region VPC;
+will generate aws_subnet.db* resources and use those if left empty
+EOM
+  default     = []
+}
+
+variable "az_cidr_map" {
+  type        = map(string)
+  description = <<EOM
+(OPTIONAL) Map of AZs:CIDR ranges for DB subnets;
+ignored if var.db_subnet_ids is set (i.e. imported)
+EOM  
+  default = {
+    "a" = "172.16.33.32/28"
+    "b" = "172.16.33.48/28"
+    "c" = "172.16.33.64/28"
+  }
+}
+
+variable "db_vpc_id" {
+  type        = string
+  description = <<EOM
+(OPTIONAL) ID of the VPC in which to create the aws_subnet.db* resources;
+MUST be set if either var.db_subnet_ids or var.db_security_group is empty/blank
+EOM
+  default     = ""
+}
+
+# Security/KMS
+
+variable "storage_encrypted" {
+  type        = bool
+  description = "Whether or not to encrypt the underlying Aurora storage layer"
+  default     = true
+}
+
+variable "db_kms_key_id" {
+  type        = string
+  description = <<EOM
+(OPTIONAL) ID of an already-existing KMS Key used to encrypt the database;
+will create the aws_kms_key.db / aws_kms_alias.db resources
+and use those for encryption if left blank
+EOM
+  default     = ""
+}
+
+variable "key_admin_role_name" {
+  type        = string
+  description = <<EOM
+(REQUIRED) Name of an external IAM role to be granted permissions
+to interact with the KMS key used for encrypting the database
+EOM
+}
+
+variable "rds_password" {
+  type        = string
+  description = "Password for the RDS master user account"
+}
+
+variable "rds_username" {
+  type        = string
+  description = "Username for the RDS master user account"
+}
+
 # DNS / Route53
 
 variable "internal_zone_id" {
   type        = string
   description = <<EOM
-ID of the Route53 hosted zone to create records in. Leave blank
-if not configuring DNS/Route53 records for the Aurora cluster/instances.
+ID of the Route53 hosted zone to create records in; leave blank
+if not configuring DNS/Route53 records for the Aurora cluster/instances
 EOM
   default     = ""
 }
 
 variable "route53_ttl" {
   type        = number
-  description = "TTL for the Route53 DNS records for the writer/reader endpoints."
+  description = "TTL for the Route53 DNS records for the writer/reader endpoints"
   default     = 300
 }
