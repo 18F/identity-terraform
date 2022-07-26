@@ -1,4 +1,13 @@
+# -- Locals --
+
+locals {
+  log_bucket       = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
+  state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
+  inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
+}
+
 # -- Variables --
+
 variable "bucket_name_prefix" {
   description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
   type        = string
@@ -10,8 +19,8 @@ variable "region" {
 
 variable "remote_state_enabled" {
   description = <<EOM
-Whether to manage the TF remote state bucket and lock table.
-Set this to false if you want to skip this for bootstrapping.
+Whether to manage the remote state bucket
+and DynamoDB lock table (1 for true, 0 for false).
 EOM
   default     = 1
 }
@@ -28,6 +37,7 @@ variable "sse_algorithm" {
 }
 
 # -- Data Sources --
+
 data "aws_caller_identity" "current" {
 }
 
@@ -57,68 +67,7 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
   }
 }
 
-# -- Locals --
-
-locals {
-  log_bucket       = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
-  inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
-}
-
 # -- Resources --
-
-######## Deprecated bucket ! Delete these blocks ########
-resource "aws_s3_bucket" "s3-logs" {
-  bucket = "${var.bucket_name_prefix}.s3-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
-resource "aws_s3_bucket_acl" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
-    }
-  }
-}
-
-resource "aws_s3_bucket_versioning" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-
-  versioning_configuration {
-    status = "Suspended"
-  }
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "s3-logs" {
-  bucket = aws_s3_bucket.s3-logs.id
-
-  rule {
-    id     = "expirelogs"
-    status = "Enabled"
-
-    filter {
-      prefix = "/"
-    }
-
-    expiration {
-      days = 1
-    }
-    noncurrent_version_expiration {
-      noncurrent_days = 1
-    }
-  }
-}
-######## Deprecated bucket ! Delete these blocks ########
 
 # Bucket used for storing S3 access logs
 # do not enable logging on this bucket
@@ -180,18 +129,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
   }
 }
 
-resource "aws_s3_bucket" "tf-state" {
+data "aws_s3_bucket" "tf-state" {
   count  = var.remote_state_enabled
   bucket = local.state_bucket
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -202,7 +147,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tf-state" {
 
 resource "aws_s3_bucket_versioning" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
 
   versioning_configuration {
     status = "Enabled"
@@ -211,44 +156,16 @@ resource "aws_s3_bucket_versioning" "tf-state" {
 
 resource "aws_s3_bucket_acl" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
   acl    = "private"
 }
 
 resource "aws_s3_bucket_logging" "tf-state" {
   count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
 
   target_bucket = aws_s3_bucket.s3-access-logs.id
   target_prefix = "${local.state_bucket}/"
-}
-
-resource "aws_s3_bucket_policy" "tf-state" {
-  count  = var.remote_state_enabled
-  bucket = aws_s3_bucket.tf-state[count.index].id
-  policy = data.aws_iam_policy_document.inventory_bucket_policy.json
-}
-
-resource "aws_dynamodb_table" "tf-lock-table" {
-  count = var.remote_state_enabled
-
-  name           = var.state_lock_table
-  read_capacity  = 2
-  write_capacity = 1
-  hash_key       = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  server_side_encryption {
-    enabled = true
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # bucket to collect S3 Inventory reports
@@ -296,10 +213,9 @@ resource "aws_s3_bucket_public_access_block" "inventory" {
   restrict_public_buckets = true
 }
 
-
 module "s3_config" {
   for_each   = var.remote_state_enabled == 1 ? toset(["s3-access-logs", "tf-state"]) : toset(["s3-access-logs"])
-  source     = "github.com/18F/identity-terraform//s3_config?ref=682105726e7212eaf58cc1a9b1d2ed6ee3a7b6e0"
+  source     = "github.com/18F/identity-terraform//s3_config?ref=0c1ffbdb1b5e8fe6a1813296c1425975014c8ca4"
   depends_on = [aws_s3_bucket.s3-access-logs]
 
   bucket_name_prefix   = var.bucket_name_prefix
@@ -308,10 +224,29 @@ module "s3_config" {
   inventory_bucket_arn = aws_s3_bucket.inventory.arn
 }
 
-# -- Outputs --
-output "s3_log_bucket" {
-  value = aws_s3_bucket.s3-logs.id
+resource "aws_dynamodb_table" "tf-lock-table" {
+  count = var.remote_state_enabled
+
+  name           = var.state_lock_table
+  read_capacity  = 2
+  write_capacity = 1
+  hash_key       = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
+
+# -- Outputs --
 
 output "s3_access_log_bucket" {
   value = aws_s3_bucket.s3-access-logs.id
