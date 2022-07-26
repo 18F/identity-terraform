@@ -6,14 +6,14 @@ terraform {
     archive = {
       source = "hashicorp/archive"
     }
+    cloudinit = {
+      source = "hashicorp/cloudinit"
+    }
     external = {
       source = "hashicorp/external"
     }
     null = {
       source = "hashicorp/null"
-    }
-    template = {
-      source = "hashicorp/template"
     }
     github = {
       source = "integrations/github"
