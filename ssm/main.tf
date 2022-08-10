@@ -212,8 +212,8 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
   }
 }
 
-# SSM Doc(s)
-resource "aws_ssm_document" "ssm_cmd" {
+# SSM Session Docs
+resource "aws_ssm_document" "ssm_session" {
   for_each = var.ssm_doc_map
 
   name            = "${var.env_name}-ssm-document-${each.key}"
@@ -238,6 +238,34 @@ inputs:
   runAsDefaultUser: ''%{endif}
   shellProfile:
     linux: 'trap "exit 0" INT; ${each.value["command"]} ; exit'
+  DOC
+}
+
+# SSM Command Docs
+resource "aws_ssm_document" "ssm_cmd" {
+  for_each = var.ssm_cmd_doc_map
+
+  name            = "${var.env_name}-ssm-document-${each.key}"
+  document_type   = "Command"
+  document_format = "YAML"
+  content         = <<DOC
+---
+schemaVersion: '1.2'
+description: ${each.value["description"]}
+parameters {}
+runtimeConfig:
+  'aws:runShellScript':
+    properties:
+      - id: '0.aws:runShellScript'
+        runCommand
+          - ${each.value["command"]}
+  %{if each.value["logging"]}s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
+  s3EncryptionEnabled: true
+  cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm_session_logs.name}"
+  cloudWatchEncryptionEnabled: true
+  cloudWatchStreamingEnabled: true%{else}s3EncryptionEnabled: false
+  cloudWatchEncryptionEnabled: false%{endif}
+  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   DOC
 }
 
