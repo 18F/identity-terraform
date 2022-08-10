@@ -259,7 +259,7 @@ runtimeConfig:
     properties:
       - id: '0.aws:runShellScript'
         runCommand:
-          ${each.value["command"]}
+          - ${each.value["command"]}
   DOC
 }
 
