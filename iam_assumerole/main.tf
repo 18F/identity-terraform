@@ -82,3 +82,7 @@ resource "aws_iam_role_policy_attachment" "policy_attachment_custom" {
   role       = aws_iam_role.iam_assumable_role[0].name
   policy_arn = element(var.custom_policy_arns, count.index)
 }
+
+output "iam_assumable_role" {
+  value = aws_iam_role.iam_assumable_role
+}
