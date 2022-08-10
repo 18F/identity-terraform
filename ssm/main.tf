@@ -257,9 +257,9 @@ parameters {}
 runtimeConfig:
   'aws:runShellScript':
     properties:
-      - id: '0.aws:runShellScript'
-        runCommand
-          - ${each.value["command"]}
+    - id: '0.aws:runShellScript'
+      runCommand:
+      - ${each.value["command"]}
   %{if each.value["logging"]}s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
   s3EncryptionEnabled: true
   cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm_session_logs.name}"
