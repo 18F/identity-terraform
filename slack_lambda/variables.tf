@@ -25,7 +25,7 @@ variable "lambda_memory" {
 variable "lambda_runtime" {
   description = "Lambda runtime"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "slack_webhook_url_parameter" {

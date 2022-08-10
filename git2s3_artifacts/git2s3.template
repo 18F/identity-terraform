@@ -350,7 +350,7 @@
             "Properties": {
                 "Description": "Copies objects from a source S3 bucket to a destination.",
                 "Handler": "index.handler",
-                "Runtime": "python3.7",
+                "Runtime": "python3.9",
                 "Role": {
                     "Fn::GetAtt": [
                         "CopyZipsRole",
@@ -657,7 +657,7 @@
                         "Arn"
                     ]
                 },
-                "Runtime": "python3.8",
+                "Runtime": "python3.9",
                 "Timeout": 300,
                 "Code": {
                     "S3Bucket": {
@@ -795,7 +795,7 @@
                         "Arn"
                     ]
                 },
-                "Runtime": "python3.8",
+                "Runtime": "python3.9",
                 "Timeout": 300,
                 "Code": {
                     "S3Bucket": {
@@ -1188,7 +1188,7 @@
                         "Arn"
                     ]
                 },
-                "Runtime": "python3.8",
+                "Runtime": "python3.9",
                 "Timeout": 900,
                 "VpcConfig": {
                     "Fn::If": [
