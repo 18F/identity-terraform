@@ -260,13 +260,6 @@ runtimeConfig:
       - id: '0.aws:runShellScript'
         runCommand:
           - ${each.value["command"]}
-  %{if each.value["logging"]}s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
-  s3EncryptionEnabled: true
-  cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm_session_logs.name}"
-  cloudWatchEncryptionEnabled: true
-  cloudWatchStreamingEnabled: true%{else}s3EncryptionEnabled: false
-  cloudWatchEncryptionEnabled: false%{endif}
-  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   DOC
 }
 
