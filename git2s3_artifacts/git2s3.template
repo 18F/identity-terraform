@@ -1158,7 +1158,7 @@
                     "Type": "NO_ARTIFACTS"
                 },
                 "Environment": {
-                    "Image": "aws/codebuild/standard:2.0",
+                    "Image": "aws/codebuild/standard:4.0",
                     "Type": "LINUX_CONTAINER",
                     "ComputeType": "BUILD_GENERAL1_SMALL"
                 },
