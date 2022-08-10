@@ -15,6 +15,23 @@ EOM
   }
 }
 
+variable "ssm_cmd_doc_map" {
+  description = <<EOM
+REQUIRED. Map of data for SSM Documents. Each must include the document name,
+description, command(s) to run at login, whether to log the commands/output from the
+given session/document, and whether to run specifically as root (vs. a Linux user).
+EOM
+  type        = map(map(string))
+  default = {
+    "default" = {
+      description = "Login shell"
+      command     = "uptime"
+      logging     = false
+      use_root    = false
+    },
+  }
+}
+
 variable "session_timeout" {
   description = <<EOM
 REQUIRED. Amount of time (in minutes) of inactivity
