@@ -213,7 +213,7 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
 }
 
 # SSM Session Docs
-resource "aws_ssm_document" "ssm_session" {
+resource "aws_ssm_document" "ssm_cmd" {
   for_each = var.ssm_doc_map
 
   name            = "${var.env_name}-ssm-document-${each.key}"
@@ -242,10 +242,10 @@ inputs:
 }
 
 # SSM Command Docs
-resource "aws_ssm_document" "ssm_cmd" {
+resource "aws_ssm_document" "ssm_command" {
   for_each = var.ssm_cmd_doc_map
 
-  name            = "${var.env_name}-ssm-document-${each.key}"
+  name            = "${var.env_name}-ssm-cdoc-${each.key}"
   document_type   = "Command"
   document_format = "YAML"
   content         = <<DOC
