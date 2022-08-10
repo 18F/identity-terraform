@@ -213,10 +213,10 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
 }
 
 # SSM Session Docs
-resource "aws_ssm_document" "ssm_cmd" {
+resource "aws_ssm_document" "ssm_session" {
   for_each = var.ssm_doc_map
-
-  name            = "${var.env_name}-ssm-document-${each.key}"
+  lifecycle { create_before_destroy=false}
+  name            = "${var.env_name}-ssm-sdoc-${each.key}"
   document_type   = "Session"
   target_type     = "/AWS::EC2::Instance"
   document_format = "YAML"
@@ -242,8 +242,9 @@ inputs:
 }
 
 # SSM Command Docs
-resource "aws_ssm_document" "ssm_command" {
+resource "aws_ssm_document" "ssm_cmd" {
   for_each = var.ssm_cmd_doc_map
+  lifecycle { create_before_destroy=false}
 
   name            = "${var.env_name}-ssm-cdoc-${each.key}"
   document_type   = "Command"
