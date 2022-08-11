@@ -1,3 +1,12 @@
+# variable optional attributes will be fully supported in Terraform v1.3.x;
+# remove this section once that is officially released and confirmed working
+# 
+# more info: https://github.com/hashicorp/terraform/releases/tag/v1.3.0-alpha20220608
+
+terraform {
+  experiments = [module_variable_optional_attrs]
+}
+
 # -- Variables --
 
 variable "enabled" {
@@ -21,7 +30,17 @@ variable "iam_policies" {
   type = list(object({
     policy_name        = string
     policy_description = string
-    policy_document    = list(any)
+    policy_document = list(object({
+      sid       = string
+      effect    = string
+      actions   = list(string)
+      resources = list(string)
+      conditions = optional(list(object({
+        test     = string
+        variable = string
+        values   = list(string)
+      })))
+    }))
   }))
 }
 
@@ -48,6 +67,17 @@ data "aws_iam_policy_document" "iam_policy_doc" {
       effect    = statement.value.effect
       actions   = statement.value.actions
       resources = statement.value.resources
+
+      dynamic "condition" {
+        for_each = (
+          statement.value["conditions"] == null ? [] : statement.value["conditions"]
+        )
+        content {
+          test     = condition.value.test
+          variable = condition.value.variable
+          values   = condition.value.values
+        }
+      }
     }
   }
 }
