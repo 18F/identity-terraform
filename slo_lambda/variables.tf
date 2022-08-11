@@ -10,7 +10,7 @@ variable "env_name" {
 variable "lambda_runtime" {
   description = "Lambda runtime"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "slo_lambda_code" {
