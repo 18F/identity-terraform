@@ -216,7 +216,7 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
 resource "aws_ssm_document" "ssm_session" {
   for_each = var.ssm_doc_map
   lifecycle { create_before_destroy=false}
-  name            = "${var.env_name}-ssm-sdoc-${each.key}"
+  name            = "${var.env_name}-ssm-document-${each.key}"
   document_type   = "Session"
   target_type     = "/AWS::EC2::Instance"
   document_format = "YAML"
@@ -246,7 +246,7 @@ resource "aws_ssm_document" "ssm_cmd" {
   for_each = var.ssm_cmd_doc_map
   lifecycle { create_before_destroy=false}
 
-  name            = "${var.env_name}-ssm-cdoc-${each.key}"
+  name            = "${var.env_name}-ssm-cmd-${each.key}"
   document_type   = "Command"
   document_format = "YAML"
   content         = <<DOC
@@ -259,7 +259,8 @@ runtimeConfig:
     properties:
       - id: '0.aws:runShellScript'
         runCommand:
-          - ${each.value["command"]}
+        %{for ssm_cmd in each.value["command"]}  - ${ssm_cmd}
+        %{endfor}
   DOC
 }
 

@@ -21,11 +21,11 @@ REQUIRED. Map of data for SSM Documents. Each must include the document name,
 description, command(s) to run at login, whether to log the commands/output from the
 given session/document, and whether to run specifically as root (vs. a Linux user).
 EOM
-  type        = map(map(string))
+  type        = map(any)
   default = {
     "default" = {
       description = "Login shell"
-      command     = "uptime"
+      command     = ["uptime"]
       logging     = false
       use_root    = false
     },
