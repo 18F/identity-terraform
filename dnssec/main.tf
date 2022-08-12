@@ -117,7 +117,7 @@ resource "aws_kms_key" "dnssec" {
   # 
   # See the README for more info, as well as:
   # https://github.com/hashicorp/terraform/issues/3116
-  # https://github.com/hashicorp/terraform/issues/4149
+  # https://github.com/hashicorp/terraform/issues/30937
 
   #lifecycle {
   #  prevent_destroy = true
@@ -218,6 +218,12 @@ resource "aws_iam_policy" "dnssec_disable_prevent" {
   path        = "/"
   description = "Prevent disabling of DNSSEC / deletion of hosted zone ${var.dnssec_zone_name}"
   policy      = data.aws_iam_policy_document.dnssec_disable_prevent[count.index].json
+
+  # extra safeguard while the KMS/DNSSEC resources can't conditionally
+  # have their own lifecycle rules set, as discussed above
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "dnssec" {

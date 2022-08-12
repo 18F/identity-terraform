@@ -93,11 +93,13 @@ The possibility of accidental destruction of the 'DNSSEC-signing-enabled' resour
 
 For this module, the `lifecycle { prevent_destroy = true }` safeguard is **not** attached to the various DNSSEC resources. Doing so would add significant complexity, and manual work, to the key rotation process, as explained below:
 
-Key rotation requires the ability to destroy the old, deactivated keys once they are fully confirmed to no longer be in use, and [lifecycle rules currently (as of 2021-12-14) do not support interpolation.](https://www.terraform.io/docs/language/meta-arguments/lifecycle.html#literal-values-only) Thus, logic cannot be written to change a lifecycle rule automatically when marking a key as inactive / commenting out a key in the `dnssec_ksks` string map. One would need to manually override/comment out the `lifecycle` block (in a local copy of `main.tf`), or remove it from the actual Terraform statefile (via `state pull` / `state push` commands), and run an *extra* `terraform apply` command, in order to remove the resources and keep Terraform's state accurate.
+Key rotation requires the ability to destroy the old, deactivated keys once they are fully confirmed to no longer be in use, and [lifecycle rules currently (as of 2022-08-11) do not support interpolation.](https://www.terraform.io/docs/language/meta-arguments/lifecycle.html#literal-values-only) Thus, logic cannot be written to change a lifecycle rule automatically when marking a key as inactive / commenting out a key in the `dnssec_ksks` string map. One would need to manually override/comment out the `lifecycle` block (in a local copy of `main.tf`), or remove it from the actual Terraform statefile (via `state pull` / `state push` commands), and run an *extra* `terraform apply` command, in order to remove the resources and keep Terraform's state accurate.
 
 Until such time that they *can* be configured with interpolation, the `lifecycle` blocks for these resources are commented out, with the hope to include them as an additional safeguard in the future. Terraform *has* indicated an intent to implement this feature request in the near future, and further discussion and planning can be found within the `hashicorp/terraform` repo:
 - https://github.com/hashicorp/terraform/issues/3116
-- https://github.com/hashicorp/terraform/issues/4149
+- https://github.com/hashicorp/terraform/issues/30937
+
+***Additionally:*** While the resources for KMS/KSK keys, aliases, and DNSSEC status itself don't currently have lifecycle blocks applied, the `DNSSecDisablePrevent` IAM policy -- conditionally created, with `var.protect_resources` set to `true` -- has `lifecycle { prevent_destroy = true }`, thus requiring an additional Terraform operation to reverse said lifecycle rule if needing to delete the policy. This is an extra safeguard to help prevent resource removals/deletions, and will (most likely) be left in place if/when lifecycle rule interpolation is supported.
 
 ## Example Implementation
 
