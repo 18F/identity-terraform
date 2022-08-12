@@ -118,7 +118,7 @@ resource "aws_s3_bucket_logging" "artifact_bucket" {
   bucket = aws_s3_bucket.artifact_bucket.id
 
   target_bucket = local.log_bucket
-  target_prefix = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
+  target_prefix = "${var.bucket_name_prefix}-public-artifacts-${var.region}/"
 }
 
 module "s3_config" {
