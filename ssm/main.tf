@@ -251,7 +251,7 @@ resource "aws_ssm_document" "ssm_cmd" {
   document_format = "YAML"
   content         = <<DOC
 ---
-schemaVersion: '1.2'
+schemaVersion: '2.0'
 description: ${each.value["description"]}
 parameters: {}
 runtimeConfig:
