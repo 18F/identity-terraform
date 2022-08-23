@@ -251,12 +251,12 @@ resource "aws_ssm_document" "ssm_cmd" {
   document_format = "YAML"
   content         = <<DOC
 ---
-schemaVersion: '2.0'
+schemaVersion: '2.2'
 description: ${each.value["description"]}
 parameters: {}
 mainSteps:
-#'aws:runShellScript':
-- action: '0.aws:runShellScript'
+- action: 'aws:runShellScript'
+  Name: "${each.key}
   inputs:
     runCommand:
    %{for ssm_cmd in each.value["command"]} - ${ssm_cmd}
