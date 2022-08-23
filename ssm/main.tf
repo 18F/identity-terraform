@@ -255,12 +255,12 @@ schemaVersion: '2.2'
 description: ${each.value["description"]}
 parameters: {}
 mainSteps:
-  'aws:runShellScript':
-    - action: '0.aws:runShellScript'
-    inputs:
-      runCommand:
-     %{for ssm_cmd in each.value["command"]} - ${ssm_cmd}
-     %{endfor}
+'aws:runShellScript':
+- action: '0.aws:runShellScript'
+inputs:
+  runCommand:
+ %{for ssm_cmd in each.value["command"]} - ${ssm_cmd}
+ %{endfor}
   DOC
 }
 
