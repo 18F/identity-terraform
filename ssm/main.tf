@@ -1,5 +1,5 @@
 data "aws_caller_identity" "current" {
-u
+}
 
 # KMS keys
 data "aws_iam_policy_document" "kms_ssm" {
@@ -245,18 +245,18 @@ inputs:
 resource "aws_ssm_document" "ssm_cmd" {
   for_each = var.ssm_cmd_doc_map
   lifecycle { create_before_destroy = false }
+
   name            = "${var.env_name}-ssm-cmd-${each.key}"
   document_type   = "Command"
   document_format = "YAML"
   content         = <<DOC
 ---
-schemaVersion: '2.2'
+schemaVersion: '2.0'
 description: ${each.value["description"]}
 parameters: {}
 mainSteps:
 #'aws:runShellScript':
 - action: '0.aws:runShellScript'
-  name: "${var.env_name}_${each.key}"
   inputs:
     runCommand:
    %{for ssm_cmd in each.value["command"]} - ${ssm_cmd}
