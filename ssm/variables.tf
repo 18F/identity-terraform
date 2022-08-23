@@ -28,6 +28,7 @@ EOM
       command     = ["uptime"]
       logging     = false
       use_root    = false
+      parameters = []
     },
   }
 }
