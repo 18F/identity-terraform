@@ -257,7 +257,7 @@ parameters: {}
 mainSteps:
 #'aws:runShellScript':
 - action: '0.aws:runShellScript'
-  name: ${each.value["name"]}
+  name: "${var.env_name}-ssm-cmd-${each.key}"
   inputs:
     runCommand:
    %{for ssm_cmd in each.value["command"]} - ${ssm_cmd}
