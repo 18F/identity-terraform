@@ -255,7 +255,7 @@ schemaVersion: '2.2'
 description: ${each.value["description"]}
 parameters: {}
 mainSteps:
-'aws:runShellScript':
+#'aws:runShellScript':
 - action: '0.aws:runShellScript'
   inputs:
     runCommand:
