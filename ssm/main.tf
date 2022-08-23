@@ -256,11 +256,11 @@ description: ${each.value["description"]}
 parameters: {}
 mainSteps:
   'aws:runShellScript':
+    - action: '0.aws:runShellScript'
     inputs:
-      - action: '0.aws:runShellScript'
-        runCommand:
-        %{for ssm_cmd in each.value["command"]}  - ${ssm_cmd}
-        %{endfor}
+      runCommand:
+      %{for ssm_cmd in each.value["command"]}  - ${ssm_cmd}
+      %{endfor}
   DOC
 }
 
