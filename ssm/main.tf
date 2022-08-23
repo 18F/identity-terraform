@@ -256,7 +256,7 @@ description: ${each.value["description"]}
 parameters: {}
 mainSteps:
 - action: 'aws:runShellScript'
-  Name: block1
+  name: block1
   inputs:
     runCommand:
    %{for ssm_cmd in each.value["command"]} - ${ssm_cmd}
