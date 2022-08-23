@@ -259,8 +259,8 @@ mainSteps:
     - action: '0.aws:runShellScript'
     inputs:
       runCommand:
-        %{for ssm_cmd in each.value["command"]}- ${ssm_cmd}
-        %{endfor}
+      %{for ssm_cmd in each.value["command"]} - ${ssm_cmd}
+      %{endfor}
   DOC
 }
 
