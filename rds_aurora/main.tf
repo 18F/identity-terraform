@@ -302,11 +302,11 @@ resource "aws_rds_cluster" "aurora" {
     Name = local.db_name
   }
 
-  #lifecycle {
-  #  ignore_changes = [
-  #    replication_source_identifier
-  #  ]
-  #}
+  lifecycle {
+    ignore_changes = [
+      replication_source_identifier
+    ]
+  }
 
   # To properly delete this cluster via Terraform:
   # 1. Set var.skip_final_snapshot to `true` and var.deletion_protection to `false`
