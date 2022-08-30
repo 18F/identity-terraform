@@ -315,13 +315,28 @@ variable "rds_username" {
   description = "Username for the RDS master user account"
 }
 
+variable "skip_final_snapshot" {
+  type        = bool
+  description = <<EOM
+Whether or not to skip creating a final snapshot before deleting
+the Aurora cluster/instance(s)
+EOM
+  default     = false
+}
+
+variable "deletion_protection" {
+  type        = bool
+  description = "Whether or not to enable deletion protection for the cluster"
+  default     = true
+}
+
 # DNS / Route53
 
 variable "internal_zone_id" {
   type        = string
   description = <<EOM
 ID of the Route53 hosted zone to create records in; leave blank
-if not configuring DNS/Route53 records for the Aurora cluster/instances
+if not configuring DNS/Route53 records for the Aurora cluster/instance(s)
 EOM
   default     = ""
 }

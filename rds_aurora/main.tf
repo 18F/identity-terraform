@@ -309,14 +309,13 @@ resource "aws_rds_cluster" "aurora" {
   #}
 
   # To properly delete this cluster via Terraform:
-  # 1. Uncomment `skip_final_snapshot = true` and
-  #    comment out `deletion_protection = true` below.
+  # 1. Set var.skip_final_snapshot to `true` and var.deletion_protection to `false`
   # 2. Perform a targeted 'apply' (e.g. "-target=aws_rds_cluster.aurora")
   #    to remove deletion protection + disable requiring a final snapshot.
   # 3. Perform a 'destroy' operation as needed.
 
-  #skip_final_snapshot = true
-  deletion_protection = true
+  skip_final_snapshot = var.skip_final_snapshot
+  deletion_protection = var.deletion_protection
 }
 
 resource "aws_rds_cluster_instance" "aurora" {
