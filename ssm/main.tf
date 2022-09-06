@@ -262,11 +262,12 @@ parameters:
   %{endfor}
 mainSteps:
 - action: "aws:runShellScript"
-  name: "TESTER"
+  name: "block1"
   inputs:
     runCommand:
-    %{for ssm_cmd in each.value["command"]}- ${ssm_cmd}
-        %{endfor}
+  %{for ssm_cmd in each.value["command"]~}
+  - ${ssm_cmd}
+  %{endfor}
   DOC
 }
 
