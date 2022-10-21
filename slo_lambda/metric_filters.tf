@@ -13,7 +13,7 @@ locals {
 resource "aws_cloudwatch_log_metric_filter" "idp_filtered_uris_success" {
   name           = "${var.env_name}-idp-filtered-uris-success"
   log_group_name = "${var.env_name}_/var/log/nginx/access.log"
-  pattern        = concat("{", local.idp_uri_denylist_filter, " && ($.status = 2* || $.status = 3*)}")
+  pattern        = join("", ["{", local.idp_uri_denylist_filter, " && ($.status = 2* || $.status = 3*)}"])
   metric_transformation {
     name       = "FilteredUrisSuccess"
     namespace  = "${var.env_name}/sli"
@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_metric_filter" "idp_filtered_uris_success" {
 resource "aws_cloudwatch_log_metric_filter" "idp_filtered_uris_total" {
   name    = "${var.env_name}-idp-filtered-uris-success"
   log_group_name = "${var.env_name}_/var/log/nginx/access.log"
-  pattern = concat("{", local.idp_uri_denylist_filter, "}")
+  pattern = join("", ["{", local.idp_uri_denylist_filter, "}"])
   metric_transformation {
     name       = "FilteredUrisTotal"
     namespace  = "${var.env_name}/sli"
