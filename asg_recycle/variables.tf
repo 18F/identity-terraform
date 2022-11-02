@@ -43,7 +43,7 @@ EOM
 }
 
 variable "time_zone" {
-  description = "IANA time zone to use with cron schedules (uses UTC by default)."
+  description = "IANA time zone to use with cron schedules. Uses UTC by default."
   type        = string
   default     = "Etc/UTC"
 }
