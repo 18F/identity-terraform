@@ -64,7 +64,7 @@ Customized set of cron jobs for recycling (up/down) and/or zeroing out hosts.
 If set, var.scale_schedule will be ignored in favor of whatever is defined here.
 MUST follow the defined format as shown for the default value!
 EOM
-  type        = map(map(list(string)))
+  type        = map(any)
   default = {
     #    "custom_schedule" = {
     #      recycle_up    = ["0 11 * * 1-5"]
