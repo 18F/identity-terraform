@@ -34,9 +34,7 @@ The `cron` expressions for the predefined schedules are as follows:
 | `weeklyzero_normal`     | <pre>0 11,17,23 * * 1<br>0 5,11,17,23 * * 2-4<br>0 5,11 * * 5</pre> | <pre>15 11,17,23 * * 1<br>15 5,11,17,23 * * 2-4<br>15 5,11 * * 5</pre> | `0 5 * * 1`          | `0 17 * * 5`           |
 | `weeklyzero_business`   | `0 17 * * 1-4`                                                      | `15 17 * * 1-4`                                                        | `0 5 * * 1`          | `0 17 * * 5`           |
 
-To use one of these, set the `scale_schedule` variable to the name of the desired schedule, and the module will extract its corresponding 'recycle'/'zero out' schedules from the `local.rotation_schedules` map in `schedule.tf`.
-
-If desiring to use a different set of expressions for 'recycle' and/or 'zero out' schedules, the `custom_schedule` map variable can be used instead, e.g.:
+If desiring to use a different set of expressions for 'recycle' and/or 'zero out' schedules, `var.custom_schedule` can be used instead, e.g.:
 
 ```terraform
 custom_schedule = {
@@ -48,6 +46,8 @@ custom_schedule = {
   }
 }
 ```
+
+To use a set of expressions, set `var.scale_schedule` to the name of the desired schedule, and the module will extract its corresponding 'recycle'/'zero out' schedules from the `local.rotation_schedules` map in `schedule.tf` (or `var.custom_schedule`, if using that instead).
 
 ## Examples
 
@@ -74,6 +74,7 @@ module "migration_recycle" {
   time_zone                  = "America/New_York"
   spinup_mult_factor         = 1
   override_spindown_capacity = 0
+  scale_schedule             = "migration_nightlyzero_business"
   custom_schedule = {
     "migration_nightlyzero_business" = {
       recycle_up   = ["50 16 * * 1-5"]
@@ -90,14 +91,14 @@ module "migration_recycle" {
 
 ## Variables
 
-| Name                         | Type                     | Description                                                                                                                           | Required | Default            |
-| ----                         | ----                     | -----------                                                                                                                           | -------- | -------            |
-| `asg_name`                   | string                   | Name of the Auto Scaling Group to apply scheduled actions to                                                                          | YES      | N/A                |
-| `normal_desired_capacity`    | number                   | Default Desired capacity for the Auto Scaling Group                                                                                   | YES      | N/A                |
-| `override_spindown_capacity` | number                   | Set a specific number of instances for spindown instead of `normal_desired_capacity`                                                  | NO       | -1                 |
-| `max_size`                   | number                   | Default maximum capacity for the Auto Scaling Group                                                                                   | NO       | -1                 |
-| `min_size`                   | number                   | Default minimum capacity for the Auto Scaling Group                                                                                   | NO       | -1                 |
-| `spinup_mult_factor`         | number                   | Multiplier for `normal_desired_capacity` to calculate Desired capacity (normal x mult) for the `auto-recycle.spinup` scheduled action | NO       | 2                  |
-| `time_zone`                  | string                   | IANA time zone to use with cron schedules (uses UTC by default)                                                                       | NO       | Etc/UTC            |
-| `scale_schedule`             | string                   | Name of one of the blocks in schedule.tf which defines the cron schedules for 'recycle' and/or 'zero out' Scheduled Actions           | NO       | `nozero_norecycle` |
-| `custom_schedule`            | map(`map(list(string))`) | Customized set of cron jobs for recycling (up/down) and/or zeroing out hosts (overrides `scale_schedule` if set)                      | NO       | {}                 |
+| Name                         | Type    | Description                                                                                                                           | Required | Default            |
+| ----                         | ----    | -----------                                                                                                                           | -------- | -------            |
+| `asg_name`                   | string  | Name of the Auto Scaling Group to apply scheduled actions to                                                                          | YES      | N/A                |
+| `normal_desired_capacity`    | number  | Default Desired capacity for the Auto Scaling Group                                                                                   | YES      | N/A                |
+| `override_spindown_capacity` | number  | Set a specific number of instances for spindown instead of `normal_desired_capacity`                                                  | NO       | -1                 |
+| `max_size`                   | number  | Default maximum capacity for the Auto Scaling Group                                                                                   | NO       | -1                 |
+| `min_size`                   | number  | Default minimum capacity for the Auto Scaling Group                                                                                   | NO       | -1                 |
+| `spinup_mult_factor`         | number  | Multiplier for `normal_desired_capacity` to calculate Desired capacity (normal x mult) for the `auto-recycle.spinup` scheduled action | NO       | 2                  |
+| `time_zone`                  | string  | IANA time zone to use with cron schedules (uses UTC by default)                                                                       | NO       | Etc/UTC            |
+| `scale_schedule`             | string  | Name of a block in `local.rotation_schedules` or `var.custom_schedule` with `cron` schedules for the associated Scheduled Actions     | NO       | `nozero_norecycle` |
+| `custom_schedule`            | `any`   | Customized set of cron jobs for recycling (up/down) and/or zeroing out hosts (overrides `local.rotation_schedules` if set)            | NO       | {}                 |

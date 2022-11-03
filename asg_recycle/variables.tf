@@ -52,7 +52,7 @@ variable "scale_schedule" {
   description = <<EOM
 Name of one of the blocks defined in schedule.tf, which defines the cron schedules
 for recycling and/or 'autozero' scheduled actions. MUST match one of the key names
-in local.rotation_schedules. Ignored if var.custom_schedule has been set.
+in local.rotation_schedules (or var.custom_schedule if using that instead).
 EOM
   type        = string
   default     = "nozero_norecycle"
@@ -61,7 +61,7 @@ EOM
 variable "custom_schedule" {
   description = <<EOM
 Customized set of cron jobs for recycling (up/down) and/or zeroing out hosts.
-If set, var.scale_schedule will be ignored in favor of whatever is defined here.
+MUST contain at least one object with var.scale_schedule as its name, and
 MUST follow the defined format as shown for the default value!
 EOM
   type        = any
