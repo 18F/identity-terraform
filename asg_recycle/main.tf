@@ -1,8 +1,8 @@
 locals {
-  schedule = (
-    var.custom_schedule == {} ? lookup(
-      local.rotation_schedules, var.scale_schedule
-    ) : var.custom_schedule
+  schedule_map = var.custom_schedule == {} ? local.rotation_schedules : var.custom_schedule
+  schedule = lookup(
+    { for k, v in local.schedule_map : k => v if k == var.scale_schedule },
+    var.scale_schedule
   )
 }
 
