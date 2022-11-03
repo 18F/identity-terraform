@@ -17,6 +17,7 @@ class Metric:
     """
     Holds what we need to query a CloudWatch metric.
     """
+
     def __init__(self, namespace: str, metric_name: str, dimensions: list):
         self.namespace = namespace
         self.metric_name = metric_name
@@ -25,7 +26,7 @@ class Metric:
             'StartTime': datetime.datetime.utcnow() - datetime.timedelta(days=WINDOW_DAYS),
             'EndTime': datetime.datetime.utcnow(),
             'Period': WINDOW_DAYS * 24 * 60 * 60,
-            'Statistics' :[
+            'Statistics': [
                 'Sum',
             ],
         }
@@ -46,6 +47,7 @@ class BackendSuccessMetric:
     """
     Metric that combines a few others 
     """
+
     def sum(self, client) -> float:
         request_count = METRICS['request_count'].sum(client)
         elb_500s = METRICS['elb_500s'].sum(client)
@@ -60,17 +62,20 @@ class ValidRequests:
     return before selecting a target group. Excludes 4XX reponses originiating
     from the LB.
     """
+
     def sum(self, client) -> float:
         request_count = METRICS['request_count'].sum(client)
         elb_500s = METRICS['elb_500s'].sum(client)
 
         return request_count + elb_500s
 
+
 class GoodResponses:
     """
     Metric that encompasses all good reponses from the target group. Excludes
     5XX responses and timeouts.
     """
+
     def sum(self, client) -> float:
         responses = [
             METRICS['target_200s'],
@@ -160,6 +165,16 @@ METRICS = {
         ]
     ),
     'backend_success': BackendSuccessMetric(),
+    'filtered_uris_success': Metric(
+        namespace=SLI_NAMESPACE,
+        metric_name='FilteredUrisSuccess',
+        dimensions=[],
+    ),
+    'filtered_uris_total': Metric(
+        namespace=SLI_NAMESPACE,
+        metric_name='FilteredUrisTotal',
+        dimensions=[],
+    ),
 }
 
 
@@ -169,7 +184,13 @@ SLIS = {
         METRICS['good_responses'],
         METRICS['valid_requests'],
     ),
+    'filtered_availability': SLI(
+        'filtered-availability',
+        METRICS['filtered_uris_success'],
+        METRICS['filtered_uris_total'],
+    )
 }
+
 
 def create_slis(client, slis):
     # Write Cloudwatch
@@ -190,10 +211,12 @@ def create_slis(client, slis):
             MetricData=metric_data,
         )
 
+
 def lambda_handler(event, context):
     # Query Cloudwatch
     client = boto3.client('cloudwatch')
     create_slis(client, SLIS)
+
 
 def main():
     lambda_handler(None, None)
