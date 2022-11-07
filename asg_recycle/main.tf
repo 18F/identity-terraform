@@ -39,10 +39,11 @@ resource "aws_autoscaling_schedule" "recycle_spindown" {
 resource "aws_autoscaling_schedule" "autozero_spinup" {
   for_each = toset(local.schedule["autozero_up"])
 
-  scheduled_action_name  = "auto-zero.spinup"
-  min_size               = var.min_size
-  max_size               = var.max_size <= 0 ? 1 : var.max_size
-  desired_capacity       = var.normal_desired_capacity
+  scheduled_action_name = "auto-zero.spinup"
+  min_size              = var.min_size
+  max_size              = var.max_size <= 0 ? 1 : var.max_size
+  desired_capacity = var.normal_desired_capacity > var.max_size ? (
+  var.max_size) : var.normal_desired_capacity
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
