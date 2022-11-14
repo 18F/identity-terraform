@@ -12,7 +12,7 @@ resource "aws_autoscaling_schedule" "recycle_spinup" {
   scheduled_action_name  = "auto-recycle.spinup"
   min_size               = var.min_size
   max_size               = var.max_size
-  desired_capacity       = var.normal_desired_capacity * var.spinup_mult_factor
+  desired_capacity       = var.normal_desired * var.spinup_mult_factor
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
@@ -25,7 +25,7 @@ resource "aws_autoscaling_schedule" "recycle_spindown" {
   min_size              = var.min_size
   max_size              = var.max_size
   desired_capacity = var.override_spindown_capacity == -1 ? (
-  var.normal_desired_capacity) : var.override_spindown_capacity
+  var.normal_desired) : var.override_spindown_capacity
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
@@ -41,10 +41,12 @@ resource "aws_autoscaling_schedule" "autozero_spinup" {
 
   scheduled_action_name = "auto-zero.spinup"
   min_size              = var.min_size
-  max_size              = var.max_size == 0 ? (
+  max_size = var.max_size == 0 ? (
   var.min_size == 0 ? 1 : var.min_size) : var.max_size
-  desired_capacity = var.normal_desired_capacity > var.max_size ? (
-  var.max_size) : var.normal_desired_capacity
+  desired_capacity = (
+    var.normal_desired > var.max_size || var.normal_desired < var.min_size ? (
+    var.max_size) : var.normal_desired
+  )
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name

@@ -3,7 +3,7 @@ variable "asg_name" {
   type        = string
 }
 
-variable "normal_desired_capacity" {
+variable "normal_desired" {
   description = <<EOM
 Default Desired capacity for the Auto Scaling Group.
 Multiplied by spinup_mult_factor to set the Desired capacity for auto-recycle.spinup.
@@ -14,7 +14,7 @@ EOM
 
 variable "override_spindown_capacity" {
   description = <<EOM
-Set a specific number of instances for spindown instead of normal_desired_capacity.
+Set a specific number of instances for spindown instead of normal_desired.
 Will ONLY override the Desired capacity for the auto-recycle.spindown action.
 EOM
   type        = number
@@ -35,7 +35,7 @@ variable "min_size" {
 
 variable "spinup_mult_factor" {
   description = <<EOM
-Multiplier for normal_desired_capacity to calculate Desired capacity (normal x mult)
+Multiplier for normal_desired to calculate Desired capacity (normal x mult)
 for the auto-recycle.spinup scheduled action.
 EOM
   type        = number
