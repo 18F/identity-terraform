@@ -41,7 +41,8 @@ resource "aws_autoscaling_schedule" "autozero_spinup" {
 
   scheduled_action_name = "auto-zero.spinup"
   min_size              = var.min_size
-  max_size              = var.max_size <= 0 ? 1 : var.max_size
+  max_size              = var.max_size == 0 ? (
+  var.min_size == 0 ? 1 : var.min_size) : var.max_size
   desired_capacity = var.normal_desired_capacity > var.max_size ? (
   var.max_size) : var.normal_desired_capacity
   recurrence             = each.key
@@ -53,7 +54,7 @@ resource "aws_autoscaling_schedule" "autozero_spindown" {
   for_each = toset(local.schedule["autozero_down"])
 
   scheduled_action_name  = "auto-zero.spindown"
-  min_size               = var.min_size > 0 ? 0 : var.min_size
+  min_size               = 0
   max_size               = var.max_size
   desired_capacity       = 0
   recurrence             = each.key
