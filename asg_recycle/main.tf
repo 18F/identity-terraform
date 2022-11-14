@@ -40,12 +40,12 @@ resource "aws_autoscaling_schedule" "autozero_spinup" {
   for_each = toset(local.schedule["autozero_up"])
 
   scheduled_action_name = "auto-zero.spinup"
-  min_size              = var.min_size
-  max_size = var.max_size == 0 ? (
-  var.min_size == 0 ? 1 : var.min_size) : var.max_size
+  min_size              = var.normal_min
+  max_size = var.normal_max == 0 ? (
+  var.normal_min == 0 ? 1 : var.normal_min) : var.normal_max
   desired_capacity = (
-    var.normal_desired > var.max_size || var.normal_desired < var.min_size ? (
-    var.max_size) : var.normal_desired
+    var.normal_desired > var.normal_max || var.normal_desired < var.normal_min ? (
+    var.normal_max) : var.normal_desired
   )
   recurrence             = each.key
   time_zone              = var.time_zone

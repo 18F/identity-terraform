@@ -3,15 +3,6 @@ variable "asg_name" {
   type        = string
 }
 
-variable "normal_desired" {
-  description = <<EOM
-Default Desired capacity for the Auto Scaling Group.
-Multiplied by spinup_mult_factor to set the Desired capacity for auto-recycle.spinup.
-Used for auto-recycle.spindown, unless override_spindown_capacity has been set.
-EOM
-  type        = number
-}
-
 variable "override_spindown_capacity" {
   description = <<EOM
 Set a specific number of instances for spindown instead of normal_desired.
@@ -31,6 +22,25 @@ variable "min_size" {
   description = "Default minimum capacity for the Auto Scaling Group."
   type        = number
   default     = -1
+}
+
+variable "normal_desired" {
+  description = <<EOM
+Default Desired capacity for the Auto Scaling Group.
+Multiplied by spinup_mult_factor to set the Desired capacity for auto-recycle.spinup.
+Used for auto-recycle.spindown, unless override_spindown_capacity has been set.
+EOM
+  type        = number
+}
+
+variable "normal_max" {
+  description = "Normal (post-autozero) maximum capacity for the Auto Scaling Group."
+  type        = number
+}
+
+variable "normal_min" {
+  description = "Normal (post-autozero) minimum capacity for the Auto Scaling Group."
+  type        = number
 }
 
 variable "spinup_mult_factor" {
