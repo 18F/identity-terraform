@@ -12,7 +12,7 @@ resource "aws_autoscaling_schedule" "recycle_spinup" {
   scheduled_action_name  = "auto-recycle.spinup"
   min_size               = var.min_size
   max_size               = var.max_size
-  desired_capacity       = var.normal_desired_capacity * var.spinup_mult_factor
+  desired_capacity       = var.normal_desired * var.spinup_mult_factor
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
@@ -25,7 +25,7 @@ resource "aws_autoscaling_schedule" "recycle_spindown" {
   min_size              = var.min_size
   max_size              = var.max_size
   desired_capacity = var.override_spindown_capacity == -1 ? (
-  var.normal_desired_capacity) : var.override_spindown_capacity
+  var.normal_desired) : var.override_spindown_capacity
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
@@ -40,10 +40,13 @@ resource "aws_autoscaling_schedule" "autozero_spinup" {
   for_each = toset(local.schedule["autozero_up"])
 
   scheduled_action_name = "auto-zero.spinup"
-  min_size              = var.min_size
-  max_size              = var.max_size <= 0 ? 1 : var.max_size
-  desired_capacity = var.normal_desired_capacity > var.max_size ? (
-  var.max_size) : var.normal_desired_capacity
+  min_size              = var.normal_min
+  max_size = var.normal_max == 0 ? (
+  var.normal_min == 0 ? 1 : var.normal_min) : var.normal_max
+  desired_capacity = (
+    var.normal_desired > var.normal_max || var.normal_desired < var.normal_min ? (
+    var.normal_max) : var.normal_desired
+  )
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
@@ -53,7 +56,7 @@ resource "aws_autoscaling_schedule" "autozero_spindown" {
   for_each = toset(local.schedule["autozero_down"])
 
   scheduled_action_name  = "auto-zero.spindown"
-  min_size               = var.min_size > 0 ? 0 : var.min_size
+  min_size               = 0
   max_size               = var.max_size
   desired_capacity       = 0
   recurrence             = each.key
