@@ -19,6 +19,10 @@ resource "aws_autoscaling_schedule" "recycle_spinup" {
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "recycle_spindown" {
@@ -35,6 +39,10 @@ resource "aws_autoscaling_schedule" "recycle_spindown" {
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Spin down to 0 hosts, on a regular schedule. Depending upon selection,
@@ -59,6 +67,10 @@ resource "aws_autoscaling_schedule" "autozero_spinup" {
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "autozero_spindown" {
@@ -74,4 +86,8 @@ resource "aws_autoscaling_schedule" "autozero_spindown" {
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
