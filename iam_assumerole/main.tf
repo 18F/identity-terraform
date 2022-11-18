@@ -1,12 +1,3 @@
-# variable optional attributes will be fully supported in Terraform v1.3.x;
-# remove this section once that is officially released and confirmed working
-# 
-# more info: https://github.com/hashicorp/terraform/releases/tag/v1.3.0-alpha20220608
-
-terraform {
-  experiments = [module_variable_optional_attrs]
-}
-
 # -- Variables --
 
 variable "enabled" {
