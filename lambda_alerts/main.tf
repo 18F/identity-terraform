@@ -38,14 +38,16 @@ variable "treat_missing_data" {
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   count = var.enabled
 
-  alarm_name        = "Lambda error rate: ${var.function_name}"
+  alarm_name        = "${var.function_name}_LambdaErrorRate"
   alarm_description = "Lambda error rate has exceeded ${var.error_rate_threshold}%"
 
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
   threshold                 = var.error_rate_threshold
   insufficient_data_actions = []
+  datapoints_to_alarm       = var.datapoints_to_alarm
+  treat_missing_data        = var.treat_missing_data
+  alarm_actions             = var.alarm_actions
 
   metric_query {
     id          = "error_rate"
@@ -78,10 +80,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
     }
   }
 
-  datapoints_to_alarm = var.datapoints_to_alarm
-
-  treat_missing_data = var.treat_missing_data
-
-  alarm_actions = var.alarm_actions
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
