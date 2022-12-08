@@ -38,7 +38,7 @@ variable "treat_missing_data" {
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   count = var.enabled
 
-  alarm_name        = "${var.function_name}_LambdaErrorRate"
+  alarm_name        = "LambdaErrorRate_${var.function_name}"
   alarm_description = "Lambda error rate has exceeded ${var.error_rate_threshold}%"
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
