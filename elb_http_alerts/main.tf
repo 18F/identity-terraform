@@ -50,7 +50,7 @@ locals {
 # -- Resources --
 
 resource "aws_cloudwatch_metric_alarm" "elb_http_5xx" {
-  alarm_name        = "${var.lb_name} ${var.lb_type} HTTP 5XX"
+  alarm_name        = "${var.lb_name}_${var.lb_type}_HTTP-5XX"
   alarm_description = <<EOM
 HTTP 5XX errors served by the ${var.lb_name} ${var.lb_type} without hosts
 EOM
@@ -77,7 +77,7 @@ EOM
 }
 
 resource "aws_cloudwatch_metric_alarm" "target_http_5xx" {
-  alarm_name        = "${var.lb_name} Target HTTP 5XX"
+  alarm_name        = "${var.lb_name}_Target_HTTP-5XX"
   alarm_description = <<EOM
 HTTP 5XX errors served by hosts in ${var.lb_name} ${var.lb_type}
 EOM
