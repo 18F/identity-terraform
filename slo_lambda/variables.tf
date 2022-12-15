@@ -44,3 +44,8 @@ variable "sli_prefix" {
   type        = string
   default     = "idp"
 }
+
+variable "slis" {
+  description = "JSON serialization of SLIs"
+  type        = string
+}
