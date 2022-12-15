@@ -93,6 +93,7 @@ resource "aws_lambda_function" "windowed_slo" {
       SLI_NAMESPACE     = var.namespace == "" ? "${var.env_name}/sli" : var.namespace
       LOAD_BALANCER_ARN = var.load_balancer_arn
       SLI_PREFIX        = var.sli_prefix
+      SLIS              = var.slis
     }
   }
 
