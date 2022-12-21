@@ -59,13 +59,14 @@ variable "lambda_identity_lambda_functions_gitrev" {
 }
 
 variable "dynamodb_retention_days" {
-  default     = "365"
+  default     = 365
   description = "Number of days to retain kms log records in dynamodb"
 }
 
 variable "kmslog_lambda_debug" {
-  default     = 0
+  default     = false
   description = "Whether to run the kms logging lambdas in debug mode in this account"
+  type        = bool
 }
 
 variable "ec2_kms_arns" {
@@ -73,6 +74,8 @@ variable "ec2_kms_arns" {
   description = "ARN(s) of EC2 roles permitted access to KMS"
 }
 
-variable "alarm_sns_topic_arn" {
-  description = "SNS Topic ARN for alarms"
+variable "alarm_sns_topic_arns" {
+  description = "List of SNS Topic ARN for alarms"
+  type        = list(string)
+  default     = []
 }

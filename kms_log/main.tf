@@ -528,9 +528,7 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
   threshold          = 1
   alarm_description  = "This alarm notifies when messages are on dead letter queue"
   treat_missing_data = "ignore"
-  alarm_actions = [
-    var.alarm_sns_topic_arn,
-  ]
+  alarm_actions      = var.alarm_sns_topic_arns
 }
 
 resource "aws_cloudwatch_metric_alarm" "cloudwatch_lambda_backlog" {
@@ -549,9 +547,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudwatch_lambda_backlog" {
   threshold          = 3600000
   alarm_description  = "Kinesis backlog for ${var.env_name}-cloudwatch-kms"
   treat_missing_data = "ignore"
-  alarm_actions = [
-    var.alarm_sns_topic_arn,
-  ]
+  alarm_actions      = var.alarm_sns_topic_arns
 }
 
 resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
@@ -572,9 +568,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
   threshold          = 10000
   alarm_description  = "Kinesis backlog for ${var.env_name}-cloudtrail-kms"
   treat_missing_data = "ignore"
-  alarm_actions = [
-    var.alarm_sns_topic_arn,
-  ]
+  alarm_actions      = var.alarm_sns_topic_arns
 }
 
 #lambda functions
@@ -597,7 +591,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 
   environment {
     variables = {
-      DEBUG               = var.kmslog_lambda_debug == 1 ? "1" : ""
+      DEBUG               = var.kmslog_lambda_debug ? "1" : ""
       LOG_LEVEL           = "0"
       CT_QUEUE_URL        = aws_sqs_queue.kms_ct_events.id
       RETENTION_DAYS      = var.dynamodb_retention_days
@@ -617,7 +611,7 @@ module "ct-processor-github-alerts" {
 
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
-  alarm_actions        = [var.alarm_sns_topic_arn]
+  alarm_actions        = var.alarm_sns_topic_arns
   error_rate_threshold = 5 # percent
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
@@ -785,7 +779,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 
   environment {
     variables = {
-      DEBUG               = var.kmslog_lambda_debug == 1 ? "1" : ""
+      DEBUG               = var.kmslog_lambda_debug ? "1" : ""
       LOG_LEVEL           = "0"
       RETENTION_DAYS      = var.dynamodb_retention_days
       DDB_TABLE           = aws_dynamodb_table.kms_events.id
@@ -804,7 +798,7 @@ module "cw-processor-github-alerts" {
 
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
-  alarm_actions        = [var.alarm_sns_topic_arn]
+  alarm_actions        = var.alarm_sns_topic_arns
   error_rate_threshold = 5 # percent
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
@@ -927,7 +921,7 @@ resource "aws_lambda_function" "event_processor" {
 
   environment {
     variables = {
-      DEBUG     = var.kmslog_lambda_debug == 1 ? "1" : ""
+      DEBUG     = var.kmslog_lambda_debug ? "1" : ""
       LOG_LEVEL = "0"
       ENV_NAME  = var.env_name
     }
