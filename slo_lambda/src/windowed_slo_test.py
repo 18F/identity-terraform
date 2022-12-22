@@ -64,7 +64,6 @@ def test_simple_sli():
 
         sli_config = {
             "http-200-availability": {
-                'type': 'AvailabilitySLI',
                 'numerator': {
                     'type': 'SingleMetric',
                     'namespace': 'AWS/ApplicationELB',
@@ -108,7 +107,6 @@ def test_multiple_metric_sli():
 
         sli_config = {
             'all-availability': {
-                'type': 'AvailabilitySLI',
                 'numerator': {
                     'type':  "LBGoodResponseMetric",
                     'load_balancer_arn': LOAD_BALANCER_ARN,
