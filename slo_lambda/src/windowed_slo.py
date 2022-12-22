@@ -93,15 +93,52 @@ class SingleMetric(MetricBase):
         """
         sum returns the sum of a single cloudwatch metric over WINDOW_DAYS
         """
-        total = 0
+        total = 0.0
         for datapoint in Cloudwatch.client().get_metric_statistics(
                 Namespace=self.namespace,
                 MetricName=self.metric_name,
                 Dimensions=self.dimensions,
                 **self.stat_args,
         )['Datapoints']:
-            total += datapoint['Sum']
+            total += self.extract_stat(datapoint)
         return total
+
+    def extract_stat(self, datapoint: Dict) -> float:
+        """
+        extract_stat takes a Cloudwatch datapoint and returns the numeric value
+        """
+
+        return datapoint['Sum']
+
+
+class CountMetric(SingleMetric):
+    """
+    Like SingleMetric, but aggreates with SampleCount() instead of Sum().
+    Useful for latency metrics.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.stat_args['Statistics'] = ['SampleCount']
+
+    def extract_stat(self, datapoint: Dict) -> float:
+        return datapoint['SampleCount']
+
+
+class TrimmedCountMetric(SingleMetric):
+    """
+    Like SingleMetric, but aggreates with TrimmedCount() instead of Sum().
+    Useful for latency metrics.
+    """
+
+    def __init__(self, threshold: str, **kwargs):
+        super().__init__(**kwargs)
+        self.threshold_stat = 'TC(:%s)' % threshold
+        self.stat_args.pop('Statistics')
+        self.stat_args['ExtendedStatistics'] = [self.threshold_stat]
+
+    def extract_stat(self, datapoint: Dict) -> float:
+        return datapoint['ExtendedStatistics'][self.threshold_stat]
 
 
 class LBValidRequestMetric(MetricBase):
