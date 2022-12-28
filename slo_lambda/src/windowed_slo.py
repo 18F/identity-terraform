@@ -110,7 +110,7 @@ class CompositeMetric:
     """
 
     def __init__(self, window_days: int, metrics: List[Dict]):
-        self.metrics = [SingleMetric(**m) for m in metrics]
+        self.metrics = [SingleMetric(window_days=window_days, **m) for m in metrics]
 
     def sum(self) -> float:
         total = 0.0
@@ -169,7 +169,7 @@ class SLI:
 
     def get_ratio(self) -> float:
         """
-        get_ratio returns the sum of the numerator diveded by the sum of the
+        get_ratio returns the sum of the numerator divided by the sum of the
         denominator, calculated over the last window_days.
 
         Can return ZeroDivisonError.
