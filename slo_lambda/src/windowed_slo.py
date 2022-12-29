@@ -8,6 +8,7 @@ import datetime
 import json
 import os
 import boto3  # type: ignore
+import botocore
 
 
 # ENVIRONMENT VARIABLES
@@ -161,7 +162,7 @@ class SLI:
             self.numerator = CompositeMetric(window_days=window_days, metrics=numerator)
 
         if type(denominator) is dict:
-            self.denomenator = SingleMetric(window_days=window_days, **denominator)
+            self.denominator = SingleMetric(window_days=window_days, **denominator)
         else:
             self.denominator = CompositeMetric(
                 window_days=window_days, metrics=denominator
@@ -174,10 +175,7 @@ class SLI:
 
         Can return ZeroDivisonError.
         """
-        calculated_numerator = self.numertor.sum()
-        calculated_denominator = self.demominator.sum()
-
-        return calculated_numerator / calculated_denominator
+        return self.numerator.sum() / self.denominator.sum()
 
 
 def publish_slis(slis: Dict[str, SLI], sli_namespace: str, sli_prefix: str):
@@ -191,6 +189,13 @@ def publish_slis(slis: Dict[str, SLI], sli_namespace: str, sli_prefix: str):
         except ZeroDivisionError:
             print("x/0 error for %s" % sli_name)
             continue
+        except (
+            botocore.exceptions.ClientError,
+            botocore.exceptions.BotoCoreError,
+        ) as e:
+            print("CloudWatch API error for %s: %s" % (sli_name, e))
+            continue
+
         print("%s: %f" % (sli_name, value))
         metric_data = [
             {
