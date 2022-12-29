@@ -155,12 +155,12 @@ class SLI:
         window_days: int = 30,
     ):
         # This hideousness supports providing a single numerator definition or a list of them
-        if type(numerator) == Dict:
+        if type(numerator) is dict:
             self.numerator = SingleMetric(window_days=window_days, **numerator)
         else:
             self.numerator = CompositeMetric(window_days=window_days, metrics=numerator)
 
-        if type(denominator) == Dict:
+        if type(denominator) is dict:
             self.denomenator = SingleMetric(window_days=window_days, **denominator)
         else:
             self.denominator = CompositeMetric(
@@ -217,8 +217,11 @@ def parse_sli_json(sli_json: str) -> Dict[str, SLI]:
     # Since the SLIs were defined in Terraform and converted to JSON
     # dictionaries, we need to convert them to SLI objects.
     for sli_name, sli_config in sli_configs.items():
-        sli = SLI(**sli_config)
-        slis[sli_name] = sli
+        try:
+            slis[sli_name] = SLI(**sli_config)
+        except (KeyError, TypeError, ValueError) as e:
+            print(f"Skipping malformed SLI {sli_name}: {e}")
+
     return slis
 
 
