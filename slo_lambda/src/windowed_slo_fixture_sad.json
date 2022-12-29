@@ -1,0 +1,106 @@
+{
+  "all_availability": {
+    "nomnomnomerator": [
+      {
+        "namespace": "AWS/ApplicationELB",
+        "metric_name": "HTTPCode_Target_2XX_Count",
+        "dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "LoadyMcLoadFace"
+          }
+        ]
+      },
+      {
+        "namespace": "AWS/ApplicationELB",
+        "metric_name": "HTTPCode_Target_3XX_Count",
+        "dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "LoadyMcLoadFace"
+          }
+        ]
+      },
+      {
+        "namespace": "AWS/ApplicationELB",
+        "metric_name": "HTTPCode_Target_4XX_Count",
+        "dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "LoadyMcLoadFace"
+          }
+        ]
+      }
+    ],
+    "denominator": [
+      {
+        "namespace": "AWS/ApplicationELB",
+        "metric_name": "RequestCount",
+        "dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "LoadyMcLoadFace"
+          }
+        ]
+      },
+      {
+        "namespace": "AWS/ApplicationELB",
+        "metric_name": "HTTPCode_Target_5XX_Count",
+        "dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "LoadyMcLoadFace"
+          }
+        ]
+      }
+    ]
+  },
+  "interesting_availability": {
+    "window_days": "hi-mom",
+    "numerator": {
+      "namespace": "test/sli",
+      "metric_name": "InterestingUrisSuccess",
+      "dimensions": [
+        {
+          "Name": "Hostname",
+          "Value": "highly.reliable.foo"
+        }
+      ]
+    },
+    "denominator": {
+      "namespace": "test/sli",
+      "metric_name": "InterestingUrisTotal",
+      "dimensions": [
+        {
+          "Name": "Hostname",
+          "Value": "highly.reliable.foo"
+        }
+      ]
+    }
+  },
+  "interesting_latency": {
+    "window_days": 30,
+    "numerator": {
+      "namespace": "test/sli",
+      "metric_name": "InterestingUrisSuccessLatency",
+      "meaningless_statistic": "TC(0.1)",
+      "dimensions": [
+        {
+          "Name": "Hostname",
+          "Value": "highly.reliable.foo"
+        }
+      ]
+    },
+    "denominator": {
+      "namespace": "test/sli",
+      "metric_name": "InterestingUrisSuccessLatency",
+      "statistic": "SampleCount",
+      "dimensions": [
+        {
+          "Name": "Hostname",
+          "Value": "highly.reliable.foo"
+        }
+      ]
+    }
+  }
+}
