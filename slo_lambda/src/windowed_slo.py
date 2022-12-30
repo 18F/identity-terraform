@@ -3,12 +3,12 @@ Given SLIs that contain ratios of CloudWatch metrics, writes new metrics that
 aggregate over window_days and calculate the ratios.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, TypedDict, Union
 import datetime
 import json
 import os
 import boto3  # type: ignore
-import botocore
+import botocore  # type: ignore
 
 
 # ENVIRONMENT VARIABLES
@@ -64,12 +64,15 @@ class SingleMetric:
         dimensions: List,
         statistic: Optional[str] = "Sum",
         extended_statistic: Optional[str] = None,
+        multiplier: float = 1.0,
     ):
         self.namespace = namespace
         self.metric_name = metric_name
         self.dimensions = dimensions
         self.statistic = statistic
         self.extended_statistic = extended_statistic
+        self.multiplier = float(multiplier)
+
         self.stat_args = {
             "StartTime": datetime.datetime.utcnow()
             - datetime.timedelta(days=window_days),
@@ -84,6 +87,7 @@ class SingleMetric:
     def sum(self) -> float:
         """
         sum returns the sum of a single cloudwatch metric over window_days
+        multiplied by the multiplier.
         """
         total = 0.0
         for datapoint in Cloudwatch.client().get_metric_statistics(
@@ -93,7 +97,7 @@ class SingleMetric:
             **self.stat_args,
         )["Datapoints"]:
             total += self.extract_stat(datapoint)
-        return total
+        return total * self.multiplier
 
     def extract_stat(self, datapoint: Dict) -> float:
         """
@@ -151,8 +155,8 @@ class SLI:
 
     def __init__(
         self,
-        numerator: Union[Dict, List[Dict]],
-        denominator: Union[Dict, List[Dict]],
+        numerator: Dict | List[Dict],
+        denominator: Dict | List[Dict],
         window_days: int = 30,
     ):
         # This hideousness supports providing a single numerator definition or a list of them
