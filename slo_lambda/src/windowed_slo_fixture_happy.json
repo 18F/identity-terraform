@@ -24,6 +24,7 @@
       {
         "namespace": "AWS/ApplicationELB",
         "metric_name": "HTTPCode_Target_4XX_Count",
+        "multiplier": -1,
         "dimensions": [
           {
             "Name": "LoadBalancer",

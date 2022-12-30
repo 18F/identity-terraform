@@ -102,5 +102,31 @@
         }
       ]
     }
+  },
+  "boring_latency": {
+    "window_days": 30,
+    "numerator": {
+      "namespace": "test/sli",
+      "metric_name": "BoringUrisSuccessLatency",
+      "extended_statistic": "TC(0.1)",
+      "multiplier": "lots",
+      "dimensions": [
+        {
+          "Name": "Hostname",
+          "Value": "highly.reliable.foo"
+        }
+      ]
+    },
+    "denominator": {
+      "namespace": "test/sli",
+      "metric_name": "BoringUrisSuccessLatency",
+      "statistic": "SampleCount",
+      "dimensions": [
+        {
+          "Name": "Hostname",
+          "Value": "highly.reliable.foo"
+        }
+      ]
+    }
   }
 }
