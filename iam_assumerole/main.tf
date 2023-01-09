@@ -88,6 +88,7 @@ resource "aws_iam_role" "iam_assumable_role" {
   assume_role_policy   = var.master_assumerole_policy
   path                 = "/"
   max_session_duration = var.role_duration #seconds
+  permissions_boundary = data.aws_iam_policy.permission_boundary_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attachment_main" {
