@@ -45,6 +45,11 @@ variable "role_name" {
   description = "Name of the IAM role."
 }
 
+variable "permissions_boundary_policy_arn" {
+  description = "ARN of the permission boundary policy"
+  default     = ""
+}
+
 # -- Resources --
 
 # create policy document; iterate through statements{} via dynamic
@@ -88,7 +93,7 @@ resource "aws_iam_role" "iam_assumable_role" {
   assume_role_policy   = var.master_assumerole_policy
   path                 = "/"
   max_session_duration = var.role_duration #seconds
-  permissions_boundary = data.aws_iam_policy.permission_boundary_policy.arn
+  permissions_boundary = var.permissions_boundary_policy_arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attachment_main" {
