@@ -65,3 +65,4 @@ module "billing-assumerole" {
    - `policy_name` - **string**: Name of the IAM policy to be created.
    - `policy_description` - **string**: Description of the IAM policy.
    - `policy_document` - **list(object)**: List of Statements included in the policy document. Each _object_ in the list should include the contents of a Statement, i.e. the `sid`, `effect`, `actions`, and `resources`.
+- `permissions_boundary_policy_arn` - **string**: ARN of the Permission Boundary Policy
