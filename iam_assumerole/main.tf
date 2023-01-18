@@ -46,7 +46,10 @@ variable "role_name" {
 }
 
 variable "permissions_boundary_policy_arn" {
-  description = "ARN of the permission boundary policy"
+  description = <<EOM
+(REQUIRED) ARN of an existing IAM policy (from another module/source)
+which will be used as the Permissions Boundary for the IAM role.
+EOM
 }
 
 # -- Resources --
