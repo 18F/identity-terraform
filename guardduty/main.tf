@@ -1,0 +1,338 @@
+data "aws_caller_identity" "current" {}
+
+# GuardDuty
+
+resource "aws_guardduty_detector" "main" {
+  enable = true
+
+  finding_publishing_frequency = var.finding_freq
+
+  datasources {
+    s3_logs {
+      enable = var.s3_enable
+    }
+    kubernetes {
+      audit_logs {
+        enable = var.k8s_audit_enable
+      }
+    }
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          enable = var.ec2_ebs_enable
+        }
+      }
+    }
+  }
+}
+
+resource "aws_guardduty_publishing_destination" "s3" {
+  detector_id      = aws_guardduty_detector.main.id
+  destination_arn  = aws_s3_bucket.guardduty.arn
+  kms_key_arn      = aws_kms_key.guardduty.arn
+  destination_type = "S3"
+
+  depends_on = [
+    aws_s3_bucket_policy.guardduty
+  ]
+}
+
+# KMS
+
+data "aws_iam_policy_document" "guardduty_kms" {
+  statement {
+    sid    = "AllowKMSEncryption"
+    effect = "Allow"
+    actions = [
+      "kms:Encrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key/*"
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["guardduty.amazonaws.com"]
+    }
+
+    dynamic "condition" {
+      for_each = local.gd_perm_conditions
+      content {
+        test     = "StringEquals"
+        variable = condition.value["variable"]
+        values   = condition.value["values"]
+      }
+    }
+  }
+
+  statement {
+    sid    = "KMSRootIAMAllow"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
+    }
+    actions = [
+      "kms:*"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_kms_key" "guardduty" {
+  description             = "KMS Key for GuardDuty publishing"
+  deletion_window_in_days = 7
+  policy                  = data.aws_iam_policy_document.guardduty_kms.json
+}
+
+resource "aws_kms_alias" "guardduty" {
+  name          = "alias/guardduty-kms"
+  target_key_id = aws_kms_key.guardduty.key_id
+}
+
+# S3
+
+data "aws_iam_policy_document" "guardduty_s3" {
+  statement {
+    sid    = "AllowGDGetBucketLocation"
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketLocation"
+    ]
+
+    resources = [
+      aws_s3_bucket.guardduty.arn
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["guardduty.amazonaws.com"]
+    }
+
+    dynamic "condition" {
+      for_each = local.gd_perm_conditions
+      content {
+        test     = "StringEquals"
+        variable = condition.value["variable"]
+        values   = condition.value["values"]
+      }
+    }
+  }
+
+  statement {
+    sid    = "AllowGDPutObject"
+    effect = "Allow"
+    actions = [
+      "s3:PutObject"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.guardduty.arn}/*"
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["guardduty.amazonaws.com"]
+    }
+
+    dynamic "condition" {
+      for_each = local.gd_perm_conditions
+      content {
+        test     = "StringEquals"
+        variable = condition.value["variable"]
+        values   = condition.value["values"]
+      }
+    }
+  }
+
+  statement {
+    sid    = "DenyUnencryptedUploads"
+    effect = "Deny"
+    actions = [
+      "s3:PutObject"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.guardduty.arn}/*"
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["guardduty.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
+      values   = [aws_kms_key.guardduty.arn]
+    }
+  }
+
+  statement {
+    sid    = "DenyNonHTTPS"
+    effect = "Deny"
+    actions = [
+      "s3:*"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.guardduty.arn}/*"
+    ]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket" "guardduty" {
+  bucket = join(".", [
+    "${var.bucket_name_prefix}.guardduty",
+    "${data.aws_caller_identity.current.account_id}-${var.region}"
+  ])
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "guardduty" {
+  bucket = aws_s3_bucket.guardduty.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "guardduty" {
+  bucket = aws_s3_bucket.guardduty.id
+  policy = data.aws_iam_policy_document.guardduty_s3.json
+}
+
+resource "aws_s3_bucket_logging" "guardduty" {
+  bucket = aws_s3_bucket.guardduty.id
+
+  target_bucket = local.log_bucket
+  target_prefix = "${aws_s3_bucket.guardduty.id}}/"
+}
+
+resource "aws_s3_bucket_versioning" "guardduty" {
+  bucket = aws_s3_bucket.guardduty.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "guardduty" {
+  bucket = aws_s3_bucket.guardduty.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.guardduty.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "guardduty" {
+  bucket = aws_s3_bucket.guardduty.id
+
+  rule {
+    id     = "expire"
+    status = "Enabled"
+    filter {
+      prefix = "/"
+    }
+
+    transition {
+      storage_class = "INTELLIGENT_TIERING"
+    }
+    noncurrent_version_transition {
+      storage_class = "INTELLIGENT_TIERING"
+    }
+    expiration {
+      days = 2190
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 2190
+    }
+  }
+}
+
+module "guardduty_bucket_config" {
+  source = "github.com/18F/identity-terraform//s3_config?ref=7445ae915936990bc52109087d92e5f9564f0f7c"
+
+  bucket_name_prefix   = var.bucket_name_prefix
+  bucket_name          = "guardduty"
+  region               = var.region
+  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
+}
+
+# CloudWatch Event Logging
+
+resource "aws_cloudwatch_event_rule" "guardduty_findings" {
+  name        = "GuardDutyFindings-${var.region}"
+  description = "Send GuardDuty findings in ${var.region} to CW Log Groups"
+  tags = {
+    "Name" = "GuardDutyFindings-${var.region}"
+  }
+
+  event_pattern = <<EOM
+{
+  "source" : [
+    "aws.guardduty"
+  ],
+  "detail-type" : [
+    "GuardDuty Finding"
+  ]
+}
+EOM
+}
+
+resource "aws_cloudwatch_log_group" "guardduty_findings" {
+  name              = "/aws/events/gdfindings"
+  retention_in_days = 365
+  tags = {
+    "Name" = "GuardDuty findings"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "guardduty_findings" {
+  rule      = aws_cloudwatch_event_rule.guardduty_findings.name
+  target_id = "GDFindingsToCWLogs"
+  arn       = aws_cloudwatch_log_group.guardduty_findings.arn
+}
+
+data "aws_iam_policy_document" "delivery_events_logs" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:PutLogEventsBatch",
+    ]
+
+    resources = [
+      "arn:aws:logs:*:*:*"
+    ]
+    principals {
+      identifiers = [
+        "delivery.logs.amazonaws.com",
+        "events.amazonaws.com"
+      ]
+      type = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "delivery_events_logs" {
+  policy_document = data.aws_iam_policy_document.delivery_events_logs.json
+  policy_name     = "delivery_events_logs"
+}
