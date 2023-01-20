@@ -273,7 +273,7 @@ module "guardduty_bucket_config" {
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = "guardduty"
   region               = var.region
-  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
+  inventory_bucket_arn = local.inventory_bucket_arn
 }
 
 # CloudWatch Event Logging

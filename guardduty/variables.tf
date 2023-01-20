@@ -16,9 +16,9 @@ locals {
     var.log_bucket_name) : join(".",
     [var.bucket_name_prefix, "s3-access-logs", local.bucket_name_suffix]
   )
-  inventory_bucket = var.inventory_bucket_name != "" ? (
-    var.inventory_bucket_name) : join(".",
-    [var.bucket_name_prefix, "s3-inventory", local.bucket_name_suffix]
+  inventory_bucket_arn = var.inventory_bucket_arn != "" ? (
+    var.inventory_bucket_arn) : join(".",
+    ["arn:aws:s3:::${var.bucket_name_prefix}", "s3-inventory", local.bucket_name_suffix]
   )
 }
 
@@ -63,11 +63,11 @@ EOM
   default     = ""
 }
 
-variable "inventory_bucket_name" {
+variable "inventory_bucket_arn" {
   type        = string
   description = <<EOM
-Override name of the S3 bucket used for S3 Inventory reports.
-Will default to $bucket_name_prefix.s3-inventory.$account_id-$region
+Override ARN of the S3 Inventory reports bucket.
+Defaults to arn:aws:s3:::$bucket_name_prefix.s3-inventory.$account_id-$region
 if not explicitly declared.
 EOM
   default     = ""
