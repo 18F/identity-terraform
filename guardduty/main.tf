@@ -199,10 +199,10 @@ data "aws_iam_policy_document" "guardduty_s3" {
 }
 
 resource "aws_s3_bucket" "guardduty" {
-  bucket = join(".", [
-    "${var.bucket_name_prefix}.guardduty",
+  bucket = var.bucket_name_override == "" ? join(".", [
+    "${var.bucket_name_prefix}.${var.bucket_name}",
     "${data.aws_caller_identity.current.account_id}-${var.region}"
-  ])
+  ]) : var.bucket_name_override
   force_destroy = true
 }
 
@@ -220,7 +220,7 @@ resource "aws_s3_bucket_logging" "guardduty" {
   bucket = aws_s3_bucket.guardduty.id
 
   target_bucket = local.log_bucket
-  target_prefix = "${aws_s3_bucket.guardduty.id}}/"
+  target_prefix = "${aws_s3_bucket.guardduty.id}/"
 }
 
 resource "aws_s3_bucket_versioning" "guardduty" {
@@ -279,10 +279,10 @@ module "guardduty_bucket_config" {
 # CloudWatch Event Logging
 
 resource "aws_cloudwatch_event_rule" "guardduty_findings" {
-  name        = "GuardDutyFindings-${var.region}"
+  name        = "${var.event_rule_prefix}-${var.region}"
   description = "Send GuardDuty findings in ${var.region} to CW Log Groups"
   tags = {
-    "Name" = "GuardDutyFindings-${var.region}"
+    "Name" = "${var.event_rule_prefix}-${var.region}"
   }
 
   event_pattern = <<EOM
@@ -298,16 +298,16 @@ EOM
 }
 
 resource "aws_cloudwatch_log_group" "guardduty_findings" {
-  name              = "/aws/events/gdfindings"
+  name              = var.log_group_name
   retention_in_days = 365
   tags = {
-    "Name" = "GuardDuty findings"
+    "Name" = var.log_group_name
   }
 }
 
 resource "aws_cloudwatch_event_target" "guardduty_findings" {
   rule      = aws_cloudwatch_event_rule.guardduty_findings.name
-  target_id = "GDFindingsToCWLogs"
+  target_id = var.event_target_id
   arn       = aws_cloudwatch_log_group.guardduty_findings.arn
 }
 
