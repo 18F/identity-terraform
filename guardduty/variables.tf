@@ -33,8 +33,8 @@ variable "region" {
 variable "bucket_name" {
   type        = string
   description = <<EOM
-REQUIRED. Second substring in S3 bucket name of
-$bucket_name_prefix.$bucket_name.$account_id-$region
+Second substring in S3 bucket name of
+$bucket_name_prefix.$bucket_name.$account_id-$region.
 EOM
   default     = "guardduty"
 }
@@ -42,21 +42,21 @@ EOM
 variable "bucket_name_prefix" {
   type        = string
   description = <<EOM
-REQUIRED. First substring in S3 bucket name of
-$bucket_name_prefix.$bucket_name.$account_id-$region
+First substring in S3 bucket name of
+$bucket_name_prefix.$bucket_name.$account_id-$region.
 EOM
 }
 
 variable "bucket_name_override" {
-  description = "Set this to override the normal bucket naming schema."
   type        = string
+  description = "Set this to override the normal bucket naming schema."
   default     = ""
 }
 
 variable "log_bucket_name" {
   type        = string
   description = <<EOM
-(OPTIONAL) Override name of the bucket used for S3 logging.
+Override name of the bucket used for S3 logging.
 Will default to $bucket_name_prefix.s3-access-logs.$account_id-$region
 if not explicitly declared.
 EOM
@@ -66,7 +66,7 @@ EOM
 variable "inventory_bucket_name" {
   type        = string
   description = <<EOM
-(OPTIONAL) Override name of the S3 bucket used for S3 Inventory reports.
+Override name of the S3 bucket used for S3 Inventory reports.
 Will default to $bucket_name_prefix.s3-inventory.$account_id-$region
 if not explicitly declared.
 EOM
@@ -106,7 +106,7 @@ EOM
 variable "event_rule_prefix" {
   type        = string
   description = <<EOM
-Prefix string used to name the GuardDuty Findings CloudWatch Event Rule,
+Prefix string used to name the GuardDuty Findings CloudWatch Event Rule
 in the form $event_rule_prefix-$region.
 EOM
   default     = "GuardDutyFindings"
