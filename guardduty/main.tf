@@ -334,5 +334,5 @@ data "aws_iam_policy_document" "delivery_events_logs" {
 
 resource "aws_cloudwatch_log_resource_policy" "delivery_events_logs" {
   policy_document = data.aws_iam_policy_document.delivery_events_logs.json
-  policy_name     = "delivery_events_logs"
+  policy_name     = "cw-rule-log-publishing-policy"
 }
