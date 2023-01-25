@@ -279,10 +279,10 @@ module "guardduty_bucket_config" {
 # CloudWatch Event Logging
 
 resource "aws_cloudwatch_event_rule" "guardduty_findings" {
-  name        = "${var.event_rule_prefix}-${var.region}"
-  description = "Send GuardDuty findings in ${var.region} to CW Log Groups"
+  name        = var.event_rule_name
+  description = "Send GuardDuty findings to CW Log Groups"
   tags = {
-    "Name" = "${var.event_rule_prefix}-${var.region}"
+    "Name" = var.event_rule_name
   }
 
   event_pattern = <<EOM

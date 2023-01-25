@@ -103,12 +103,9 @@ EOM
   default     = false
 }
 
-variable "event_rule_prefix" {
+variable "event_rule_name" {
   type        = string
-  description = <<EOM
-Prefix string used to name the GuardDuty Findings CloudWatch Event Rule
-in the form $event_rule_prefix-$region.
-EOM
+  description = "Name for the GuardDuty Findings CloudWatch Event Rule."
   default     = "GuardDutyFindings"
 }
 
@@ -121,6 +118,6 @@ variable "log_group_name" {
 variable "event_target_id" {
   type        = string
   description = "ID for the Event Target used for CloudWatch Logs."
-  default     = "GDFindingsToCWLogs"
+  default     = "SendToCWLogGroup"
 }
 
