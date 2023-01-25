@@ -301,7 +301,7 @@ resource "aws_cloudwatch_log_group" "guardduty_findings" {
   name              = var.log_group_name
   retention_in_days = 365
   tags = {
-    "Name" = var.log_group_name
+    "Name" = var.event_rule_name
   }
 }
 
