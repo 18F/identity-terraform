@@ -103,15 +103,15 @@ EOM
   default     = false
 }
 
-variable "event_rule_name" {
+variable "cloudwatch_name" {
   type        = string
-  description = "Name for the GuardDuty Findings CloudWatch Event Rule."
+  description = "Name for the GuardDuty Findings CloudWatch Target/Event/Rule."
   default     = "GuardDutyFindings"
 }
 
-variable "log_group_name" {
+variable "log_group_id" {
   type        = string
-  description = "Name of the CloudWatch Log Group to log GuardDuty findings."
+  description = "ID of the CloudWatch Log Group to log GuardDuty findings."
   default     = "/aws/events/gdfindings"
 }
 
@@ -121,3 +121,8 @@ variable "event_target_id" {
   default     = "SendToCWLogGroup"
 }
 
+variable "publishing_policy_name" {
+  type        = string
+  description = "Name of the CloudWatch Log Resource Policy used for log delivery."
+  default     = "cw-rule-log-publishing-policy"
+}

@@ -279,10 +279,10 @@ module "guardduty_bucket_config" {
 # CloudWatch Event Logging
 
 resource "aws_cloudwatch_event_rule" "guardduty_findings" {
-  name        = var.event_rule_name
+  name        = var.cloudwatch_name
   description = "Send GuardDuty findings to CW Log Groups"
   tags = {
-    "Name" = var.event_rule_name
+    "Name" = var.cloudwatch_name
   }
 
   event_pattern = <<EOM
@@ -298,10 +298,10 @@ EOM
 }
 
 resource "aws_cloudwatch_log_group" "guardduty_findings" {
-  name              = var.log_group_name
+  name              = var.log_group_id
   retention_in_days = 365
   tags = {
-    "Name" = var.event_rule_name
+    "Name" = var.cloudwatch_name
   }
 }
 
@@ -334,5 +334,5 @@ data "aws_iam_policy_document" "delivery_events_logs" {
 
 resource "aws_cloudwatch_log_resource_policy" "delivery_events_logs" {
   policy_document = data.aws_iam_policy_document.delivery_events_logs.json
-  policy_name     = "cw-rule-log-publishing-policy"
+  policy_name     = var.publishing_policy_name
 }
