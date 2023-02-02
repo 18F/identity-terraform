@@ -912,12 +912,13 @@ resource "aws_lambda_function" "event_processor" {
     ]
   }
 
-  function_name = local.event_processor_lambda_name
-  description   = "18F/identity-lambda-functions: KMS Log Event Processor"
-  role          = aws_iam_role.event_processor.arn
-  handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
-  runtime       = "ruby2.7"
-  timeout       = 120 # seconds
+  function_name                  = local.event_processor_lambda_name
+  description                    = "18F/identity-lambda-functions: KMS Log Event Processor"
+  role                           = aws_iam_role.event_processor.arn
+  handler                        = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
+  runtime                        = "ruby2.7"
+  timeout                        = 120 # seconds
+  reserved_concurrent_executions = var.kmslog_lambda_reserved_concurrent_executions ? var.kmslog_lambda_reserved_concurrent_executions : "-1"
 
   environment {
     variables = {
