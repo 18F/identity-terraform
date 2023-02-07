@@ -47,5 +47,21 @@ variable "sli_prefix" {
 
 variable "slis" {
   description = "JSON serialization of SLIs"
-  type        = string
+  type        = map(object({
+    window_days = optional(number)
+    numerator = list(object({
+      namespace = string
+      metric_name = string
+      dimensions = list(map(string))
+      statistic = optional(string)
+      extended_statistic = optional(string)
+    }))
+    denominator = list(object({
+      namespace = string
+      metric_name = string
+      dimensions = list(map(string))
+      statistic = optional(string)
+      extended_statistic = optional(string)
+    }))
+  }))
 }
