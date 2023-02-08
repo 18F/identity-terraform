@@ -11,10 +11,10 @@ os.environ['SLIS'] = ''
 
 # This import relies on our env var insertions above, so can't be reordered
 # autopep8: off
-from windowed_slo import parse_sli_json, create_slis, Cloudwatch, load_balancer_id
+from windowed_slo import parse_sli_json, publish_slis, Cloudwatch
 # autopep8: on
 
-LOAD_BALANCER_ARN = 'arn:aws:elasticloadbalancing:us-west-2:123:loadbalancer/app/login-idp-alb-pretend/1234'
+LOAD_BALANCER_ID = 'app/login-idp-alb-pretend/1234'
 
 
 def get_metric_statistics(metric_name, datapoints_sum):

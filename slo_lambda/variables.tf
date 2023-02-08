@@ -22,7 +22,7 @@ variable "slo_lambda_code" {
 variable "window_days" {
   description = "SLI window in days"
   type        = number
-  default     = 24
+  default     = 28
 }
 
 variable "namespace" {
