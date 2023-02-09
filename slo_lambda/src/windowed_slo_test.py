@@ -61,7 +61,7 @@ def test_simple_sli():
             *get_metric_statistics('HTTPCode_ELB_5XX_Count', 2))
         stubber.add_response(
             *put_metric_data('test-http-200-availability', 1/3))
-        
+
         Cloudwatch.cloudwatch_client = cw
 
         sli_config = {
@@ -190,7 +190,7 @@ def test_multiple_metric_sli():
         slis = parse_sli_json(json.dumps(sli_config), handle_exceptions=False)
         publish_slis(slis, SLI_NAMESPACE, SLI_PREFIX, handle_exceptions=False)
 
-        
+
 def test_sad_config():
     # By default, blithely continue on
     with open('windowed_slo_fixture_sad.json') as f:
@@ -198,7 +198,7 @@ def test_sad_config():
 
     # But internally, know that the config is bad
     with pytest.raises(TypeError) as excinfo:
-        
+
         with open('windowed_slo_fixture_sad.json') as f:
             parse_sli_json(f.read(), handle_exceptions=False)
 
