@@ -20,7 +20,7 @@ variable "slo_lambda_code" {
 }
 
 variable "window_days" {
-  description = "SLI window in days"
+  description = "Global SLI window in days. A four-week window is a good general-purpose interval, based on https://sre.google/workbook/implementing-slos/"
   type        = number
   default     = 28
 }
