@@ -57,50 +57,58 @@
     ]
   },
   "interesting_availability": {
-    "numerator": {
-      "namespace": "test/sli",
-      "metric_name": "InterestingUrisSuccess",
-      "dimensions": [
-        {
-          "Name": "Hostname",
-          "Value": "highly.reliable.foo"
-        }
-      ]
-    },
-    "denominator": {
-      "namespace": "test/sli",
-      "metric_name": "InterestingUrisTotal",
-      "dimensions": [
-        {
-          "Name": "Hostname",
-          "Value": "highly.reliable.foo"
-        }
-      ]
-    }
+    "numerator": [
+      {
+        "namespace": "test/sli",
+        "metric_name": "InterestingUrisSuccess",
+        "dimensions": [
+          {
+            "Name": "Hostname",
+            "Value": "highly.reliable.foo"
+          }
+        ]
+      }
+    ],
+    "denominator": [
+      {
+        "namespace": "test/sli",
+        "metric_name": "InterestingUrisTotal",
+        "dimensions": [
+          {
+            "Name": "Hostname",
+            "Value": "highly.reliable.foo"
+          }
+        ]
+      }
+    ]
   },
   "interesting_latency": {
     "window_days": 30,
-    "numerator": {
-      "namespace": "test/sli",
-      "metric_name": "InterestingUrisSuccessLatency",
-      "extended_statistic": "TC(0.1)",
-      "dimensions": [
-        {
-          "Name": "Hostname",
-          "Value": "highly.reliable.foo"
-        }
-      ]
-    },
-    "denominator": {
-      "namespace": "test/sli",
-      "metric_name": "InterestingUrisSuccessLatency",
-      "statistic": "SampleCount",
-      "dimensions": [
-        {
-          "Name": "Hostname",
-          "Value": "highly.reliable.foo"
-        }
-      ]
-    }
+    "numerator": [
+      {
+        "namespace": "test/sli",
+        "metric_name": "InterestingUrisSuccessLatency",
+        "extended_statistic": "TC(0.1)",
+        "dimensions": [
+          {
+            "Name": "Hostname",
+            "Value": "highly.reliable.foo"
+          }
+        ]
+      }
+    ]    
+    "denominator": [
+      {
+        "namespace": "test/sli",
+        "metric_name": "InterestingUrisSuccessLatency",
+        "statistic": "SampleCount",
+        "dimensions": [
+          {
+            "Name": "Hostname",
+            "Value": "highly.reliable.foo"
+          }
+        ]
+      }
+    ]
   }
 }
