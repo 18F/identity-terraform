@@ -1,17 +1,17 @@
-import datetime
 import os
 import boto3
 import json
 from botocore.stub import Stubber, ANY
+import pytest
 
 os.environ['WINDOW_DAYS'] = '24'
-os.environ['SLI_NAMESPACE'] = 'test/sli'
-os.environ['SLI_PREFIX'] = 'test'
+SLI_NAMESPACE = 'test/sli'
+SLI_PREFIX = 'test'
 os.environ['SLIS'] = ''
 
 # This import relies on our env var insertions above, so can't be reordered
 # autopep8: off
-from windowed_slo import parse_sli_json, publish_slis, Cloudwatch, SLI_NAMESPACE, SLI_PREFIX
+from windowed_slo import parse_sli_json, publish_slis, Cloudwatch
 # autopep8: on
 
 LOAD_BALANCER_ID = 'app/login-idp-alb-pretend/1234'
@@ -66,6 +66,7 @@ def test_simple_sli():
 
         sli_config = {
             "http-200-availability": {
+                'window_days': None,
                 'numerator': [
                     {
                         'namespace': 'AWS/ApplicationELB',
@@ -104,9 +105,8 @@ def test_simple_sli():
         }
 
         # The SLI config is assumed to be json, so convert the dict to json
-        slis = parse_sli_json(json.dumps(sli_config))
-        publish_slis(slis, SLI_NAMESPACE, SLI_PREFIX)
-
+        slis = parse_sli_json(json.dumps(sli_config), handle_exceptions=False)
+        publish_slis(slis, SLI_NAMESPACE, SLI_PREFIX, handle_exceptions=False)
 
 def test_multiple_metric_sli():
     cw = boto3.client('cloudwatch')
@@ -129,6 +129,7 @@ def test_multiple_metric_sli():
 
         sli_config = {
             'all-availability': {
+                'window_days': 24,
                 'numerator': [
                     {
                         'namespace': 'AWS/ApplicationELB',
@@ -164,7 +165,7 @@ def test_multiple_metric_sli():
                 'denominator': [
                                     {
                         'namespace': 'AWS/ApplicationELB',
-                        'metric_name': 'RequestCountRequestCount',
+                        'metric_name': 'RequestCount',
                         'dimensions': [
                             {
                                 'Name': 'LoadBalancer',
@@ -186,5 +187,24 @@ def test_multiple_metric_sli():
             }
         }
         # The SLI config is assumed to be json, so convert the dict to json
-        slis = parse_sli_json(json.dumps(sli_config))
-        publish_slis(slis, SLI_NAMESPACE, SLI_PREFIX)
+        slis = parse_sli_json(json.dumps(sli_config), handle_exceptions=False)
+        publish_slis(slis, SLI_NAMESPACE, SLI_PREFIX, handle_exceptions=False)
+
+        
+def test_sad_config():
+    # By default, blithely continue on
+    with open('windowed_slo_fixture_sad.json') as f:
+        parse_sli_json(f.read())
+
+    # But internally, know that the config is bad
+    with pytest.raises(TypeError) as excinfo:
+        
+        with open('windowed_slo_fixture_sad.json') as f:
+            parse_sli_json(f.read(), handle_exceptions=False)
+
+    assert "unexpected keyword argument 'nomnomnomerator'" in str(excinfo.value)
+
+def test_happy_config():
+    # Ensure we can actually parse
+    with open('windowed_slo_fixture_happy.json') as f:
+        parse_sli_json(f.read(), handle_exceptions=False)
