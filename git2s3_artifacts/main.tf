@@ -122,7 +122,7 @@ resource "aws_s3_bucket_logging" "artifact_bucket" {
 }
 
 module "s3_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=981497a941de179ce72d1a383b2973962c04d4c6"
+  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.artifact_bucket.id
