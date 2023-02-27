@@ -268,7 +268,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "guardduty" {
 }
 
 module "guardduty_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=7445ae915936990bc52109087d92e5f9564f0f7c"
+  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  #source = "../s3_config"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = "guardduty"
