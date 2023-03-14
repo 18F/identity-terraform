@@ -66,23 +66,19 @@ module "ssm" {
       command     = "sudo su -"
       description = "Login and change to root user"
       logging     = false
-    },
-    "tail-cw" = {
-      command     = "sudo tail -f /var/log/cloud-init-output.log"
-      description = "Tail the cloud-init-output logs"
-      logging     = true
+    }
   }
 }
 ```
 
 ## Variables
 
-| Name                    | Type                 | Description                                                              | Required | Default                                                                                                                                                   |
-| -----                   | -----                | -----                                                                    | -----    | -----                                                                                                                                                     |
-| `ssm_doc_map`           | **map(map(string))** | Map of data for SSM documents                                            | YES      | <pre>{<br> 'default' = {<br>  description = 'Login shell'<br>  command   = 'cd ; /bin/bash'<br>  logging   = true<br>  use_root  = true<br> },<br>}</pre> |
-| `session_timeout`       | **number**           | Amount of time (in minutes) of inactivity to allow before a session ends | YES      | 15                                                                                                                                                        |
-| `region`                | **string**           | AWS Region                                                               | YES      |                                                                                                                                                           |
-| `env_name`              | **string**           | Environment name                                                         | YES      |                                                                                                                                                           |
-| `bucket_name_prefix`    | **string**           | First substring in S3 bucket name                                        | YES      |                                                                                                                                                           |
-| `log_bucket_name`       | **string**           | Override name of the bucket used for S3 logging                          | NO       | <blank>                                                                                                                                                   |
-| `inventory_bucket_name` | **string**           | Override name of the S3 bucket used for S3 Inventory reports             | NO       | <blank>                                                                                                                                                   |
+| Name                    | Type                 | Description                                                              | Required | Default                                                                                                                             |
+| -----                   | -----                | -----                                                                    | -----    | -----                                                                                                                               |
+| `ssm_doc_map`           | **map(map(string))** | Map of data for SSM documents                                            | YES      | <pre>{<br> 'default' = {<br>  description = 'Login shell'<br>  command   = 'cd ; /bin/bash'<br>  logging   = true<br> },<br>}</pre> |
+| `session_timeout`       | **number**           | Amount of time (in minutes) of inactivity to allow before a session ends | YES      | 15                                                                                                                                  |
+| `region`                | **string**           | AWS Region                                                               | YES      |                                                                                                                                     |
+| `env_name`              | **string**           | Environment name                                                         | YES      |                                                                                                                                     |
+| `bucket_name_prefix`    | **string**           | First substring in S3 bucket name                                        | YES      |                                                                                                                                     |
+| `log_bucket_name`       | **string**           | Override name of the bucket used for S3 logging                          | NO       | <blank>                                                                                                                             |
+| `inventory_bucket_name` | **string**           | Override name of the S3 bucket used for S3 Inventory reports             | NO       | <blank>                                                                                                                             |
