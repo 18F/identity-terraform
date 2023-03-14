@@ -24,7 +24,7 @@ EOM
   type        = map(any)
   default = {
     "default" = {
-      description = "Login shell"
+      description = "Verify host uptime"
       command     = ["uptime"]
       logging     = false
       parameters  = []
