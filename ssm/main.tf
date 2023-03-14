@@ -296,7 +296,7 @@ inputs:
       type: ${ssm_parameter.type}
       default: ${ssm_parameter.default}
       description: ${ssm_parameter.description}
-      %{if ssm_parameter.pattern}allowedPattern: ${ssm_parameter.pattern}%{endif}
+      allowedPattern: ${ssm_parameter.pattern}
     %{endfor}
   properties:
     linux:
