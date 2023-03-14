@@ -238,7 +238,7 @@ inputs:
   %{if each.value["use_root"] == "false"}runAsEnabled: true
   runAsDefaultUser: ''%{endif}
   shellProfile:
-    linux: 'trap "exit 0" INT TERM; ${each.value["command"]} ; exit'
+    linux: 'trap exit INT TERM; ${each.value["command"]}%{if each.value["exit"]}; exit%{endif}'
   DOC
 }
 
