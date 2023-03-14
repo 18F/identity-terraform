@@ -235,8 +235,8 @@ inputs:
   cloudWatchEncryptionEnabled: false%{endif}
   kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-  %{if each.value["use_root"] == "false"}runAsEnabled: true
-  runAsDefaultUser: ''%{endif}
+  runAsEnabled: true
+  runAsDefaultUser: ''
   shellProfile:
     linux: 'trap "exit 0" INT TERM; ${each.value["command"]} ; exit'
   DOC
@@ -272,9 +272,42 @@ mainSteps:
   DOC
 }
 
+# SSM InteractiveCommands Session Docs
+resource "aws_ssm_document" "ssm_interactive_cmd" {
+  for_each = var.ssm_interactive_cmd_map
+  lifecycle { create_before_destroy = false }
+  name            = "${var.env_name}-ssm-document-${each.key}"
+  document_type   = "Session"
+  target_type     = "/AWS::EC2::Instance"
+  document_format = "YAML"
+  content         = <<DOC
+---
+schemaVersion: '1.0'
+description: ${each.value["description"]}
+sessionType: InteractiveCommands
+inputs:
+  s3EncryptionEnabled: false
+  cloudWatchEncryptionEnabled: false
+  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
+  idleSessionTimeout: ${var.session_timeout}
+parameters:
+  %{for ssm_parameter in each.value["parameters"]}
+  ${ssm_parameter.name}:
+    type: ${ssm_parameter.type}
+    default: ${ssm_parameter.default}
+    description: ${ssm_parameter.description}
+    allowedPattern: ${ssm_parameter.pattern}
+  %{endfor}
+properties:
+  linux:
+    %{for ssm_cmd in each.value["command"]}commands: "${ssm_cmd}"%{endfor}
+    runAsElevated: true
+  DOC
+}
+
 # log when SSM commands are used, even if session data is not
 resource "aws_cloudwatch_event_rule" "ssm_cmd" {
-  for_each = var.ssm_doc_map
+  for_each = local.all_docs_and_cmds
 
   name        = "${var.env_name}-ssm-cmd-${each.key}"
   description = "Capture when SSM command '${each.key}' used in ${var.env_name}"
@@ -313,7 +346,7 @@ resource "aws_cloudwatch_log_group" "ssm_cmd_logs" {
 }
 
 resource "aws_cloudwatch_event_target" "ssm_cmds" {
-  for_each = var.ssm_doc_map
+  for_each = local.all_docs_and_cmds
 
   rule      = aws_cloudwatch_event_rule.ssm_cmd[each.key].name
   target_id = "${var.env_name}_SSMCmd_${each.key}"

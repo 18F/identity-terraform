@@ -1,8 +1,8 @@
 variable "ssm_doc_map" {
   description = <<EOM
-REQUIRED. Map of data for SSM Documents. Each must include the document name,
-description, command(s) to run at login, whether to log the commands/output from the
-given session/document, and whether to run specifically as root (vs. a Linux user).
+REQUIRED. Map of data for SSM Session Documents. Each must include the document name,
+description, command(s) to run at login, and whether to log the commands/output
+from the given session/document.
 EOM
   type        = map(map(string))
   default = {
@@ -10,24 +10,39 @@ EOM
       description = "Login shell"
       command     = "cd ; /bin/bash"
       logging     = false
-      use_root    = false
+      exit        = true
     },
   }
 }
 
 variable "ssm_cmd_doc_map" {
   description = <<EOM
-REQUIRED. Map of data for SSM Documents. Each must include the document name,
-description, command(s) to run at login, whether to log the commands/output from the
-given session/document, and whether to run specifically as root (vs. a Linux user).
+REQUIRED. Map of data for SSM Command Documents. Each must include the document name,
+description, command to run, any parameter(s) used to configure said command, and
+whether to log the commands/output from the given session/document.
 EOM
   type        = map(any)
   default = {
     "default" = {
-      description = "Login shell"
+      description = "Verify host uptime"
       command     = ["uptime"]
       logging     = false
-      use_root    = false
+      parameters  = []
+    },
+  }
+}
+
+variable "ssm_interactive_cmd_map" {
+  description = <<EOM
+REQUIRED. Map of data for SSM InteractiveCommand Session Documents. Each must
+include the document name, description, command to run, and any parameter(s) used
+to configure said command.
+EOM
+  type        = map(any)
+  default = {
+    "default" = {
+      description = "Check network interface configuration"
+      command     = ["ifconfig"]
       parameters  = []
     },
   }
@@ -91,4 +106,10 @@ locals {
   inventory_bucket = var.inventory_bucket_name != "" ? var.inventory_bucket_name : join(".",
     [var.bucket_name_prefix, "s3-inventory", local.bucket_name_suffix]
   )
+
+  all_docs_and_cmds = toset(compact(flatten([
+    keys(var.ssm_doc_map),
+    keys(var.ssm_interactive_cmd_map),
+    keys(var.ssm_cmd_doc_map)
+  ])))
 }
