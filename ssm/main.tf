@@ -238,7 +238,7 @@ inputs:
   runAsEnabled: true
   runAsDefaultUser: ''
   shellProfile:
-    linux: 'trap "exit 0" INT TERM; ${each.value["command"]} ; exit'
+    linux: 'trap "exit 0" 1 2 3 15 20; ${each.value["command"]} ; exit'
   DOC
 }
 
@@ -291,16 +291,16 @@ inputs:
   kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
 parameters:
-%{for ssm_parameter in each.value["parameters"]}
-${ssm_parameter.name}:
-  type: ${ssm_parameter.type}
-  default: ${ssm_parameter.default}
-  description: ${ssm_parameter.description}
-  allowedPattern: ${ssm_parameter.pattern}
-%{endfor}
+  %{for ssm_parameter in each.value["parameters"]}
+  ${ssm_parameter.name}:
+    type: ${ssm_parameter.type}
+    default: ${ssm_parameter.default}
+    description: ${ssm_parameter.description}
+    allowedPattern: ${ssm_parameter.pattern}
+  %{endfor}
 properties:
   linux:
-    commands: ${each.value["command"]}
+    %{for ssm_cmd in each.value["command"]}commands: "${ssm_cmd}"%{endfor}
     runAsElevated: true
   DOC
 }
