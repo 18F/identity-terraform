@@ -238,7 +238,7 @@ inputs:
   runAsEnabled: true
   runAsDefaultUser: ''
   shellProfile:
-    linux: 'trap "exit 0" 1 2 3 15 20; ${each.value["command"]} ; exit'
+    linux: 'trap exit 1 2 3 15 20; ${each.value["command"]} ; exit'
   DOC
 }
 
