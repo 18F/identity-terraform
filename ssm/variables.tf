@@ -35,6 +35,22 @@ EOM
   }
 }
 
+variable "ssm_interactive_cmd_map" {
+  description = <<EOM
+REQUIRED. Map of data for SSM InteractiveCommand Session Documents. Each must
+include the document name, description, command to run, and any parameter(s) used
+to configure said command.
+EOM
+  type        = map(any)
+  default = {
+    "default" = {
+      description = "Check network interface configuration"
+      command     = ["ifconfig"]
+      parameters  = []
+    },
+  }
+}
+
 variable "session_timeout" {
   description = <<EOM
 REQUIRED. Amount of time (in minutes) of inactivity
@@ -93,4 +109,10 @@ locals {
   inventory_bucket = var.inventory_bucket_name != "" ? var.inventory_bucket_name : join(".",
     [var.bucket_name_prefix, "s3-inventory", local.bucket_name_suffix]
   )
+
+  all_docs_and_cmds = toset(compact(flatten([
+    keys(var.ssm_doc_map),
+    keys(var.ssm_interactive_cmd_map),
+    keys(var.ssm_cmd_doc_map)
+  ])))
 }
