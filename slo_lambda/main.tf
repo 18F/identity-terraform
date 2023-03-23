@@ -126,8 +126,6 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_windowed_slo" {
 }
 
 resource "aws_cloudwatch_dashboard" "sli" {
-  for_each = var.slis
-
   dashboard_name = "${var.env_name}-sli"
   dashboard_body = jsonencode({
     "widgets" : [for k, v in var.slis :
