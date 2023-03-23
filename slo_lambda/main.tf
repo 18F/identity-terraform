@@ -74,6 +74,10 @@ module "lambda_zip" {
   zip_filename         = var.slo_lambda_code
 }
 
+locals {
+  namespace = var.namespace == "" ? "${var.env_name}/sli" : var.namespace
+}
+
 # Ignore missing XRay warning
 # tfsec:ignore:aws-lambda-enable-tracing
 resource "aws_lambda_function" "windowed_slo" {
@@ -91,7 +95,7 @@ resource "aws_lambda_function" "windowed_slo" {
   environment {
     variables = {
       WINDOW_DAYS       = var.window_days
-      SLI_NAMESPACE     = var.namespace == "" ? "${var.env_name}/sli" : var.namespace
+      SLI_NAMESPACE     = local.namespace
       LOAD_BALANCER_ARN = var.load_balancer_arn
       SLI_PREFIX        = var.sli_prefix
       SLIS              = jsonencode(var.slis)
@@ -119,4 +123,30 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_windowed_slo" {
   function_name = aws_lambda_function.windowed_slo.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.every_one_day.arn
+}
+
+resource "aws_cloudwatch_dashboard" "sli" {
+  for_each = var.slis
+
+  dashboard_name = "${var.env_name}-sli"
+  dashboard_body = jsonencode({
+    "widgets" : [for k, v in var.slis :
+      {
+        "type" : "metric"
+        "width" : 24
+        "height" : 9
+        "properties" : {
+          "view" : "timeSeries"
+          "stacked" : false
+          "metrics" : [
+            [local.namespace, "${var.sli_prefix}-${k}"]
+          ]
+          "region" : data.aws_region.current.name
+          "title" : "${v.description != null ? v.description : k} over last ${var.window_days} days"
+          "stat": "Average"
+          "period" : 24 * 60 * 60
+        }
+      }
+    ]
+  })
 }
