@@ -18,6 +18,7 @@ def lambda_handler(event, context):
     url = parameter['Parameter']['Value']
     eventmsg = event['Records'][0]['Sns']['Message']
     blocks = None
+    slack_handles = ''
     try:
       data = json.loads(eventmsg)
       if 'detailType' in data and data['detailType'] == 'CodePipeline Pipeline Execution State Change':
@@ -39,9 +40,10 @@ def lambda_handler(event, context):
         except:
           formatted_time = data["StateChangeTime"]
 
-        match = re.search(r'Runbook: (https://\S+)', data["AlarmDescription"])
-        if match:
-          runbook_url = match.group(1)
+        handle_match = re.search(r'Notifying: (@[\w\-]+ )+', data["AlarmDescription"])
+        runbook_match = re.search(r'Runbook: (https://\S+)', data["AlarmDescription"])
+        if runbook_match:
+          runbook_url = runbook_match.group(1)
 
           blocks[0]["accessory"] = {
             "type": "button",
@@ -56,15 +58,25 @@ def lambda_handler(event, context):
           }
 
           description_no_runbook = data["AlarmDescription"].split('Runbook:')[0]
+          if handle_match:
+            description_no_runbook = description_no_runbook.split('Notifying:')[0]
+          
           blocks[0]["text"]["text"] += f'\n{description_no_runbook}'
         else:
+          if handle_match:
+            alarm_description = data["AlarmDescription"].split('Notifying:')[0]
+          else:
+            alarm_description = data["AlarmDescription"]
+
           blocks.append({
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": data["AlarmDescription"],
+              "text": alarm_description,
             },
           })
+          if handle_match:
+            blocks[0]["text"]["text"] += f'\n{slack_handles}'
 
         blocks.append({
           "type": "section",
