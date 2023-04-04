@@ -95,6 +95,7 @@ locals {
   ct_processor_lambda_name    = "${var.env_name}-cloudtrail-kms"
   cw_processor_lambda_name    = "${var.env_name}-cloudwatch-kms"
   event_processor_lambda_name = "${var.env_name}-kmslog-event-processor"
+  slack_processor_lambda_name = "${var.env_name}-kms-slack-batch-processor"
 }
 
 # create cmk for kms logging solution
@@ -165,10 +166,15 @@ PATTERN
 
 }
 
-resource "aws_cloudwatch_event_target" "unmatched" {
-  rule      = aws_cloudwatch_event_rule.unmatched.name
-  target_id = "${var.env_name}-slack"
-  arn       = var.sns_topic_dead_letter_arn
+
+resource "aws_cloudwatch_event_target" "unmatched_sqs" {
+  rule = aws_cloudwatch_event_rule.unmatched.name
+  arn  = aws_sqs_queue.unmatched.arn
+}
+
+resource "aws_cloudwatch_event_target" "unmatched_log_group" {
+  rule = aws_cloudwatch_event_rule.unmatched.name
+  arn  = aws_cloudwatch_log_group.unmatched.arn
 }
 
 # dynamodb table for event correlation
