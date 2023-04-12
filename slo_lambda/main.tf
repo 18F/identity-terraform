@@ -141,11 +141,11 @@ resource "aws_cloudwatch_dashboard" "sli" {
           ]
           "region" : data.aws_region.current.name
           "title" : "${v.description != null ? v.description : k} over last ${var.window_days} days"
-          "stat": "Average"
+          "stat" : "Average"
           "period" : 24 * 60 * 60
-          "yAxis": {
-            "left": {
-              "showUnits": false
+          "yAxis" : {
+            "left" : {
+              "showUnits" : false
             }
           }
         }

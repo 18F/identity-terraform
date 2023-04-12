@@ -214,8 +214,8 @@ resource "aws_s3_bucket_public_access_block" "inventory" {
 }
 
 module "s3_config" {
-  for_each   = var.remote_state_enabled == 1 ? toset(["s3-access-logs", "tf-state"]) : toset(["s3-access-logs"])
-  source     = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  for_each = var.remote_state_enabled == 1 ? toset(["s3-access-logs", "tf-state"]) : toset(["s3-access-logs"])
+  source   = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
   #source = "../s3_config"
   depends_on = [aws_s3_bucket.s3-access-logs]
 

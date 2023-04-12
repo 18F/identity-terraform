@@ -24,6 +24,12 @@ variable "min_size" {
   default     = -1
 }
 
+variable "zero_size" {
+  description = "Desired capacity to spin down to with the autozero schedules."
+  type        = number
+  default     = 0
+}
+
 variable "normal_desired" {
   description = <<EOM
 Default Desired capacity for the Auto Scaling Group.

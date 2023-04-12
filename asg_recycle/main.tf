@@ -37,10 +37,10 @@ resource "aws_autoscaling_schedule" "recycle_spindown" {
   autoscaling_group_name = var.asg_name
 }
 
-# Spin down to 0 hosts, on a regular schedule. Depending upon selection,
+# Spin down to var.zero_size hosts, on a regular schedule. Depending upon selection,
 # do this either daily after working hours, weekly (same time), or nightly.
 # Follow a similar schedule to the recycle one above.
-# Ensure that ASG can spin down/up, instead of capping min/max at 0 hosts.
+# Ensure that ASG can spin down/up, instead of capping min/max at var.zero_size hosts.
 
 resource "aws_autoscaling_schedule" "autozero_spinup" {
   for_each = toset(local.schedule["autozero_up"])
@@ -50,8 +50,8 @@ resource "aws_autoscaling_schedule" "autozero_spinup" {
     index(local.schedule["autozero_up"], each.key)
   ])
   min_size = var.normal_min
-  max_size = var.normal_max == 0 ? (
-  var.normal_min == 0 ? 1 : var.normal_min) : var.normal_max
+  max_size = var.normal_max == var.zero_size ? (
+  var.normal_min == var.zero_size ? 1 : var.normal_min) : var.normal_max
   desired_capacity = (
     var.normal_desired > var.normal_max || var.normal_desired < var.normal_min ? (
     var.normal_max) : var.normal_desired
@@ -68,9 +68,9 @@ resource "aws_autoscaling_schedule" "autozero_spindown" {
     "auto-zero.spindown",
     index(local.schedule["autozero_down"], each.key)
   ])
-  min_size               = 0
+  min_size               = var.zero_size
   max_size               = var.max_size
-  desired_capacity       = 0
+  desired_capacity       = var.zero_size
   recurrence             = each.key
   time_zone              = var.time_zone
   autoscaling_group_name = var.asg_name
