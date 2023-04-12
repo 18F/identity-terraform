@@ -3,7 +3,7 @@
 This Terraform module is used to create automatic tasks that 'recycle' and/or 'zero out' the EC2 instances in an Auto Scaling Group (ASG), via a set of Scheduled Actions applied to the group. These tasks are defined thusly:
 
 - ***Recycling*** involves doubling the Desired count of an ASG, allowing new instances to spin up, and then resetting the Desired count back to its original value after a specific number of minutes.
-- ***Zeroing out*** involves setting the Desired count of an ASG to 0 at a specified time, which is useful for spinning down hosts on a daily/nightly/weekly/etc. basis when they will not be in use.
+- ***Zeroing out*** involves setting the Desired count of an ASG to 0 (or whatever the value of `var.zero_size` is) at a specified time, which is useful for spinning down hosts on a daily/nightly/weekly/etc. basis when they will not need to be in use.
 
 Since the goal of these Scheduled Actions is to replace older EC2 instances with newer ones, this module *only* works on ASGs that use an `OldestInstance` termination policy.
 
@@ -11,7 +11,7 @@ Since the goal of these Scheduled Actions is to replace older EC2 instances with
 
 Within `schedule.tf` is a local variable, `rotation_schedules`, which is a map of predefined schedules for recycling and/or zeroing out hosts, based on common scaling needs for ASGs:
 
-- `*zero` schedules define how frequently (if at all) 'zero out' actions are run; the actions they create will spin up instances at 0500 and spin them down to 0 at 1600
+- `*zero` schedules define how frequently (if at all) 'zero out' actions are run; the actions they create will spin up instances at 0500 and spin them down to `var.zero_size` at 1700
 - `norecycle` schedules do not create 'recycle' actions, regardless of whether or not 'zero out' actions are also created
 - `normal` schedules create 4 'recycle' actions every day (at 0500 / 1100 / 1700 / 2300)
 - `business` schedules create a single 'recycle' action each weekday (at 1700)
@@ -94,10 +94,13 @@ module "migration_recycle" {
 | Name                         | Type    | Description                                                                                                                           | Required | Default            |
 | ----                         | ----    | -----------                                                                                                                           | -------- | -------            |
 | `asg_name`                   | string  | Name of the Auto Scaling Group to apply scheduled actions to                                                                          | YES      | N/A                |
-| `normal_desired_capacity`    | number  | Default Desired capacity for the Auto Scaling Group                                                                                   | YES      | N/A                |
 | `override_spindown_capacity` | number  | Set a specific number of instances for spindown instead of `normal_desired_capacity`                                                  | NO       | -1                 |
 | `max_size`                   | number  | Default maximum capacity for the Auto Scaling Group                                                                                   | NO       | -1                 |
 | `min_size`                   | number  | Default minimum capacity for the Auto Scaling Group                                                                                   | NO       | -1                 |
+| `zero_size`                  | number  | Desired capacity to spin down to with the autozero schedules                                                                          | NO       | 0                  |
+| `normal_desired`             | number  | Default Desired capacity for the Auto Scaling Group                                                                                   | YES      | N/A                |
+| `normal_max`                 | number  | Normal (post-autozero) maximum capacity for the Auto Scaling Group                                                                    | YES      | N/A                |
+| `normal_min`                 | number  | Normal (post-autozero) minimum capacity for the Auto Scaling Group                                                                    | YES      | N/A                |
 | `spinup_mult_factor`         | number  | Multiplier for `normal_desired_capacity` to calculate Desired capacity (normal x mult) for the `auto-recycle.spinup` scheduled action | NO       | 2                  |
 | `time_zone`                  | string  | IANA time zone to use with cron schedules (uses UTC by default)                                                                       | NO       | Etc/UTC            |
 | `scale_schedule`             | string  | Name of a block in `local.rotation_schedules` or `var.custom_schedule` with `cron` schedules for the associated Scheduled Actions     | NO       | `nozero_norecycle` |
