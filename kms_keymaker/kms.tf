@@ -75,6 +75,6 @@ resource "aws_kms_key" "login-dot-gov-keymaker-multi-region" {
 
 resource "aws_kms_alias" "login-dot-gov-keymaker-multi-region" {
   name          = "alias/${var.env_name}-login-dot-gov-keymaker-multi-region"
-  target_key_id = aws_kms_key.login-dot-gov-keymaker.key_id
+  target_key_id = aws_kms_key.login-dot-gov-keymaker-multi-region.key_id
 }
 
