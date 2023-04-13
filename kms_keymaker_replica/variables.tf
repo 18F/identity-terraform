@@ -11,7 +11,6 @@ variable "sqs_queue_arn" {
   description = "ARN of the SQS queue used as the CloudWatch event target."
 }
 
-variable "enable_multi_region" {
-  description = "boolean to enable multi-region kms key"
-  default     = false
+variable "primary_key_arn" {
+  description = "ARN of the multi-region kms key."
 }
