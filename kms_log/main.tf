@@ -573,17 +573,15 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
 
 #lambda functions
 resource "aws_lambda_function" "cloudtrail_processor" {
-  s3_bucket = data.aws_s3_bucket.lambda.id
-  s3_key    = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
-
   lifecycle {
     ignore_changes = [
       s3_key
     ]
   }
 
+  filename      = var.lambda_kms_ct_processor_zip
   function_name = local.ct_processor_lambda_name
-  description   = "18F/identity-lambda-functions: KMS CT Log Processor"
+  description   = "KMS CT Log Processor"
   role          = aws_iam_role.cloudtrail_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
   runtime       = "ruby2.7"
@@ -601,7 +599,6 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   }
 
   tags = {
-    source_repo = "https://github.com/18F/identity-lambda-functions"
     environment = var.env_name
   }
 }
@@ -762,17 +759,10 @@ resource "aws_iam_role_policy" "ctprocessor_sqs" {
 }
 
 resource "aws_lambda_function" "cloudwatch_processor" {
-  s3_bucket = data.aws_s3_bucket.lambda.id
-  s3_key    = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
 
-  lifecycle {
-    ignore_changes = [
-      s3_key
-    ]
-  }
-
+  filename      = var.lambda_kms_cw_processor_zip
   function_name = local.cw_processor_lambda_name
-  description   = "18F/identity-lambda-functions: KMS CW Log Processor"
+  description   = "KMS CW Log Processor"
   role          = aws_iam_role.cloudwatch_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
   runtime       = "ruby2.7"
@@ -789,7 +779,6 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   }
 
   tags = {
-    source_repo = "https://github.com/18F/identity-lambda-functions"
     environment = var.env_name
   }
 }
@@ -905,17 +894,9 @@ resource "aws_iam_role_policy" "cwprocessor_kinesis" {
 
 # lambda for creating cloudwatch metrics and events
 resource "aws_lambda_function" "event_processor" {
-  s3_bucket = data.aws_s3_bucket.lambda.id
-  s3_key    = "circleci/identity-lambda-functions/${var.lambda_identity_lambda_functions_gitrev}.zip"
-
-  lifecycle {
-    ignore_changes = [
-      s3_key
-    ]
-  }
-
+  filename      = var.lambda_kms_event_processor_zip
   function_name = local.event_processor_lambda_name
-  description   = "18F/identity-lambda-functions: KMS Log Event Processor"
+  description   = "KMS Log Event Processor"
   role          = aws_iam_role.event_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
   runtime       = "ruby2.7"
@@ -930,7 +911,6 @@ resource "aws_lambda_function" "event_processor" {
   }
 
   tags = {
-    source_repo = "https://github.com/18F/identity-lambda-functions"
     environment = var.env_name
   }
 }
