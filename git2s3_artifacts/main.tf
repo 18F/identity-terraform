@@ -91,10 +91,21 @@ resource "aws_s3_bucket" "artifact_bucket" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "artifact_bucket" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "artifact_bucket" {
   bucket = aws_s3_bucket.artifact_bucket.id
   acl    = "private"
+
+  depends_on = [aws_s3_bucket_ownership_controls.artifact_bucket]
 }
+
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket" {
   bucket = aws_s3_bucket.artifact_bucket.id

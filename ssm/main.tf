@@ -102,9 +102,19 @@ resource "aws_s3_bucket_versioning" "ssm_logs" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "ssm_logs" {
+  bucket = aws_s3_bucket.ssm_logs.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "ssm_logs" {
   bucket = aws_s3_bucket.ssm_logs.id
   acl    = "private"
+
+  depends_on = [aws_s3_bucket_ownership_controls.ssm_logs]
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {

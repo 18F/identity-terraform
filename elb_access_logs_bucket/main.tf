@@ -62,9 +62,19 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "logs" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "logs" {
+  bucket = aws_s3_bucket.logs.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "logs" {
   bucket = aws_s3_bucket.logs.id
   acl    = "log-delivery-write"
+
+  depends_on = [aws_s3_bucket_ownership_controls.logs]
 }
 
 resource "aws_s3_bucket_policy" "logs" {

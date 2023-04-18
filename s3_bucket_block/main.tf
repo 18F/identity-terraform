@@ -44,10 +44,21 @@ resource "aws_s3_bucket" "bucket" {
   force_destroy = lookup(each.value, "force_destroy", true)
 }
 
+resource "aws_s3_bucket_ownership_controls" "bucket" {
+  for_each = var.bucket_data
+  bucket   = aws_s3_bucket.bucket[each.key]
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "bucket" {
   for_each = var.bucket_data
   bucket   = aws_s3_bucket.bucket[each.key]
   acl      = lookup(each.value, "acl", "private")
+
+  depends_on = [aws_s3_bucket_ownership_controls.bucket[each.key]]
 }
 
 resource "aws_s3_bucket_policy" "bucket" {
