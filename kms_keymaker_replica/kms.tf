@@ -55,7 +55,7 @@ data "aws_iam_policy_document" "kms" {
   }
 }
 
-resource "aws_kms_replica_key" "login-dot-gov-keymaker-multi-region-replica" {
+resource "aws_kms_replica_key" "login_dot_gov_keymaker_multi_region_replica" {
   description         = "${var.env_name}-login-dot-gov-keymaker-multi-region"
   policy              = data.aws_iam_policy_document.kms.json
   primary_key_arn     = var.primary_key_arn
