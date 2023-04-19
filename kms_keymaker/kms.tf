@@ -73,7 +73,7 @@ resource "aws_kms_key" "login_dot_gov_keymaker_multi_region" {
   policy              = data.aws_iam_policy_document.kms.json
 }
 
-resource "aws_kms_alias" "login-dot-gov-keymaker-multi-region" {
+resource "aws_kms_alias" "login_dot_gov_keymaker_multi_region" {
   name          = "alias/${var.env_name}-login-dot-gov-keymaker-multi-region"
   target_key_id = aws_kms_key.login-dot-gov-keymaker-multi-region.key_id
 }
