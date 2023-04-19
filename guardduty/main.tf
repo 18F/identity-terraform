@@ -206,11 +206,6 @@ resource "aws_s3_bucket" "guardduty" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "guardduty" {
-  bucket = aws_s3_bucket.guardduty.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_ownership_controls" "guardduty" {
   bucket = aws_s3_bucket.guardduty.id
 
