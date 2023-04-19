@@ -7,15 +7,18 @@ These resources were, previously, all included within `kms_log` in a more monoli
 ## Example
 
 ```hcl
-module "kms_keymaker_uw2" {
-  source = "github.com/18F/identity-terraform//kms_keymaker?ref=main"
+  module "kms_keymaker_replica_ue1" {
+  source = "github.com/18F/identity-terraform//kms_keymaker_replica?ref=main"
 
+  providers = {
+    aws = aws.use1
+  }
+  
   env_name        = "testing"
   ec2_kms_arns    = local.kms_arns
   sqs_queue_arn   = module.kms_logging.kms-ct-events-queue
   primary_key_arn = module.kms_keymaker_uw2.multi_region_primary_key_arn
 }
-```
 
 ## Variables
 
