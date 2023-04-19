@@ -58,7 +58,7 @@ resource "aws_s3_bucket_acl" "bucket" {
   bucket   = aws_s3_bucket.bucket[each.key]
   acl      = lookup(each.value, "acl", "private")
 
-  depends_on = [aws_s3_bucket_ownership_controls.bucket[each.key]]
+  depends_on = [aws_s3_bucket_ownership_controls.bucket]
 }
 
 resource "aws_s3_bucket_policy" "bucket" {

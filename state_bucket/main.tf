@@ -178,7 +178,7 @@ resource "aws_s3_bucket_acl" "tf-state" {
   bucket = data.aws_s3_bucket.tf-state[count.index].id
   acl    = "private"
 
-  depends_on = [aws_s3_bucket_ownership_controls.tf-state[count.index]]
+  depends_on = [aws_s3_bucket_ownership_controls.tf-state]
 }
 
 resource "aws_s3_bucket_logging" "tf-state" {
