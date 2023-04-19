@@ -1,4 +1,4 @@
-# `kms_keymaker_multiregion`
+# `kms_keymaker_multiregion_primary`
 
 This Terraform module will generate multiregion KMS keys + aliases for use by the Login.gov IdP application, along with a CloudWatch event monitor, and its target (an SNS topic/subscription). It is best utilized alongside the `kms_log` module, which creates the SQS queue (whose ARN is a required variable in this module) that SNS sends messages to.
 
