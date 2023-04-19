@@ -206,9 +206,19 @@ resource "aws_s3_bucket" "guardduty" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_ownership_controls" "guardduty" {
+  bucket = aws_s3_bucket.guardduty.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "guardduty" {
   bucket = aws_s3_bucket.guardduty.id
   acl    = "private"
+
+  depends_on = [aws_s3_bucket_ownership_controls.guardduty]
 }
 
 resource "aws_s3_bucket_policy" "guardduty" {

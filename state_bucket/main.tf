@@ -97,9 +97,19 @@ resource "aws_s3_bucket_versioning" "s3-access-logs" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "s3-access-logs" {
+  bucket = aws_s3_bucket.s3-access-logs.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "s3-access-logs" {
   bucket = aws_s3_bucket.s3-access-logs.id
   acl    = "log-delivery-write"
+
+  depends_on = [aws_s3_bucket_ownership_controls.s3-access-logs]
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
@@ -154,10 +164,21 @@ resource "aws_s3_bucket_versioning" "tf-state" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "tf-state" {
   count  = var.remote_state_enabled
   bucket = data.aws_s3_bucket.tf-state[count.index].id
   acl    = "private"
+
+  depends_on = [aws_s3_bucket_ownership_controls.tf-state]
 }
 
 resource "aws_s3_bucket_logging" "tf-state" {
@@ -214,8 +235,8 @@ resource "aws_s3_bucket_public_access_block" "inventory" {
 }
 
 module "s3_config" {
-  for_each   = var.remote_state_enabled == 1 ? toset(["s3-access-logs", "tf-state"]) : toset(["s3-access-logs"])
-  source     = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  for_each = var.remote_state_enabled == 1 ? toset(["s3-access-logs", "tf-state"]) : toset(["s3-access-logs"])
+  source   = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
   #source = "../s3_config"
   depends_on = [aws_s3_bucket.s3-access-logs]
 
