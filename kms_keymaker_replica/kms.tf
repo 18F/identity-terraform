@@ -61,7 +61,7 @@ resource "aws_kms_replica_key" "login_dot_gov_keymaker_multi_region_replica" {
   primary_key_arn     = var.primary_key_arn
 }
 
-resource "aws_kms_alias" "login-dot-gov-keymaker-alias" {
+resource "aws_kms_alias" "login_dot_gov_keymaker_alias" {
   name          = "alias/${var.env_name}-login-dot-gov-keymaker-multi-region"
   target_key_id = aws_kms_replica_key.login_dot_gov_keymaker_multi_region_replica.key_id
 }
