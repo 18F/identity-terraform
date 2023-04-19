@@ -29,7 +29,7 @@ resource "aws_cloudwatch_event_rule" "decrypt" {
         "resources": {
             "ARN": [
                 "${aws_kms_key.login-dot-gov-keymaker.arn}",
-                "${aws_kms_key.login-dot-gov-keymaker-multi-region.arn}"
+                "${aws_kms_key.login_dot_gov_keymaker_multi_region.arn}"
             ]
         },
         "eventName": [
