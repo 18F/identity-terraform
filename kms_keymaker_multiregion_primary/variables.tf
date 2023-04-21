@@ -1,5 +1,6 @@
 variable "ec2_kms_arns" {
   default     = []
+  type        = list(string)
   description = "ARN(s) of EC2 roles permitted access to KMS"
 }
 
