@@ -9,5 +9,6 @@ variable "env_name" {
 }
 
 variable "sqs_queue_arn" {
+  type        = string
   description = "ARN of the SQS queue used as the CloudWatch event target."
 }
