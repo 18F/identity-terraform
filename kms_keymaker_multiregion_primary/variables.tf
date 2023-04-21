@@ -4,6 +4,7 @@ variable "ec2_kms_arns" {
 }
 
 variable "env_name" {
+  type        = string
   description = "Environment name"
 }
 
