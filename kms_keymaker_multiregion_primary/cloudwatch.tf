@@ -37,5 +37,50 @@ resource "aws_cloudwatch_event_rule" "decrypt" {
     }
 }
 PATTERN
+}
 
+resource "aws_cloudwatch_event_rule" "replication" {
+  name        = "${var.env_name}-replication-events"
+  description = "Capture disallowed replication events"
+
+  event_pattern = <<PATTERN
+{
+    "eventName": ["ReplicateKey"],
+    "eventSource": ["kms.amazonaws.com"],
+    "requestParameters": {
+        "keyId": ["${aws_kms_key.login_dot_gov_keymaker_multi_region.key_id}"],
+        "replicaRegion": {
+            "anything-but": [
+                {
+                    "us-west-2",
+                    "us-east-1"
+                ]
+            ]
+        }
+    }
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_event_rule" "update_primary_region" {
+  name        = "${var.env_name}-update-primary-region-events"
+  description = "Capture disallowed update primary region events"
+
+  event_pattern = <<PATTERN
+{
+    "eventName": ["UpdatePrimaryRegion"],
+    "eventSource": ["kms.amazonaws.com"],
+    "requestParameters": {
+        "keyId": ["${aws_kms_key.login_dot_gov_keymaker_multi_region.key_id}"],
+        "primaryRegion": {
+            "anything-but": [
+                {
+                    "us-west-2",
+                    "us-east-1"
+                ]
+            }
+        }
+    }
+}
+PATTERN
 }
