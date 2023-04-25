@@ -39,9 +39,9 @@ resource "aws_cloudwatch_event_rule" "decrypt" {
 PATTERN
 }
 
-resource "aws_cloudwatch_event_rule" "replication" {
-  name        = "${var.env_name}-replication-events"
-  description = "Capture disallowed replication events"
+resource "aws_cloudwatch_event_rule" "replicate" {
+  name        = "${var.env_name}-replicate-events"
+  description = "Capture disallowed replicate events"
 
   event_pattern = <<PATTERN
 {
