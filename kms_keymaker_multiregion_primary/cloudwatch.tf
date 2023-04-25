@@ -3,7 +3,7 @@
 # encryption context is set and has the values of
 # password-digest or pii-encryption
 resource "aws_cloudwatch_event_rule" "decrypt" {
-  name        = "${var.env_name}-decryption-events"
+  name        = "${var.env_name}-mr-decryption-events"
   description = "Capture decryption events"
 
   event_pattern = <<PATTERN
@@ -41,7 +41,7 @@ PATTERN
 
 # https://docs.aws.amazon.com/kms/latest/developerguide/ct-replicate-key.html
 resource "aws_cloudwatch_event_rule" "replicate" {
-  name        = "${var.env_name}-replicate-events"
+  name        = "${var.env_name}-mr-replicate-events"
   description = "Capture disallowed replicate events"
 
   event_pattern = <<PATTERN
@@ -58,7 +58,7 @@ PATTERN
 
 # https://docs.aws.amazon.com/kms/latest/developerguide/ct-update-primary-region.html
 resource "aws_cloudwatch_event_rule" "update_primary_region" {
-  name        = "${var.env_name}-update-primary-region-events"
+  name        = "${var.env_name}-mr-update-primary-region-events"
   description = "Capture disallowed update primary region events"
 
   event_pattern = <<PATTERN
