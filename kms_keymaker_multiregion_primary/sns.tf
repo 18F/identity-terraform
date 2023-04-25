@@ -46,8 +46,20 @@ resource "aws_sns_topic_subscription" "kms_ct_sqs" {
 
 # sets the receiver of the cloudwatch events
 # to the SNS topic
-resource "aws_cloudwatch_event_target" "sns" {
+resource "aws_cloudwatch_event_target" "decrypt" {
   rule      = aws_cloudwatch_event_rule.decrypt.name
+  target_id = "${var.env_name}-sns"
+  arn       = aws_sns_topic.kms_events.arn
+}
+
+resource "aws_cloudwatch_event_target" "replicate" {
+  rule      = aws_cloudwatch_event_rule.replicate.name
+  target_id = "${var.env_name}-sns"
+  arn       = aws_sns_topic.kms_events.arn
+}
+
+resource "aws_cloudwatch_event_target" "update_primary_region" {
+  rule      = aws_cloudwatch_event_rule.update_primary_region.name
   target_id = "${var.env_name}-sns"
   arn       = aws_sns_topic.kms_events.arn
 }
