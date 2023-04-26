@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "kms_events_topic_policy" {
 
 # SNS topic to send decryption events to SQS
 resource "aws_sns_topic" "kms_events" {
-  name = "${var.env_name}-decryption-events"
+  name = "${var.env_name}-mr-decryption-events"
 }
 
 resource "aws_sns_topic_policy" "kms_events" {

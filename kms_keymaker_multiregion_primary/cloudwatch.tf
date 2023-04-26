@@ -3,7 +3,7 @@
 # encryption context is set and has the values of
 # password-digest or pii-encryption
 resource "aws_cloudwatch_event_rule" "decrypt" {
-  name        = "${var.env_name}-decryption-events"
+  name        = "${var.env_name}-mr-decryption-events"
   description = "Capture decryption events"
 
   event_pattern = <<PATTERN
