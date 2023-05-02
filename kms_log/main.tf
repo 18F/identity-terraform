@@ -573,12 +573,6 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
 
 #lambda functions
 resource "aws_lambda_function" "cloudtrail_processor" {
-  lifecycle {
-    ignore_changes = [
-      s3_key
-    ]
-  }
-
   filename      = var.lambda_kms_ct_processor_zip
   function_name = local.ct_processor_lambda_name
   description   = "KMS CT Log Processor"
