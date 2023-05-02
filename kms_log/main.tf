@@ -86,10 +86,6 @@ resource "null_resource" "kms_log_found" {
   }
 }
 
-data "aws_s3_bucket" "lambda" {
-  bucket = "login-gov.lambda-functions.${data.aws_caller_identity.current.account_id}-${var.region}"
-}
-
 locals {
   kms_alias                   = "alias/${var.env_name}-kms-logging"
   dynamodb_table_name         = "${var.env_name}-kms-logging"
