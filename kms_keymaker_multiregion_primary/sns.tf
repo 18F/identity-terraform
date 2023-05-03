@@ -52,7 +52,7 @@ resource "aws_cloudwatch_event_target" "decrypt" {
   arn       = aws_sns_topic.kms_events.arn
 }
 
-#Send Cloudwatch Event to Alarm SNS Topic
+# send Cloudwatch events to alarm SNS topic
 resource "aws_cloudwatch_event_target" "replicate" {
   rule      = aws_cloudwatch_event_rule.replicate.name
   target_id = "${var.env_name}-sns"
