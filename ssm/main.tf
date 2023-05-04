@@ -160,20 +160,51 @@ resource "aws_cloudwatch_log_group" "ssm_session_logs" {
 
 # Policy and roles to permit SSM access / actions on EC2 instances, and to allow them to send metrics and logs to CloudWatch
 data "aws_iam_policy_document" "ssm_access_role_policy" {
-  # Basic
+  # https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonSSMManagedInstanceCore.html
   statement {
-    sid = "SSMCoreAccess"
+    sid = "SSMCoreAccess1"
     actions = [
+      "ssm:DescribeAssociation",
+      "ssm:GetDeployablePatchSnapshotForInstance",
+      "ssm:GetDocument",
+      "ssm:DescribeDocument",
+      "ssm:GetManifest",
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:ListAssociations",
+      "ssm:ListInstanceAssociations",
+      "ssm:PutInventory",
+      "ssm:PutComplianceItems",
+      "ssm:PutConfigurePackageResult",
+      "ssm:UpdateAssociationStatus",
+      "ssm:UpdateInstanceAssociationStatus",
       "ssm:UpdateInstanceInformation",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+  statement {
+    sid = "SSMCoreAccess2"
+    actions = [
       "ssmmessages:CreateControlChannel",
       "ssmmessages:CreateDataChannel",
       "ssmmessages:OpenControlChannel",
       "ssmmessages:OpenDataChannel",
-      "ec2messages:GetMessages",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+  statement {
+    sid = "SSMCoreAccess3"
+    actions = [
       "ec2messages:AcknowledgeMessage",
+      "ec2messages:DeleteMessage",
+      "ec2messages:FailMessage",
+      "ec2messages:GetEndpoint",
+      "ec2messages:GetMessages",
       "ec2messages:SendReply",
-      "ssm:ListAssociations",
-      "ssm:ListInstanceAssociations"
     ]
     resources = [
       "*",
