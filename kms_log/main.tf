@@ -280,7 +280,7 @@ resource "aws_sns_topic_subscription" "kms_events_sqs_cw_target" {
 
 # create kinesis data stream for application kms events
 resource "aws_kinesis_stream" "datastream" {
-  name        = "${var.env_name}-kms-app-events"
+  name        = local.kinesis_stream_name
   shard_count = var.kinesis_shard_count
 
   retention_period = var.kinesis_retention_hours
