@@ -1,3 +1,8 @@
+moved {
+  from = aws_cloudwatch_event_target.sns
+  to   = aws_cloudwatch_event_target.decrypt
+}
+
 data "aws_iam_policy_document" "kms_events_topic_policy" {
   policy_id = "kms_ct_sqs"
 
