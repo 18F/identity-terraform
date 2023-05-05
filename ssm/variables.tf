@@ -23,7 +23,7 @@ whether to log the commands/output from the given session/document.
 EOM
   type        = map(any)
   default = {
-    "default" = {
+    "uptime" = {
       description = "Verify host uptime"
       command     = ["uptime"]
       logging     = false
@@ -40,7 +40,7 @@ to configure said command.
 EOM
   type        = map(any)
   default = {
-    "default" = {
+    "ifconfig" = {
       description = "Check network interface configuration"
       command     = ["ifconfig"]
       parameters  = []
