@@ -79,3 +79,18 @@ variable "alarm_sns_topic_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "lambda_kms_cw_processor_zip" {
+  description = "Lambda zip file providing source code for kms cloudwatch processor"
+  type        = string
+}
+
+variable "lambda_kms_ct_processor_zip" {
+  description = "Lambda zip file providing source code for kms cloudtrail processor"
+  type        = string
+}
+
+variable "lambda_kms_event_processor_zip" {
+  description = "Lambda zip file providing source code for kms event processor"
+  type        = string
+}
