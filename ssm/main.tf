@@ -260,26 +260,26 @@ resource "aws_ssm_document" "ssm_cmd" {
   name            = "${var.env_name}-ssm-cmd-${each.key}"
   document_type   = "Command"
   document_format = "YAML"
-  content = yamlencode({
-    schemaVersion = "2.2",
-    description   = each.value["description"],
-    parameters = [
-      for ssm_parameter in each.value["parameters"] : {
-        type        = "${ssm_parameter.type}",
-        default     = "${ssm_parameter.default}",
-        description = "${ssm_parameter.description}"
-      }
-    ],
-    mainSteps = [
-      {
-        action = "aws:runShellScript",
-        name   = "block1",
-        inputs = {
-          runCommand = each.value["command"]
-        }
-      }
-    ]
-  })
+  content         = <<DOC
+---
+schemaVersion: "2.2"
+description: "${each.value["description"]}"
+parameters:
+  %{for ssm_parameter in each.value["parameters"]}
+  ${ssm_parameter.name}:
+    type: ${ssm_parameter.type}
+    default: ${ssm_parameter.default}
+    description: ${ssm_parameter.description}
+  %{endfor}
+mainSteps:
+- action: "aws:runShellScript"
+  name: "block1"
+  inputs:
+    runCommand:
+  %{for ssm_cmd in each.value["command"]~}
+  - ${ssm_cmd}
+  %{endfor}
+  DOC
 }
 
 # SSM InteractiveCommands Session Docs
