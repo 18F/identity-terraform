@@ -14,7 +14,7 @@ variable "metric_namespace" {
 
 variable "treat_missing_data" {
   description = "How to treat missing metric data in the denials alarm."
-  default     = "breaching"
+  default     = "notBreaching"
 }
 
 variable "alarm_actions" {
@@ -81,8 +81,6 @@ resource "aws_cloudwatch_metric_alarm" "squid_total_requests" {
   period              = 60
   datapoints_to_alarm = 1
   evaluation_periods  = 5
-
-  treat_missing_data = var.treat_missing_data
-
-  alarm_actions = var.alarm_actions
+  treat_missing_data  = var.treat_missing_data
+  alarm_actions       = var.alarm_actions
 }

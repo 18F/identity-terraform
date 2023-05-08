@@ -1,3 +1,8 @@
+moved {
+  from = aws_cloudwatch_event_target.sns
+  to   = aws_cloudwatch_event_target.decrypt
+}
+
 data "aws_iam_policy_document" "kms_events_topic_policy" {
   policy_id = "kms_ct_sqs"
 
@@ -46,8 +51,21 @@ resource "aws_sns_topic_subscription" "kms_ct_sqs" {
 
 # sets the receiver of the cloudwatch events
 # to the SNS topic
-resource "aws_cloudwatch_event_target" "sns" {
+resource "aws_cloudwatch_event_target" "decrypt" {
   rule      = aws_cloudwatch_event_rule.decrypt.name
   target_id = "${var.env_name}-sns"
   arn       = aws_sns_topic.kms_events.arn
+}
+
+# send Cloudwatch events to alarm SNS topic
+resource "aws_cloudwatch_event_target" "replicate" {
+  rule      = aws_cloudwatch_event_rule.replicate.name
+  target_id = "${var.env_name}-sns"
+  arn       = var.alarm_sns_topic_arn
+}
+
+resource "aws_cloudwatch_event_target" "update_primary_region" {
+  rule      = aws_cloudwatch_event_rule.update_primary_region.name
+  target_id = "${var.env_name}-sns"
+  arn       = var.alarm_sns_topic_arn
 }
