@@ -265,9 +265,9 @@ resource "aws_ssm_document" "ssm_cmd" {
     description   = each.value["description"],
     parameters = [
       for ssm_parameter in each.value["parameters"] : {
-        type        = ssm_parameter.type,
-        default     = ssm_parameter.default,
-        description = ssm_parameter.description
+        type        = "${ssm_parameter.type}",
+        default     = "${ssm_parameter.default}",
+        description = "${ssm_parameter.description}"
       }
     ],
     mainSteps = [
