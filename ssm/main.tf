@@ -275,10 +275,7 @@ mainSteps:
 - action: "aws:runShellScript"
   name: "block1"
   inputs:
-    runCommand:
-  %{for ssm_cmd in each.value["command"]~}
-  - ${ssm_cmd}
-  %{endfor}
+    runCommand: ${jsonencode(each.value["command"])}
   DOC
 }
 
