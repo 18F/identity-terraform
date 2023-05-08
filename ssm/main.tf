@@ -257,23 +257,19 @@ resource "aws_ssm_document" "ssm_cmd" {
   for_each = var.ssm_cmd_doc_map
   lifecycle { create_before_destroy = false }
 
-  locals {
-    doc_parameters = [
-      for ssm_parameter in each.value["parameters"] : {
-        "type" : ssm_parameter.type,
-        "default" : ssm_parameter.default,
-        "description" : ssm_parameter.description
-      }
-    ]
-  }
-
   name            = "${var.env_name}-ssm-cmd-${each.key}"
   document_type   = "Command"
   document_format = "YAML"
   content = yamlencode({
     "schemaVersion" : "2.2",
     "description" : each.value["description"],
-    "parameters" : local.doc_parameters,
+    "parameters" : [
+      for ssm_parameter in each.value["parameters"] : {
+        "type" : ssm_parameter.type,
+        "default" : ssm_parameter.default,
+        "description" : ssm_parameter.description
+      }
+    ],
     "mainSteps" : [
       {
         "action" : "aws:runShellScript",
