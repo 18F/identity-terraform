@@ -261,21 +261,21 @@ resource "aws_ssm_document" "ssm_cmd" {
   document_type   = "Command"
   document_format = "YAML"
   content = yamlencode({
-    "schemaVersion" : "2.2",
-    "description" : each.value["description"],
-    "parameters" : [
+    schemaVersion = "2.2",
+    description   = each.value["description"],
+    parameters = [
       for ssm_parameter in each.value["parameters"] : {
-        "type" : ssm_parameter.type,
-        "default" : ssm_parameter.default,
-        "description" : ssm_parameter.description
+        type        = ssm_parameter.type,
+        default     = ssm_parameter.default,
+        description = ssm_parameter.description
       }
     ],
-    "mainSteps" : [
+    mainSteps = [
       {
-        "action" : "aws:runShellScript",
-        "name" : "block1",
-        "inputs" : {
-          "runCommand" : each.value["command"]
+        action = "aws:runShellScript",
+        name   = "block1",
+        inputs = {
+          runCommand = each.value["command"]
         }
       }
     ]
