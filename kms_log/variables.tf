@@ -94,3 +94,8 @@ variable "lambda_kms_event_processor_zip" {
   description = "Lambda zip file providing source code for kms event processor"
   type        = string
 }
+
+variable "lambda_slack_batch_processor_zip" {
+  description = "Lambda source code that batches KMS events for notification"
+  type        = string
+}
