@@ -32,13 +32,19 @@ resource "aws_iam_role" "slack_processor" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "sqs_to_slack" {
+resource "aws_iam_role_policy_attachment" "sqs_to_lambda" {
   role       = aws_iam_role.slack_processor.name
-  policy_arn = aws_iam_policy.sqs_to_slack_policy.arn
+  policy_arn = aws_iam_policy.sqs_to_lambda_policy.arn
 }
 
-resource "aws_iam_policy" "sqs_to_slack_policy" {
-  name = "kms_sqs_to_slack"
+resource "aws_iam_role_policy_attachment" "lambda_to_slack" {
+  count      = length(var.alarm_sns_topic_arns)>0 ? 1 : 0
+  role       = aws_iam_role.slack_processor.name
+  policy_arn = aws_iam_policy.lambda_to_slack_policy[0].arn
+}
+
+resource "aws_iam_policy" "sqs_to_lambda_policy" {
+  name = "sqs_to_lambda"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -54,16 +60,24 @@ resource "aws_iam_policy" "sqs_to_slack_policy" {
           aws_sqs_queue.unmatched.arn
         ]
       },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "lambda_to_slack_policy" {
+  count = length(var.alarm_sns_topic_arns) > 0 ? 1 : 0
+  name  = "lambda_to_slack"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
         Sid    = "AllowPublishSNS"
         Effect = "Allow"
         Action = [
           "sns:Publish",
         ]
-        Resource = [
-          var.alarm_sns_topic_arns[0]
-        ]
-      },
+        Resource = [for arn in var.alarm_sns_topic_arns : arn]
+      }
     ]
   })
 }
