@@ -1,3 +1,17 @@
+locals {
+
+  default_variables = {
+    env            = var.env_name
+    log_group_name = aws_cloudwatch_log_group.unmatched.name
+  }
+
+  alarm_variables = length(var.alarm_sns_topic_arns) > 0 ? { arn = var.alarm_sns_topic_arns[0] } : {}
+
+  lambda_env_variables = merge(local.default_variables, local.alarm_variables)
+
+}
+
+
 resource "aws_sqs_queue" "unmatched" {
   name                              = "${var.env_name}-kms-unmatched-events"
   delay_seconds                     = 5
@@ -38,9 +52,14 @@ resource "aws_iam_role_policy_attachment" "sqs_to_lambda" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_to_slack" {
-  count      = length(var.alarm_sns_topic_arns)>0 ? 1 : 0
+  count      = length(var.alarm_sns_topic_arns) > 0 ? 1 : 0
   role       = aws_iam_role.slack_processor.name
   policy_arn = aws_iam_policy.lambda_to_slack_policy[0].arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_to_cloudwatch" {
+  role       = aws_iam_role.slack_processor.name
+  policy_arn = aws_iam_policy.lambda_to_cloudwatch_policy.arn
 }
 
 resource "aws_iam_policy" "sqs_to_lambda_policy" {
@@ -82,6 +101,27 @@ resource "aws_iam_policy" "lambda_to_slack_policy" {
   })
 }
 
+resource "aws_iam_policy" "lambda_to_cloudwatch_policy" {
+  name = "lambda_to_cloudwatch"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCloudwatchLogs"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = [
+          aws_cloudwatch_log_group.unmatched.arn
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
   event_source_arn                   = aws_sqs_queue.unmatched.arn
   function_name                      = aws_lambda_function.slack_processor.arn
@@ -94,7 +134,7 @@ resource "aws_lambda_function" "slack_processor" {
   function_name = local.slack_processor_lambda_name
   description   = "KMS Slack Batch Processor"
   role          = aws_iam_role.slack_processor.arn
-  handler       = "slack_batch_processor.lambda_handler"
+  handler       = "kms_slack_batch_processor.lambda_handler"
   runtime       = "python3.9"
   timeout       = 120 # seconds
 
@@ -102,14 +142,7 @@ resource "aws_lambda_function" "slack_processor" {
     environment = var.env_name
   }
 
-  dynamic "environment" {
-    for_each = var.alarm_sns_topic_arns
-    content {
-      variables = {
-        arn           = environment.value
-        env           = var.env_name
-        log_group_arn = aws_cloudwatch_log_group.unmatched.arn
-      }
-    }
+  environment {
+    variables = local.lambda_env_variables
   }
 }
