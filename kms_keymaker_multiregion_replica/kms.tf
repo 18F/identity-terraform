@@ -30,12 +30,12 @@ data "aws_iam_policy_document" "kms" {
         var.ec2_kms_arns
       )
     }
-    Condition {
+    condition {
       test = "StringEquals"
       variable = "kms:CallerAccount"
       values = [aws_caller_identity.current.account_id]
     }
-    Condition {
+    condition {
       test = "StringEquals"
       variable = "aws:RequestedRegion"
       values = [aws_region.current.name]
