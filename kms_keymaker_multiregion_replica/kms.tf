@@ -33,12 +33,12 @@ data "aws_iam_policy_document" "kms" {
     condition {
       test = "StringEquals"
       variable = "kms:CallerAccount"
-      values = [aws_caller_identity.current.account_id]
+      values = [data.aws_caller_identity.current.account_id]
     }
     condition {
       test = "StringEquals"
       variable = "aws:RequestedRegion"
-      values = [aws_region.current.name]
+      values = [data.aws_region.current.name]
     }
     resources = [
       "*",
@@ -65,12 +65,12 @@ data "aws_iam_policy_document" "kms" {
     Condition {
       test = "StringEquals"
       variable = "kms:CallerAccount"
-      values = [aws_caller_identity.current.account_id]
+      values = [data.aws_caller_identity.current.account_id]
     }
     Condition {
       test = "StringEquals"
       variable = "aws:RequestedRegion"
-      values = [aws_region.current.name]
+      values = [data.aws_region.current.name]
     }
   }
 }
