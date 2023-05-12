@@ -30,6 +30,16 @@ data "aws_iam_policy_document" "kms" {
         var.ec2_kms_arns
       )
     }
+    condition {
+      test = "StringEquals"
+      variable = "kms:CallerAccount"
+      values = [data.aws_caller_identity.current.account_id]
+    }
+    condition {
+      test = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [data.aws_region.current.name]
+    }
     resources = [
       "*",
     ]
@@ -51,6 +61,16 @@ data "aws_iam_policy_document" "kms" {
         "events.amazonaws.com",
         "sns.amazonaws.com",
       ]
+    }
+    condition {
+      test = "StringEquals"
+      variable = "kms:CallerAccount"
+      values = [data.aws_caller_identity.current.account_id]
+    }
+    condition {
+      test = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [data.aws_region.current.name]
     }
   }
 }
