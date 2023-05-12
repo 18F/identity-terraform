@@ -62,12 +62,12 @@ data "aws_iam_policy_document" "kms" {
         "sns.amazonaws.com",
       ]
     }
-    Condition {
+    condition {
       test = "StringEquals"
       variable = "kms:CallerAccount"
       values = [data.aws_caller_identity.current.account_id]
     }
-    Condition {
+    condition {
       test = "StringEquals"
       variable = "aws:RequestedRegion"
       values = [data.aws_region.current.name]
