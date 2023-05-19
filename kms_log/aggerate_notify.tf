@@ -20,8 +20,43 @@ resource "aws_sqs_queue" "unmatched" {
   message_retention_seconds         = 345600 # 4 days
   kms_master_key_id                 = aws_kms_key.kms_logging.arn
   kms_data_key_reuse_period_seconds = 600
+  redrive_policy                    = <<POLICY
+{
+    "deadLetterTargetArn": "${aws_sqs_queue.unmatched_slack_dead_letter.arn}",
+    "maxReceiveCount": ${var.ct_queue_maxreceivecount}
+}
+POLICY
+
   tags = {
     environment = var.env_name
+  }
+}
+
+resource "aws_sqs_queue" "unmatched_slack_dead_letter" {
+  name                              = "${var.env_name}-kms-slack-dead-letter"
+  kms_master_key_id                 = aws_kms_key.kms_logging.arn
+  kms_data_key_reuse_period_seconds = 600
+  message_retention_seconds         = 604800 # 7 days
+  tags = {
+    environment = var.env_name
+  }
+}
+
+resource "aws_sqs_queue_policy" "events_to_sqs" {
+  queue_url = aws_sqs_queue.unmatched.id
+  policy    = data.aws_iam_policy_document.event_to_sqs_policy.json
+}
+
+data "aws_iam_policy_document" "event_to_sqs_policy" {
+  statement {
+    sid     = "AllowEventsToSQS"
+    effect  = "Allow"
+    actions = ["sqs:SendMessage"]
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+    resources = [aws_sqs_queue.unmatched.arn]
   }
 }
 
@@ -60,6 +95,11 @@ resource "aws_iam_role_policy_attachment" "lambda_to_slack" {
 resource "aws_iam_role_policy_attachment" "lambda_to_cloudwatch" {
   role       = aws_iam_role.slack_processor.name
   policy_arn = aws_iam_policy.lambda_to_cloudwatch_policy.arn
+}
+
+resource "aws_iam_role_policy" "lambda_kms" {
+  role   = aws_iam_role.slack_processor.id
+  policy = data.aws_iam_policy_document.lambda_kms.json
 }
 
 resource "aws_iam_policy" "sqs_to_lambda_policy" {
@@ -110,12 +150,12 @@ resource "aws_iam_policy" "lambda_to_cloudwatch_policy" {
         Sid    = "AllowCloudwatchLogs"
         Effect = "Allow"
         Action = [
+          "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
-          "logs:DescribeLogStreams"
         ]
         Resource = [
-          aws_cloudwatch_log_group.unmatched.arn
+          "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.slack_processor_lambda_name}:*"
         ]
       }
     ]
