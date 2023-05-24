@@ -1,3 +1,12 @@
+locals {
+
+  dead_letter_queues = [
+    aws_sqs_queue.dead_letter.name,
+    aws_sqs_queue.unmatched_slack_dead_letter.name,
+  ]
+
+}
+
 data "aws_caller_identity" "current" {
 }
 
@@ -517,13 +526,14 @@ EOF
 }
 
 resource "aws_cloudwatch_metric_alarm" "dead_letter" {
-  alarm_name          = "${var.env_name}-kms_log_dead_letter"
+  for_each            = toset(local.dead_letter_queues)
+  alarm_name          = each.key
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
   metric_name         = "NumberOfMessagesReceived"
   namespace           = "AWS/SQS"
   dimensions = {
-    QueueName = aws_sqs_queue.dead_letter.name
+    QueueName = each.key
   }
   period             = "180"
   statistic          = "Sum"

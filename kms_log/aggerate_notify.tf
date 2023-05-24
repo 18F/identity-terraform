@@ -169,6 +169,17 @@ resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
   batch_size                         = 100
 }
 
+module "slack-processor-github-alerts" {
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+
+  enabled              = 1
+  function_name        = local.slack_processor_lambda_name
+  alarm_actions        = var.alarm_sns_topic_arns
+  error_rate_threshold = 5 # percent
+  datapoints_to_alarm  = 5
+  evaluation_periods   = 5
+}
+
 resource "aws_lambda_function" "slack_processor" {
   filename      = var.lambda_slack_batch_processor_zip
   function_name = local.slack_processor_lambda_name
