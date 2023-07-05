@@ -23,6 +23,7 @@ variable "alarm_actions" {
 variable "lb_arn_suffix" {
   description = "Load Balancer ARN Suffix"
   type        = string
+  default     = ""
 }
 
 variable "lb_threshold" {
@@ -61,8 +62,11 @@ HTTP 5XX errors served by the ${var.lb_name} ${var.lb_type} without hosts
 EOM
   namespace         = lookup(local.lb_type_data, var.lb_type)["namespace"]
   metric_name       = lookup(local.lb_type_data, var.lb_type)["lb_metric"]
-  dimensions = {
+
+  dimensions = var.lb_type == "ALB" ? {
     LoadBalancer = var.lb_arn_suffix
+    } : {
+    LoadBalancerName = var.lb_name
   }
 
   statistic           = "Sum"
@@ -88,8 +92,10 @@ HTTP 5XX errors served by hosts in ${var.lb_name} ${var.lb_type}
 EOM
   namespace         = lookup(local.lb_type_data, var.lb_type)["namespace"]
   metric_name       = lookup(local.lb_type_data, var.lb_type)["target_metric"]
-  dimensions = {
+  dimensions = var.lb_type == "ALB" ? {
     LoadBalancer = var.lb_arn_suffix
+    } : {
+    LoadBalancerName = var.lb_name
   }
 
   statistic           = "Sum"
