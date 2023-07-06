@@ -2,11 +2,6 @@
 
 # -- Data Sources --
 
-provider "aws" {
-  alias  = "use1"
-  region = "us-east-1"
-}
-
 data "aws_caller_identity" "current" {
 }
 
@@ -104,7 +99,6 @@ locals {
 
 resource "aws_kms_key" "dnssec" {
   for_each = var.dnssec_ksks
-  provider = aws.use1
 
   customer_master_key_spec = "ECC_NIST_P256"
   deletion_window_in_days  = 7
@@ -126,7 +120,6 @@ resource "aws_kms_key" "dnssec" {
 
 resource "aws_kms_alias" "dnssec" {
   for_each = var.dnssec_ksks
-  provider = aws.use1
 
   name          = "alias/${replace(var.dnssec_zone_name, "/\\./", "_")}-ksk-${each.key}"
   target_key_id = aws_kms_key.dnssec[each.key].key_id
