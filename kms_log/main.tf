@@ -20,6 +20,10 @@ locals {
 data "aws_caller_identity" "current" {
 }
 
+data "local_file" "lambda_processor_zip_file" {
+  filename = var.lambda_kms_cw_processor_zip
+}
+
 data "aws_iam_policy_document" "kms" {
   # Allow root users in
   statement {
@@ -791,6 +795,10 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
 
+  lifecycle {
+    replace_triggered_by = [data.local_file.lambda_processor_zip_file.id]
+  }
+
   environment {
     variables = {
       DEBUG               = var.kmslog_lambda_debug ? "1" : ""
@@ -972,6 +980,10 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
 
+  lifecycle {
+    replace_triggered_by = [data.local_file.lambda_processor_zip_file.id]
+  }
+
   environment {
     variables = {
       DEBUG               = var.kmslog_lambda_debug ? "1" : ""
@@ -1105,6 +1117,10 @@ resource "aws_lambda_function" "event_processor" {
   handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
+
+  lifecycle {
+    replace_triggered_by = [data.local_file.lambda_processor_zip_file.id]
+  }
 
   environment {
     variables = {
