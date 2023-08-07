@@ -50,7 +50,7 @@ resource "aws_cloudwatch_event_rule" "replicate" {
     "eventName": ["ReplicateKey"],
     "eventSource": ["kms.amazonaws.com"],
     "requestParameters": {
-        "keyId": [ "${aws_kms_key.login_dot_gov_keymaker_multi_region.key_id}" ],
+        "keyId": [ "${aws_kms_replica_key.login_dot_gov_keymaker_multi_region_replica.key_id}" ],
         "replicaRegion": [
             {
                 "anything-but": [
@@ -74,7 +74,7 @@ resource "aws_cloudwatch_event_rule" "update_primary_region" {
     "eventName": ["UpdatePrimaryRegion"],
     "eventSource": ["kms.amazonaws.com"],
     "requestParameters": {
-        "keyId": [ "${aws_kms_key.login_dot_gov_keymaker_multi_region.key_id}" ],
+        "keyId": [ "${aws_kms_replica_key.login_dot_gov_keymaker_multi_region_replica.key_id}" ],
         "replicaRegion": [
             {
                 "anything-but": [
