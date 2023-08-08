@@ -20,6 +20,10 @@ locals {
 data "aws_caller_identity" "current" {
 }
 
+data "local_file" "lambda_processor_zip_file" {
+  filename = var.lambda_kms_cw_processor_zip
+}
+
 data "aws_iam_policy_document" "kms" {
   # Allow root users in
   statement {
@@ -788,8 +792,12 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   description   = "KMS CT Log Processor"
   role          = aws_iam_role.cloudtrail_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
-  runtime       = "ruby2.7"
+  runtime       = "ruby3.2"
   timeout       = 120 # seconds
+
+  lifecycle {
+    replace_triggered_by = [data.local_file.lambda_processor_zip_file.id]
+  }
 
   environment {
     variables = {
@@ -969,13 +977,18 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   description   = "KMS CW Log Processor"
   role          = aws_iam_role.cloudwatch_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
-  runtime       = "ruby2.7"
+  runtime       = "ruby3.2"
   timeout       = 120 # seconds
+
+  lifecycle {
+    replace_triggered_by = [data.local_file.lambda_processor_zip_file.id]
+  }
 
   memory_size = var.cw_processor_memory_size
 
   ephemeral_storage {
     size = var.cw_processor_storage_size
+
   }
 
   environment {
@@ -1109,8 +1122,12 @@ resource "aws_lambda_function" "event_processor" {
   description   = "KMS Log Event Processor"
   role          = aws_iam_role.event_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
-  runtime       = "ruby2.7"
+  runtime       = "ruby3.2"
   timeout       = 120 # seconds
+
+  lifecycle {
+    replace_triggered_by = [data.local_file.lambda_processor_zip_file.id]
+  }
 
   environment {
     variables = {
