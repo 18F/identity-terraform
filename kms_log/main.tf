@@ -972,6 +972,12 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   runtime       = "ruby2.7"
   timeout       = 120 # seconds
 
+  memory_size = var.cw_processor_memory_size
+
+  ephemeral_storage {
+    size = var.cw_processor_storage_size
+  }
+
   environment {
     variables = {
       DEBUG               = var.kmslog_lambda_debug ? "1" : ""
