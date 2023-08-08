@@ -80,20 +80,48 @@ variable "alarm_sns_topic_arns" {
   default     = []
 }
 
+## Lambda KMS CloudWatch Processor Configuration
+
 variable "lambda_kms_cw_processor_zip" {
   description = "Lambda zip file providing source code for kms cloudwatch processor"
   type        = string
 }
+
+variable "cw_processor_memory_size" {
+  description = "Defines the amount of memory in MB the CloudWatch Processor can use at runtime"
+  type        = number
+  default     = 128
+  validation {
+    condition     = var.cw_processor_memory_size >= 128 && var.cw_processor_memory_size <= 10240
+    error_message = "The cw_processor_memory_size must be between the values 512 MB and 10240 MB"
+  }
+}
+
+variable "cw_processor_storage_size" {
+  description = "Defines the amount of ephemeral storage (/tmp) in MB available to the CloudWatch Processor"
+  type        = number
+  default     = 512
+  validation {
+    condition     = var.cw_processor_storage_size >= 512 && var.cw_processor_storage_size <= 10240
+    error_message = "The cw_processor_storage_size must be between the values 512 MB and 10240 MB"
+  }
+}
+
+## Lambda KMS Cloudtrail Processor Configuration
 
 variable "lambda_kms_ct_processor_zip" {
   description = "Lambda zip file providing source code for kms cloudtrail processor"
   type        = string
 }
 
+## Lambda KMS Event Processor Configuration
+
 variable "lambda_kms_event_processor_zip" {
   description = "Lambda zip file providing source code for kms event processor"
   type        = string
 }
+
+## Lambda KMS Slack Batch Processor Configuration
 
 variable "lambda_slack_batch_processor_zip" {
   description = "Lambda source code that batches KMS events for notification"
