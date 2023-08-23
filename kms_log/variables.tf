@@ -69,6 +69,12 @@ variable "kmslog_lambda_debug" {
   type        = bool
 }
 
+variable "kmslog_lambda_dry_run" {
+  default     = false
+  description = "Whether to run the kms logging lambdas in dry run mode in this account"
+  type        = bool
+}
+
 variable "ec2_kms_arns" {
   default     = []
   description = "ARN(s) of EC2 roles permitted access to KMS"

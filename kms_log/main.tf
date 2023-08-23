@@ -14,7 +14,6 @@ locals {
 
   lambda_env_variables = merge(local.default_variables, local.alarm_variables)
 
-
 }
 
 data "aws_caller_identity" "current" {
@@ -793,8 +792,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 
   environment {
     variables = {
-      DEBUG               = var.kmslog_lambda_debug ? "1" : ""
-      LOG_LEVEL           = "0"
+      DEBUG               = var.kmslog_lambda_debug
+      DRY_RUN             = var.kmslog_lambda_dry_run
       CT_QUEUE_URL        = aws_sqs_queue.kms_ct_events.id
       RETENTION_DAYS      = var.dynamodb_retention_days
       DDB_TABLE           = aws_dynamodb_table.kms_events.id
@@ -981,8 +980,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 
   environment {
     variables = {
-      DEBUG               = var.kmslog_lambda_debug ? "1" : ""
-      LOG_LEVEL           = "0"
+      DEBUG               = var.kmslog_lambda_debug
+      DRY_RUN             = var.kmslog_lambda_dry_run
       RETENTION_DAYS      = var.dynamodb_retention_days
       DDB_TABLE           = aws_dynamodb_table.kms_events.id
       SNS_EVENT_TOPIC_ARN = aws_sns_topic.kms_logging_events.arn
@@ -1115,9 +1114,9 @@ resource "aws_lambda_function" "event_processor" {
 
   environment {
     variables = {
-      DEBUG     = var.kmslog_lambda_debug ? "1" : ""
-      LOG_LEVEL = "0"
-      ENV_NAME  = var.env_name
+      DEBUG    = var.kmslog_lambda_debug
+      DRY_RUN  = var.kmslog_lambda_dry_run
+      ENV_NAME = var.env_name
     }
   }
 
