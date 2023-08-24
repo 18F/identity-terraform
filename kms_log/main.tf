@@ -14,9 +14,15 @@ locals {
 
   lambda_env_variables = merge(local.default_variables, local.alarm_variables)
 
+  lambda_insights = "arn:aws:lambda:${var.region}:580247275435:layer:LambdaInsightsExtension:38"
+
 }
 
 data "aws_caller_identity" "current" {
+}
+
+data "aws_iam_policy" "insights" {
+  arn = "arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy"
 }
 
 data "aws_iam_policy_document" "kms" {
@@ -213,6 +219,11 @@ resource "aws_iam_role_policy" "lambda_kms" {
   policy = data.aws_iam_policy_document.lambda_kms.json
 }
 
+resource "aws_iam_role_policy_attachment" "slack_processor_insights" {
+  role       = aws_iam_role.slack_processor.id
+  policy_arn = data.aws_iam_policy.insights.arn
+}
+
 resource "aws_iam_policy" "sqs_to_lambda_policy" {
   name = "${var.env_name}_unmatched_sqs_to_lambda"
   policy = jsonencode({
@@ -281,7 +292,8 @@ resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.slack_processor_lambda_name
@@ -299,6 +311,10 @@ resource "aws_lambda_function" "slack_processor" {
   handler       = "kms_slack_batch_processor.lambda_handler"
   runtime       = "python3.9"
   timeout       = 120 # seconds
+
+  layers = [
+    local.lambda_insights
+  ]
 
   tags = {
     environment = var.env_name
@@ -790,6 +806,10 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
 
+  layers = [
+    local.lambda_insights
+  ]
+
   environment {
     variables = {
       DEBUG               = var.kmslog_lambda_debug
@@ -807,8 +827,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
@@ -961,6 +981,11 @@ resource "aws_iam_role_policy" "ctprocessor_sqs" {
   policy = data.aws_iam_policy_document.ctprocessor_sqs.json
 }
 
+resource "aws_iam_role_policy_attachment" "ctprocessor_insights" {
+  role       = aws_iam_role.cloudtrail_processor.id
+  policy_arn = data.aws_iam_policy.insights.arn
+}
+
 resource "aws_lambda_function" "cloudwatch_processor" {
 
   filename      = var.lambda_kms_cw_processor_zip
@@ -970,6 +995,10 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   handler       = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
+
+  layers = [
+    local.lambda_insights
+  ]
 
   memory_size = var.cw_processor_memory_size
 
@@ -994,8 +1023,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
@@ -1102,6 +1131,11 @@ resource "aws_iam_role_policy" "cwprocessor_kinesis" {
   policy = data.aws_iam_policy_document.cwprocessor_kinesis.json
 }
 
+resource "aws_iam_role_policy_attachment" "cwprocessor_insights" {
+  role       = aws_iam_role.cloudwatch_processor.id
+  policy_arn = data.aws_iam_policy.insights.arn
+}
+
 # lambda for creating cloudwatch metrics and events
 resource "aws_lambda_function" "event_processor" {
   filename      = var.lambda_kms_event_processor_zip
@@ -1111,6 +1145,10 @@ resource "aws_lambda_function" "event_processor" {
   handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
+
+  layers = [
+    local.lambda_insights
+  ]
 
   environment {
     variables = {
@@ -1242,3 +1280,7 @@ resource "aws_iam_role_policy" "event_processor_sqs" {
   policy = data.aws_iam_policy_document.event_processor_sqs.json
 }
 
+resource "aws_iam_role_policy_attachment" "event_processor_insights" {
+  role       = aws_iam_role.event_processor.id
+  policy_arn = data.aws_iam_policy.insights.arn
+}
