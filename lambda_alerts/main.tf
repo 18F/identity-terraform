@@ -1,9 +1,11 @@
 variable "enabled" {
+  type        = number
   description = "Whether or not to create the Lambda alert monitor."
   default     = 1
 }
 
 variable "function_name" {
+  type        = string
   description = "Name of the lambda function to monitor"
 }
 
@@ -13,26 +15,51 @@ variable "alarm_actions" {
 }
 
 variable "error_rate_threshold" {
+  type        = number
   description = "The threshold error rate (as a percentage) for triggering an alert"
   default     = 1
 }
 
+variable "memory_usage_threshold" {
+  type        = number
+  description = "The threshold memory utilization (as a percentage) for triggering an alert"
+  default     = 80
+}
+
 variable "datapoints_to_alarm" {
+  type        = number
   description = "The number of datapoints that must be breaching to trigger the alarm."
   default     = 1
 }
 
 variable "evaluation_periods" {
+  type    = number
   default = 1
 }
 
 variable "period" {
+  type        = number
   description = "The period in seconds over which the specified statistic is applied."
   default     = 60
 }
 
 variable "treat_missing_data" {
+  type    = string
   default = "missing"
+}
+
+locals {
+
+  insights_layer_name = "LambdaInsightsExtension"
+
+  layers = data.aws_lambda_function.target.layers
+
+  insights_enabled = anytrue([for layer in local.layers : strcontains(layer, local.insights_layer_name)])
+
+}
+
+data "aws_lambda_function" "target" {
+  function_name = var.function_name
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
@@ -85,3 +112,29 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   }
 }
 
+resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
+  count = var.enabled == 1 && local.insights_enabled ? 1 : 0
+
+  alarm_name        = "LambdaMemoryUsage_${var.function_name}"
+  alarm_description = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%"
+
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = var.evaluation_periods
+  threshold                 = var.memory_usage_threshold
+  insufficient_data_actions = []
+  datapoints_to_alarm       = var.datapoints_to_alarm
+  treat_missing_data        = var.treat_missing_data
+  alarm_actions             = var.alarm_actions
+
+  metric_name = "memory_utilization"
+  namespace   = "LambdaInsights"
+  period      = var.period
+  statistic   = "Maximum"
+  dimensions = {
+    FunctionName = var.function_name
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
