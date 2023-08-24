@@ -23,7 +23,7 @@ variable "error_rate_threshold" {
 variable "memory_usage_threshold" {
   type        = number
   description = "The threshold memory utilization (as a percentage) for triggering an alert"
-  default     = 80
+  default     = 90
 }
 
 variable "datapoints_to_alarm" {
