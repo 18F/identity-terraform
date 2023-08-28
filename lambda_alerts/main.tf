@@ -54,6 +54,7 @@ locals {
     for layer in local.layers : strcontains(layer, local.insights_layer_name)
   ])
   layers = data.aws_lambda_function.target.layers
+
 }
 
 data "aws_lambda_function" "target" {
