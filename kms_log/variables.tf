@@ -86,6 +86,18 @@ variable "alarm_sns_topic_arns" {
   default     = []
 }
 
+variable "lambda_insights_account" {
+  description = "The lambda insights account provided by AWS for monitoring"
+  type        = string
+  default     = "580247275435"
+}
+
+variable "lambda_insights_version" {
+  description = "The lambda insights layer version to use for monitoring"
+  type        = number
+  default     = 38
+}
+
 ## Lambda KMS CloudWatch Processor Configuration
 
 variable "lambda_kms_cw_processor_zip" {
