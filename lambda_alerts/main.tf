@@ -49,12 +49,11 @@ variable "treat_missing_data" {
 }
 
 locals {
-
   insights_layer_name = "LambdaInsightsExtension"
-
+  insights_enabled = anytrue([
+    for layer in local.layers : strcontains(layer, local.insights_layer_name)
+  ])
   layers = data.aws_lambda_function.target.layers
-
-  insights_enabled = anytrue([for layer in local.layers : strcontains(layer, local.insights_layer_name)])
 
 }
 
