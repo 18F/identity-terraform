@@ -10,11 +10,9 @@ locals {
     log_group_name = aws_cloudwatch_log_group.unmatched.name
   }
 
-  alarm_variables = length(var.alarm_sns_topic_arns) > 0 ? { arn = var.alarm_sns_topic_arns[0] } : {}
-
+  alarm_variables      = length(var.alarm_sns_topic_arns) > 0 ? { arn = var.alarm_sns_topic_arns[0] } : {}
   lambda_env_variables = merge(local.default_variables, local.alarm_variables)
-
-  lambda_insights = "arn:aws:lambda:${var.region}:${var.lambda_insights_account}:layer:LambdaInsightsExtension:${var.lambda_insights_version}"
+  lambda_insights      = "arn:aws:lambda:${var.region}:${var.lambda_insights_account}:layer:LambdaInsightsExtension:${var.lambda_insights_version}"
 
 }
 
