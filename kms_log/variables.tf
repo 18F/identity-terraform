@@ -86,6 +86,12 @@ variable "alarm_sns_topic_arns" {
   default     = []
 }
 
+variable "lambda_insights_account" {
+  description = "The lambda insights account provided by AWS for monitoring"
+  type        = string
+  default     = "580247275435"
+}
+
 variable "lambda_insights_version" {
   description = "The lambda insights layer version to use for monitoring"
   type        = number

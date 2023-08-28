@@ -14,7 +14,7 @@ locals {
 
   lambda_env_variables = merge(local.default_variables, local.alarm_variables)
 
-  lambda_insights = "arn:aws:lambda:${var.region}:580247275435:layer:LambdaInsightsExtension:${var.lambda_insights_version}"
+  lambda_insights = "arn:aws:lambda:${var.region}:${var.lambda_insights_account}:layer:LambdaInsightsExtension:${var.lambda_insights_version}"
 
 }
 
