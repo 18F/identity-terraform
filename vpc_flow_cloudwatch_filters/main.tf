@@ -22,13 +22,19 @@ variable "alarm_actions" {
   description = "A list of ARNs to notify when the VPC rejection alarm fires"
 }
 
+variable "src_addr_filter" {
+  type = string
+  description = "Filter for srcAddr"
+  default = "srcAddr=172.16.*"
+}
+
 locals {
   log_group_name = var.log_group_name_override == "" ? "${var.env_name}_flow_log_group" : var.log_group_name_override
 }
 
 resource "aws_cloudwatch_log_metric_filter" "vpc_flow_rejections_total" {
   name           = "${var.env_name}-vpc-flow-rejections-total"
-  pattern        = "[version, accountID,interfaceID, srcAddr, dstAddr, srcPort, dstPort, protocol, packets, bytes, startTime, endTime, action=REJECT, logStatus]"
+  pattern        = "[version, accountId, interfaceId, srcAddr, dstAddr, srcPort, dstPort, protocol, packets, bytes, start, end, action=REJECT, logStatus, vpcId, subnetId, instanceId, tcpFlags, type, pktSrcAddr, pktDstAddr, region, azId, subLocationType, subLocationId, pktSrcAwsService, pktDstAwsService, flowDirection, trafficPath]"
   log_group_name = local.log_group_name
   metric_transformation {
     namespace     = var.metric_namespace
@@ -42,7 +48,7 @@ resource "aws_cloudwatch_log_metric_filter" "vpc_flow_rejections_internal" {
   name = "${var.env_name}-vpc-flow-rejections-internal"
 
   # Same pattern as above plus srcAddr=172.16.*
-  pattern        = "[version, accountID,interfaceID, srcAddr=172.16.*, dstAddr, srcPort, dstPort, protocol, packets, bytes, startTime, endTime, action=REJECT, logStatus]"
+  pattern        = "[version, accountId, interfaceId, ${var.src_addr_filter}, dstAddr, srcPort, dstPort, protocol, packets, bytes, start, end, action=REJECT, logStatus, vpcId, subnetId, instanceId, tcpFlags, type, pktSrcAddr, pktDstAddr, region, azId, subLocationType, subLocationId, pktSrcAwsService, pktDstAwsService, flowDirection, trafficPath]"
   log_group_name = local.log_group_name
   metric_transformation {
     namespace     = var.metric_namespace
@@ -59,7 +65,7 @@ resource "aws_cloudwatch_log_metric_filter" "vpc_flow_rejections_unexpected" {
   # src port 443, 3128, and 5044 (which seem to be timed out connections)
   # src port 26, which seems to be SSH health checks
   # destination host 192.88.99.255 for https://console.aws.amazon.com/support/v1?region=us-west-2#/case/?displayId=5319857611&language=en
-  pattern        = "[version, accountID,interfaceID, srcAddr=172.16.*, dstAddr!=192.88.99.255, srcPort!=26 && srcPort!=443 && srcPort!=3128, srcPort!=5044, dstPort, protocol, packets, bytes, startTime, endTime, action=REJECT, logStatus]"
+  pattern        = "[version, accountId, interfaceId, ${var.src_addr_filter}, dstAddr!=192.88.99.255, srcPort!=26 && srcPort!=443 && srcPort!=3128, srcPort!=5044, dstPort, protocol, packets, bytes, start, end, action=REJECT, logStatus, vpcId, subnetId, instanceId, tcpFlags, type, pktSrcAddr, pktDstAddr, region, azId, subLocationType, subLocationId, pktSrcAwsService, pktDstAwsService, flowDirection, trafficPath]"
   log_group_name = local.log_group_name
   metric_transformation {
     namespace     = var.metric_namespace
