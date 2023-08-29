@@ -65,7 +65,7 @@ resource "aws_cloudwatch_log_metric_filter" "vpc_flow_rejections_unexpected" {
   # src port 443, 3128, and 5044 (which seem to be timed out connections)
   # src port 26, which seems to be SSH health checks
   # destination host 192.88.99.255 for https://console.aws.amazon.com/support/v1?region=us-west-2#/case/?displayId=5319857611&language=en
-  pattern        = "[version, accountId, interfaceId, ${var.src_addr_filter}, dstAddr!=192.88.99.255, srcPort!=26 && srcPort!=443 && srcPort!=3128, srcPort!=5044, dstPort, protocol, packets, bytes, start, end, action=REJECT, logStatus, vpcId, subnetId, instanceId, tcpFlags, type, pktSrcAddr, pktDstAddr, region, azId, subLocationType, subLocationId, pktSrcAwsService, pktDstAwsService, flowDirection, trafficPath]"
+  pattern        = "[version, accountId, interfaceId, ${var.src_addr_filter}, dstAddr!=192.88.99.255, srcPort!=26 && srcPort!=443 && srcPort!=3128 && srcPort!=5044, dstPort, protocol, packets, bytes, start, end, action=REJECT, logStatus, vpcId, subnetId, instanceId, tcpFlags, type, pktSrcAddr, pktDstAddr, region, azId, subLocationType, subLocationId, pktSrcAwsService, pktDstAwsService, flowDirection, trafficPath]"
   log_group_name = local.log_group_name
   metric_transformation {
     namespace     = var.metric_namespace
