@@ -290,8 +290,8 @@ resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.slack_processor_lambda_name
@@ -299,6 +299,7 @@ module "slack-processor-github-alerts" {
   error_rate_threshold = 5 # percent
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
+  insights_enabled     = true
 }
 
 resource "aws_lambda_function" "slack_processor" {
@@ -825,8 +826,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
@@ -834,6 +835,7 @@ module "ct-processor-github-alerts" {
   error_rate_threshold = 5 # percent
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
+  insights_enabled     = true
 }
 
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
@@ -1021,8 +1023,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
@@ -1030,6 +1032,7 @@ module "cw-processor-github-alerts" {
   error_rate_threshold = 5 # percent
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
+  insights_enabled     = true
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
