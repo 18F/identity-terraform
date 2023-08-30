@@ -290,8 +290,8 @@ resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.slack_processor_lambda_name
@@ -826,8 +826,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
@@ -1023,8 +1023,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=ac06f87c59ad7e4e95c94b8e0637365cb5592017"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
