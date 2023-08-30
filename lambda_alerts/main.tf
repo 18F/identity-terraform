@@ -48,17 +48,10 @@ variable "treat_missing_data" {
   default = "missing"
 }
 
-locals {
-  insights_layer_name = "LambdaInsightsExtension"
-  insights_enabled = anytrue([
-    for layer in local.layers : strcontains(layer, local.insights_layer_name)
-  ])
-  layers = data.aws_lambda_function.target.layers
-
-}
-
-data "aws_lambda_function" "target" {
-  function_name = var.function_name
+variable "insights_enabled" {
+  type        = bool
+  description = "Creates lambda insights specific alerts"
+  default     = false
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
@@ -112,7 +105,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
-  count = var.enabled == 1 && local.insights_enabled ? 1 : 0
+  count = var.enabled == 1 && var.insights_enabled ? 1 : 0
 
   alarm_name        = "LambdaMemoryUsage_${var.function_name}"
   alarm_description = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%"
