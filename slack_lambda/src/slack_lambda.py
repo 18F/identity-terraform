@@ -85,6 +85,15 @@ def lambda_handler(event, context):
           data["NewStateReason"],
           f'*Time*: {formatted_time}',
           f'*Region*: {data["Region"]}'])
+      elif 'detailType' in data and data['detailType'] == 'AWS Health Event':
+          blocks = aws_health_event(data)
+          msgtext = ''.join([
+              '*AWS Health Event*\n',
+              f'*{data["detail"]["service"]}*\n',
+              f'Event Type: {data["detail"]["eventTypeCode"]}\n',
+              f'Status: {data["detail"]["statusCode"]}\n',
+              data["detail"]["eventDescription"]["latestDescription"],
+              ])
       else:
         msgtext = eventmsg
     except Exception as e:
@@ -105,3 +114,92 @@ def lambda_handler(event, context):
         "status_code": resp.status,
         "response": resp.data
     })
+
+
+def aws_health_event(json_message):
+    try:
+        details = json_message["detail"]
+        blocks = [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": ''.join([
+                            '*AWS Health Event*\n',
+                            f'*{details["service"]}*\n',
+                            f'Event Type: {details["eventTypeCode"]}\n',
+                            f'Status: {details["statusCode"]}',
+                            ])
+                        },
+                    },
+                ]
+
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": details["eventArn"],
+                },
+            })
+
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": details["eventDescription"]["latestDescription"],
+                },
+            })
+
+        if len(json_message["resources"]) > 0:
+            affected_resources = "Affected Resources:\n"
+
+            for resource in json_message["resources"]:
+                affected_resources = f"{resource}\n"
+
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": affected_resources
+                    },
+                })
+
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ''.join([
+                    f"Account: {details['account']}\n",
+                    f"Region: {details['eventRegion']}",
+                    ])
+                },
+            })
+
+        try:
+            iso_time = datetime.fromisoformat(json_message["time"])
+            formatted_time = iso_time.strftime("%Y-%m-%d %H:%M:%S %Z")
+        except:
+            formatted_time = json_message["time"]
+
+        time_information = f"Notification Time: {formatted_time}"
+
+        if 'startTime' in details:
+            time_information += f"\nStart Time: {details['startTime']}"
+
+        if 'endTime' in details:
+            time_information += f"\nEnd Time: {details['endTime']}"
+
+        if 'lastUpdatedTime' in details:
+            time_information += f"\nLast Updated: {details['lastUpdatedTime']}"
+
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": time_information
+                },
+            })
+
+        return blocks
+    except:
+        return None
