@@ -1036,9 +1036,10 @@ module "cw-processor-github-alerts" {
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
-  event_source_arn  = aws_kinesis_stream.datastream.arn
-  function_name     = aws_lambda_function.cloudwatch_processor.arn
-  starting_position = "LATEST"
+  event_source_arn       = aws_kinesis_stream.datastream.arn
+  function_name          = aws_lambda_function.cloudwatch_processor.arn
+  starting_position      = "LATEST"
+  parallelization_factor = 10
 }
 
 resource "aws_iam_role" "cloudwatch_processor" {
