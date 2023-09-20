@@ -27,14 +27,14 @@ variable "inflight_threshold" {
 }
 
 variable "max_message_size" {
-  type = number
+  type        = number
   description = "The maximum message size supported by the queue"
 }
 
 variable "message_size_threshold" {
-  type = number
+  type        = number
   description = "The percentile threshold of message sizes"
-  default = 80
+  default     = 80
 }
 
 variable "evaluation_periods" {
