@@ -974,7 +974,7 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
   role          = aws_iam_role.cloudtrail_requeue.arn
   handler       = "main.IdentityKMSMonitor::CloudTrailRequeue.process"
   runtime       = "ruby3.2"
-  timeout       = 120 # seconds
+  timeout       = 900 # 15 minutes
 
   layers = [
     local.lambda_insights
