@@ -951,12 +951,13 @@ data "aws_iam_policy_document" "ctrequeue_sqs" {
 resource "aws_cloudwatch_event_rule" "schedule" {
   name                = "${local.ct_requeue_lambda_name}-schedule"
   description         = "Schedule for the ${local.ct_requeue_lambda_name} function"
-  schedule_expression = "rate(1 hour)"
+  schedule_expression = "rate(15 minutes)"
 }
 
 resource "aws_cloudwatch_event_target" "cloudtrail_requeue_trigger" {
-  rule = aws_cloudwatch_event_rule.schedule.name
-  arn  = aws_lambda_function.cloudtrail_requeue.arn
+  count = var.ct_requeue_concurrency
+  rule  = aws_cloudwatch_event_rule.schedule.name
+  arn   = aws_lambda_function.cloudtrail_requeue.arn
 }
 
 resource "aws_lambda_permission" "event_bridge_to_cloudtrail_requeue" {

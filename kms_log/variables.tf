@@ -139,6 +139,12 @@ variable "lambda_kms_ct_requeue_zip" {
   type        = string
 }
 
+variable "ct_requeue_concurrency" {
+  description = "Defines the number of concurrent requeue lambda executions"
+  type        = number
+  default     = 1
+}
+
 ## Lambda KMS Event Processor Configuration
 
 variable "lambda_kms_event_processor_zip" {
