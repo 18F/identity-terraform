@@ -1005,6 +1005,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
       DEBUG               = var.kmslog_lambda_debug
       DRY_RUN             = var.kmslog_lambda_dry_run
       CT_QUEUE_URL        = aws_sqs_queue.kms_ct_events.id
+      CT_REQUEUE_URL      = aws_sqs_queue.cloudtrail_requeue.id
       RETENTION_DAYS      = var.dynamodb_retention_days
       DDB_TABLE           = aws_dynamodb_table.kms_events.id
       SNS_EVENT_TOPIC_ARN = aws_sns_topic.kms_logging_events.arn
