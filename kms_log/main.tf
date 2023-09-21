@@ -946,6 +946,26 @@ data "aws_iam_policy_document" "ctrequeue_sqs" {
   }
 }
 
+# Scheduled Trigger Expressions for cloudtrail_requeue
+
+resource "aws_cloudwatch_event_rule" "schedule" {
+  name                = "${local.ct_requeue_lambda_name}-schedule"
+  description         = "Schedule for the ${local.ct_requeue_lambda_name} function"
+  schedule_expression = "rate(1 hour)"
+}
+
+resource "aws_cloudwatch_event_target" "cloudtrail_requeue_trigger" {
+  rule = aws_cloudwatch_event_rule.schedule.name
+  arn  = aws_lambda_function.cloudtrail_requeue.arn
+}
+
+resource "aws_lambda_permission" "event_bridge_to_cloudtrail_requeue" {
+  source_arn    = aws_cloudwatch_event_rule.schedule.arn
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cloudtrail_requeue.function_name
+  principal     = "events.amazonaws.com"
+}
+
 #lambda functions
 resource "aws_lambda_function" "cloudtrail_requeue" {
   filename      = var.lambda_kms_ct_requeue_zip
