@@ -132,6 +132,13 @@ variable "lambda_kms_ct_processor_zip" {
   type        = string
 }
 
+## Lambda KMS Cloudtrail Requeue Configuration
+
+variable "lambda_kms_ct_requeue_zip" {
+  description = "Lambda zip file providing source code for kms cloudtrail requeue service"
+  type        = string
+}
+
 ## Lambda KMS Event Processor Configuration
 
 variable "lambda_kms_event_processor_zip" {

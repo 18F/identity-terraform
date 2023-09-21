@@ -3,6 +3,7 @@ locals {
   dead_letter_queues = [
     aws_sqs_queue.dead_letter.name,
     aws_sqs_queue.unmatched_slack_dead_letter.name,
+    aws_sqs_queue.cloudtrail_requeue_dead_letter.name,
   ]
 
   default_variables = {
@@ -115,6 +116,7 @@ locals {
   kmslog_event_rule_name      = "${var.env_name}-unmatched-kmslog"
   dashboard_name              = "${var.env_name}-kms-logging"
   ct_processor_lambda_name    = "${var.env_name}-cloudtrail-kms"
+  ct_requeue_lambda_name      = "${var.env_name}-kms-cloudtrail-requeue"
   cw_processor_lambda_name    = "${var.env_name}-cloudwatch-kms"
   event_processor_lambda_name = "${var.env_name}-kmslog-event-processor"
   slack_processor_lambda_name = "${var.env_name}-kms-slack-batch-processor"
@@ -346,6 +348,37 @@ resource "aws_sqs_queue" "unmatched_slack_dead_letter" {
 # create dead letter queue for kms cloudtrail events
 resource "aws_sqs_queue" "dead_letter" {
   name                              = "${var.env_name}-kms-dead-letter"
+  kms_master_key_id                 = aws_kms_key.kms_logging.arn
+  kms_data_key_reuse_period_seconds = 600
+  message_retention_seconds         = 604800 # 7 days
+  tags = {
+    environment = var.env_name
+  }
+}
+
+# queue for cloudtrail requeueing service
+resource "aws_sqs_queue" "cloudtrail_requeue" {
+  name                              = "${var.env_name}-kms-ct-requeue"
+  max_message_size                  = var.ct_queue_max_message_size
+  visibility_timeout_seconds        = var.ct_queue_visibility_timeout_seconds
+  message_retention_seconds         = var.ct_queue_message_retention_seconds
+  kms_master_key_id                 = aws_kms_key.kms_logging.arn
+  kms_data_key_reuse_period_seconds = 600 # number of seconds the kms key is cached
+  redrive_policy                    = <<POLICY
+{
+    "deadLetterTargetArn": "${aws_sqs_queue.cloudtrail_requeue_dead_letter.arn}",
+    "maxReceiveCount": ${var.ct_queue_maxreceivecount}
+}
+POLICY
+
+  tags = {
+    environment = var.env_name
+  }
+}
+
+# create dead letter queue for kms cloudtrail requeue service 
+resource "aws_sqs_queue" "cloudtrail_requeue_dead_letter" {
+  name                              = "${var.env_name}-kms-ct-requeue-dead-letter"
   kms_master_key_id                 = aws_kms_key.kms_logging.arn
   kms_data_key_reuse_period_seconds = 600
   message_retention_seconds         = 604800 # 7 days
@@ -819,7 +852,141 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
   alarm_actions      = var.alarm_sns_topic_arns
 }
 
+resource "aws_iam_role" "cloudtrail_requeue" {
+  name = "${var.env_name}_cloudtrail_requeue_service"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "ctrequeue_cloudwatch" {
+  name   = "ctrequeue_cloudwatch"
+  role   = aws_iam_role.cloudtrail_requeue.id
+  policy = data.aws_iam_policy_document.ctrequeue_cloudwatch.json
+}
+
+resource "aws_iam_role_policy" "ctrequeue_kms" {
+  name   = "ctrequeue_kms"
+  role   = aws_iam_role.cloudtrail_requeue.id
+  policy = data.aws_iam_policy_document.lambda_kms.json
+}
+
+resource "aws_iam_role_policy" "ctrequeue_sqs" {
+  name   = "ctprocessor_sqs"
+  role   = aws_iam_role.cloudtrail_requeue.id
+  policy = data.aws_iam_policy_document.ctrequeue_sqs.json
+}
+
+resource "aws_iam_role_policy_attachment" "ctrequeue_insights" {
+  role       = aws_iam_role.cloudtrail_requeue.id
+  policy_arn = data.aws_iam_policy.insights.arn
+}
+
+data "aws_iam_policy_document" "ctrequeue_cloudwatch" {
+  statement {
+    sid    = "CreateLogGroup"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+    ]
+
+    resources = [
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+    ]
+  }
+  statement {
+    sid    = "PutLogEvents"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = [
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.ct_requeue_lambda_name}:*",
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "ctrequeue_sqs" {
+  statement {
+    sid    = "SQSPrimary"
+    effect = "Allow"
+    actions = [
+      "sqs:SendMessage",
+    ]
+
+    resources = [
+      aws_sqs_queue.kms_ct_events.arn,
+    ]
+  }
+  statement {
+    sid    = "SQSRequeue"
+    effect = "Allow"
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:ChangeMessageVisibility",
+      "sqs:ReceiveMessage",
+      "sqs:GetQueueAttributes",
+    ]
+
+    resources = [
+      aws_sqs_queue.cloudtrail_requeue.arn,
+    ]
+  }
+}
+
 #lambda functions
+resource "aws_lambda_function" "cloudtrail_requeue" {
+  filename      = var.lambda_kms_ct_requeue_zip
+  function_name = local.ct_requeue_lambda_name
+  description   = "KMS CT Requeue Service"
+  role          = aws_iam_role.cloudtrail_requeue.arn
+  handler       = "main.IdentityKMSMonitor::CloudTrailRequeue.process"
+  runtime       = "ruby3.2"
+  timeout       = 120 # seconds
+
+  layers = [
+    local.lambda_insights
+  ]
+
+  environment {
+    variables = {
+      DEBUG          = var.kmslog_lambda_debug
+      DRY_RUN        = var.kmslog_lambda_dry_run
+      CT_QUEUE_URL   = aws_sqs_queue.kms_ct_events.id
+      CT_REQUEUE_URL = aws_sqs_queue.cloudtrail_requeue.id
+    }
+  }
+
+  tags = {
+    environment = var.env_name
+  }
+}
+
+module "ct-requeue-alerts" {
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  #source = "../lambda_alerts"
+
+  enabled              = 1
+  function_name        = local.ct_requeue_lambda_name
+  alarm_actions        = var.alarm_sns_topic_arns
+  error_rate_threshold = 5 # percent
+  datapoints_to_alarm  = 5
+  evaluation_periods   = 5
+  insights_enabled     = true
+}
+
 resource "aws_lambda_function" "cloudtrail_processor" {
   filename      = var.lambda_kms_ct_processor_zip
   function_name = local.ct_processor_lambda_name
@@ -940,18 +1107,28 @@ data "aws_iam_policy_document" "ctprocessor_sns" {
 
 data "aws_iam_policy_document" "ctprocessor_sqs" {
   statement {
-    sid    = "SQS"
+    sid    = "SQSPrimary"
     effect = "Allow"
     actions = [
       "sqs:DeleteMessage",
       "sqs:ChangeMessageVisibility",
       "sqs:ReceiveMessage",
-      "sqs:SendMessage",
       "sqs:GetQueueAttributes",
     ]
 
     resources = [
       aws_sqs_queue.kms_ct_events.arn,
+    ]
+  }
+  statement {
+    sid    = "SQSRequeue"
+    effect = "Allow"
+    actions = [
+      "sqs:SendMessage",
+    ]
+
+    resources = [
+      aws_sqs_queue.cloudtrail_requeue.arn,
     ]
   }
 }
