@@ -157,7 +157,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   alarm_actions             = var.alarm_actions
 
   metric_name = "Duration"
-  namespace   = "Lambda"
+  namespace   = "AWS/Lambda"
   period      = var.period
   statistic   = "Maximum"
   dimensions = {
