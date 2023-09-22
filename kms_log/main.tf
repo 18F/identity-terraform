@@ -965,6 +965,16 @@ resource "aws_lambda_permission" "event_bridge_to_cloudtrail_requeue" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cloudtrail_requeue.function_name
   principal     = "events.amazonaws.com"
+
+  depends_on = [
+    aws_lambda_function.cloudtrail_requeue
+  ]
+
+  lifecycle {
+    replace_triggered_by = [
+      aws_lambda_function.cloudtrail_requeue.id
+    ]
+  }
 }
 
 #lambda functions
