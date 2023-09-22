@@ -28,7 +28,7 @@ variable "memory_usage_threshold" {
 
 variable "duration_setting" {
   type        = number
-  description = "The duration setting of the lambda to monitor"
+  description = "The duration setting of the lambda to monitor (in seconds)"
 }
 
 variable "duration_threshold" {
@@ -63,6 +63,10 @@ variable "insights_enabled" {
   type        = bool
   description = "Creates lambda insights specific alerts"
   default     = false
+}
+
+locals {
+  duration_settings_in_milliseconds = var.duration_setting * 1000
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
@@ -150,7 +154,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
-  threshold                 = var.duration_setting * (var.duration_threshold * 0.01)
+  threshold                 = local.duration_settings_in_milliseconds * (var.duration_threshold * 0.01)
   insufficient_data_actions = []
   datapoints_to_alarm       = var.datapoints_to_alarm
   treat_missing_data        = var.treat_missing_data
