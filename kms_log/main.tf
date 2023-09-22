@@ -300,8 +300,8 @@ resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.slack_processor_lambda_name
@@ -310,6 +310,7 @@ module "slack-processor-github-alerts" {
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
+  duration_setting     = aws_lambda_function.slack_processor.timeout
 }
 
 resource "aws_lambda_function" "slack_processor" {
@@ -1006,8 +1007,8 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
 }
 
 module "ct-requeue-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_requeue_lambda_name
@@ -1016,6 +1017,7 @@ module "ct-requeue-alerts" {
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
+  duration_setting     = aws_lambda_function.cloudtrail_requeue.timeout
 }
 
 resource "aws_lambda_function" "cloudtrail_processor" {
@@ -1049,8 +1051,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
@@ -1059,6 +1061,7 @@ module "ct-processor-github-alerts" {
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
+  duration_setting     = aws_lambda_function.cloudtrail_processor.timeout
 }
 
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
@@ -1256,8 +1259,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
@@ -1266,6 +1269,7 @@ module "cw-processor-github-alerts" {
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
+  duration_setting     = aws_lambda_function.cloudwatch_processor.timeout
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
