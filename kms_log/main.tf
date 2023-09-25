@@ -952,7 +952,7 @@ data "aws_iam_policy_document" "ctrequeue_sqs" {
 resource "aws_cloudwatch_event_rule" "schedule" {
   name                = "${local.ct_requeue_lambda_name}-schedule"
   description         = "Schedule for the ${local.ct_requeue_lambda_name} function"
-  schedule_expression = "rate(5 minutes)"
+  schedule_expression = "rate(1 hour)"
 }
 
 resource "aws_cloudwatch_event_target" "cloudtrail_requeue_trigger" {
