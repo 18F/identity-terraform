@@ -40,7 +40,7 @@ variable "message_size_threshold" {
 variable "age_of_oldest_message_threshold" {
   type        = number
   description = "The threshold for age_of_oldest_message. Defined in seconds."
-  default     = 3600 # 5 Minutes
+  default     = 300 # 5 Minutes
 }
 
 variable "evaluation_periods" {
