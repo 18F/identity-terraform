@@ -35,7 +35,7 @@ resource "aws_cloudwatch_metric_alarm" "age_of_oldest_message" {
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
-  threshold                 = 3600 # 5 Minutes
+  threshold                 = var.age_of_oldest_message_threshold
   insufficient_data_actions = []
 
   metric_name = "ApproximateAgeOfOldestMessage"
