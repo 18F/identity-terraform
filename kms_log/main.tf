@@ -377,6 +377,15 @@ POLICY
   }
 }
 
+module "reqeue_queue_alerts" {
+  #source = "github.com/18F/identity-terraform//sqs_alerts?ref="
+  source = "../sqs_alerts"
+
+  queue_name                      = aws_sqs_queue.cloudtrail_requeue.name
+  max_message_size                = aws_sqs_queue.cloudtrail_requeue.max_message_size
+  age_of_oldest_message_threshold = 7200 # 2 Hours
+}
+
 # create dead letter queue for kms cloudtrail requeue service 
 resource "aws_sqs_queue" "cloudtrail_requeue_dead_letter" {
   name                              = "${var.env_name}-kms-ct-requeue-dead-letter"
