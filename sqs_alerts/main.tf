@@ -62,7 +62,7 @@ resource "aws_cloudwatch_metric_alarm" "message_size" {
   threshold                 = var.max_message_size * (var.message_size_threshold * 0.01)
   insufficient_data_actions = []
 
-  metric_name = "ApproximateAgeOfOldestMessage"
+  metric_name = "SentMessageSize"
   namespace   = "AWS/SQS"
   period      = var.period
   statistic   = "Maximum"
