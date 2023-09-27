@@ -26,6 +26,17 @@ variable "memory_usage_threshold" {
   default     = 90
 }
 
+variable "duration_setting" {
+  type        = number
+  description = "The duration setting of the lambda to monitor (in seconds)"
+}
+
+variable "duration_threshold" {
+  type        = number
+  description = "The duration threshold (as a percentage) for triggering an alert"
+  default     = 80
+}
+
 variable "datapoints_to_alarm" {
   type        = number
   description = "The number of datapoints that must be breaching to trigger the alarm."
@@ -52,6 +63,10 @@ variable "insights_enabled" {
   type        = bool
   description = "Creates lambda insights specific alerts"
   default     = false
+}
+
+locals {
+  duration_settings_in_milliseconds = var.duration_setting * 1000
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
@@ -120,6 +135,33 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
 
   metric_name = "memory_utilization"
   namespace   = "LambdaInsights"
+  period      = var.period
+  statistic   = "Maximum"
+  dimensions = {
+    FunctionName = var.function_name
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
+  count = var.enabled
+
+  alarm_name        = "LambdaDuration_${var.function_name}"
+  alarm_description = "Lambda duration has exceeded ${var.duration_threshold}%"
+
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = var.evaluation_periods
+  threshold                 = local.duration_settings_in_milliseconds * (var.duration_threshold * 0.01)
+  insufficient_data_actions = []
+  datapoints_to_alarm       = var.datapoints_to_alarm
+  treat_missing_data        = var.treat_missing_data
+  alarm_actions             = var.alarm_actions
+
+  metric_name = "Duration"
+  namespace   = "AWS/Lambda"
   period      = var.period
   statistic   = "Maximum"
   dimensions = {
