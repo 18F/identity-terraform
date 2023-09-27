@@ -160,8 +160,8 @@ POLICY
 }
 
 module "unmatched_queue_alerts" {
-  #source = "github.com/18F/identity-terraform//sqs_alerts?ref="
-  source = "../sqs_alerts"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.unmatched.name
   max_message_size = aws_sqs_queue.unmatched.max_message_size
@@ -420,8 +420,8 @@ POLICY
 }
 
 module "kms_ct_queue_alerts" {
-  #source = "github.com/18F/identity-terraform//sqs_alerts?ref="
-  source = "../sqs_alerts"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.kms_ct_events.name
   max_message_size = aws_sqs_queue.kms_ct_events.max_message_size
@@ -530,8 +530,8 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
 }
 
 module "kms_cloudwatch_events_queue_alerts" {
-  #source = "github.com/18F/identity-terraform//sqs_alerts?ref="
-  source = "../sqs_alerts"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.kms_cloudwatch_events.name
   max_message_size = aws_sqs_queue.kms_cloudwatch_events.max_message_size
