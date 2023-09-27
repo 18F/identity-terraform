@@ -300,8 +300,8 @@ resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.slack_processor_lambda_name
@@ -378,8 +378,8 @@ POLICY
 }
 
 module "reqeue_queue_alerts" {
-  #source = "github.com/18F/identity-terraform//sqs_alerts?ref="
-  source = "../sqs_alerts"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
 
   queue_name                      = aws_sqs_queue.cloudtrail_requeue.name
   max_message_size                = aws_sqs_queue.cloudtrail_requeue.max_message_size
@@ -1016,8 +1016,8 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
 }
 
 module "ct-requeue-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_requeue_lambda_name
@@ -1060,8 +1060,8 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_processor_lambda_name
@@ -1268,8 +1268,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
