@@ -24,7 +24,7 @@ variable "alarm_actions" {
 
 variable "default_field_list" {
   type        = list(any)
-  description = "Default filds for flow logs"
+  description = "Default fields for flow logs"
   default = [
     "version",
     "accountId",
