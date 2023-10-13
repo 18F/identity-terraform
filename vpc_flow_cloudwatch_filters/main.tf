@@ -22,12 +22,6 @@ variable "alarm_actions" {
   description = "A list of ARNs to notify when the VPC rejection alarm fires"
 }
 
-variable "src_addr_filter" {
-  type        = string
-  description = "Filter for srcAddr"
-  default     = "srcAddr=172.16.*"
-}
-
 variable "default_field_list" {
   type        = list(any)
   description = "Default filds for flow logs"
