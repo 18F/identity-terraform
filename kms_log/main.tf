@@ -3,6 +3,7 @@ locals {
   dead_letter_queues = [
     aws_sqs_queue.dead_letter.name,
     aws_sqs_queue.unmatched_slack_dead_letter.name,
+    aws_sqs_queue.cloudtrail_requeue_dead_letter.name,
   ]
 
   default_variables = {
@@ -115,6 +116,7 @@ locals {
   kmslog_event_rule_name      = "${var.env_name}-unmatched-kmslog"
   dashboard_name              = "${var.env_name}-kms-logging"
   ct_processor_lambda_name    = "${var.env_name}-cloudtrail-kms"
+  ct_requeue_lambda_name      = "${var.env_name}-kms-cloudtrail-requeue"
   cw_processor_lambda_name    = "${var.env_name}-cloudwatch-kms"
   event_processor_lambda_name = "${var.env_name}-kmslog-event-processor"
   slack_processor_lambda_name = "${var.env_name}-kms-slack-batch-processor"
@@ -155,6 +157,14 @@ POLICY
   tags = {
     environment = var.env_name
   }
+}
+
+module "unmatched_queue_alerts" {
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
+
+  queue_name       = aws_sqs_queue.unmatched.name
+  max_message_size = aws_sqs_queue.unmatched.max_message_size
 }
 
 resource "aws_sqs_queue_policy" "events_to_sqs" {
@@ -290,7 +300,7 @@ resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
   #source = "../lambda_alerts"
 
   enabled              = 1
@@ -300,6 +310,7 @@ module "slack-processor-github-alerts" {
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
+  duration_setting     = aws_lambda_function.slack_processor.timeout
 }
 
 resource "aws_lambda_function" "slack_processor" {
@@ -346,6 +357,46 @@ resource "aws_sqs_queue" "dead_letter" {
   }
 }
 
+# queue for cloudtrail requeueing service
+resource "aws_sqs_queue" "cloudtrail_requeue" {
+  name                              = "${var.env_name}-kms-ct-requeue"
+  max_message_size                  = var.ct_queue_max_message_size
+  visibility_timeout_seconds        = var.ct_queue_visibility_timeout_seconds
+  message_retention_seconds         = var.ct_queue_message_retention_seconds
+  kms_master_key_id                 = aws_kms_key.kms_logging.arn
+  kms_data_key_reuse_period_seconds = 600 # number of seconds the kms key is cached
+  redrive_policy                    = <<POLICY
+{
+    "deadLetterTargetArn": "${aws_sqs_queue.cloudtrail_requeue_dead_letter.arn}",
+    "maxReceiveCount": ${var.ct_queue_maxreceivecount}
+}
+POLICY
+
+  tags = {
+    environment = var.env_name
+  }
+}
+
+module "reqeue_queue_alerts" {
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
+
+  queue_name                      = aws_sqs_queue.cloudtrail_requeue.name
+  max_message_size                = aws_sqs_queue.cloudtrail_requeue.max_message_size
+  age_of_oldest_message_threshold = 7200 # 2 Hours
+}
+
+# create dead letter queue for kms cloudtrail requeue service 
+resource "aws_sqs_queue" "cloudtrail_requeue_dead_letter" {
+  name                              = "${var.env_name}-kms-ct-requeue-dead-letter"
+  kms_master_key_id                 = aws_kms_key.kms_logging.arn
+  kms_data_key_reuse_period_seconds = 600
+  message_retention_seconds         = 604800 # 7 days
+  tags = {
+    environment = var.env_name
+  }
+}
+
 # queue for cloudtrail kms events
 resource "aws_sqs_queue" "kms_ct_events" {
   name                              = "${var.env_name}-kms-ct-events"
@@ -366,6 +417,14 @@ POLICY
   tags = {
     environment = var.env_name
   }
+}
+
+module "kms_ct_queue_alerts" {
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
+
+  queue_name       = aws_sqs_queue.kms_ct_events.name
+  max_message_size = aws_sqs_queue.kms_ct_events.max_message_size
 }
 
 resource "aws_sqs_queue_policy" "default" {
@@ -468,6 +527,14 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
   tags = {
     environment = var.env_name
   }
+}
+
+module "kms_cloudwatch_events_queue_alerts" {
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  #source = "../sqs_alerts"
+
+  queue_name       = aws_sqs_queue.kms_cloudwatch_events.name
+  max_message_size = aws_sqs_queue.kms_cloudwatch_events.max_message_size
 }
 
 resource "aws_sqs_queue_policy" "kms_cloudwatch_events" {
@@ -795,7 +862,173 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_lambda_backlog" {
   alarm_actions      = var.alarm_sns_topic_arns
 }
 
+resource "aws_iam_role" "cloudtrail_requeue" {
+  name = "${var.env_name}_cloudtrail_requeue_service"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "ctrequeue_cloudwatch" {
+  name   = "ctrequeue_cloudwatch"
+  role   = aws_iam_role.cloudtrail_requeue.id
+  policy = data.aws_iam_policy_document.ctrequeue_cloudwatch.json
+}
+
+resource "aws_iam_role_policy" "ctrequeue_kms" {
+  name   = "ctrequeue_kms"
+  role   = aws_iam_role.cloudtrail_requeue.id
+  policy = data.aws_iam_policy_document.lambda_kms.json
+}
+
+resource "aws_iam_role_policy" "ctrequeue_sqs" {
+  name   = "ctprocessor_sqs"
+  role   = aws_iam_role.cloudtrail_requeue.id
+  policy = data.aws_iam_policy_document.ctrequeue_sqs.json
+}
+
+resource "aws_iam_role_policy_attachment" "ctrequeue_insights" {
+  role       = aws_iam_role.cloudtrail_requeue.id
+  policy_arn = data.aws_iam_policy.insights.arn
+}
+
+data "aws_iam_policy_document" "ctrequeue_cloudwatch" {
+  statement {
+    sid    = "CreateLogGroup"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+    ]
+
+    resources = [
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
+    ]
+  }
+  statement {
+    sid    = "PutLogEvents"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = [
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.ct_requeue_lambda_name}:*",
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "ctrequeue_sqs" {
+  statement {
+    sid    = "SQSPrimary"
+    effect = "Allow"
+    actions = [
+      "sqs:SendMessage",
+    ]
+
+    resources = [
+      aws_sqs_queue.kms_ct_events.arn,
+    ]
+  }
+  statement {
+    sid    = "SQSRequeue"
+    effect = "Allow"
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:ChangeMessageVisibility",
+      "sqs:ReceiveMessage",
+      "sqs:GetQueueAttributes",
+    ]
+
+    resources = [
+      aws_sqs_queue.cloudtrail_requeue.arn,
+    ]
+  }
+}
+
+# Scheduled Trigger Expressions for cloudtrail_requeue
+
+resource "aws_cloudwatch_event_rule" "schedule" {
+  name                = "${local.ct_requeue_lambda_name}-schedule"
+  description         = "Schedule for the ${local.ct_requeue_lambda_name} function"
+  schedule_expression = "rate(1 hour)"
+}
+
+resource "aws_cloudwatch_event_target" "cloudtrail_requeue_trigger" {
+  count = var.ct_requeue_concurrency
+  rule  = aws_cloudwatch_event_rule.schedule.name
+  arn   = aws_lambda_function.cloudtrail_requeue.arn
+}
+
+resource "aws_lambda_permission" "event_bridge_to_cloudtrail_requeue" {
+  source_arn    = aws_cloudwatch_event_rule.schedule.arn
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cloudtrail_requeue.function_name
+  principal     = "events.amazonaws.com"
+
+  depends_on = [
+    aws_lambda_function.cloudtrail_requeue
+  ]
+
+  lifecycle {
+    replace_triggered_by = [
+      aws_lambda_function.cloudtrail_requeue.id
+    ]
+  }
+}
+
 #lambda functions
+resource "aws_lambda_function" "cloudtrail_requeue" {
+  filename      = var.lambda_kms_ct_requeue_zip
+  function_name = local.ct_requeue_lambda_name
+  description   = "KMS CT Requeue Service"
+  role          = aws_iam_role.cloudtrail_requeue.arn
+  handler       = "main.IdentityKMSMonitor::CloudTrailRequeue.process"
+  runtime       = "ruby3.2"
+  timeout       = 900 # 15 minutes
+
+  layers = [
+    local.lambda_insights
+  ]
+
+  environment {
+    variables = {
+      DEBUG          = var.kmslog_lambda_debug
+      DRY_RUN        = var.kmslog_lambda_dry_run
+      CT_QUEUE_URL   = aws_sqs_queue.kms_ct_events.id
+      CT_REQUEUE_URL = aws_sqs_queue.cloudtrail_requeue.id
+    }
+  }
+
+  tags = {
+    environment = var.env_name
+  }
+}
+
+module "ct-requeue-alerts" {
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  #source = "../lambda_alerts"
+
+  enabled              = 1
+  function_name        = local.ct_requeue_lambda_name
+  alarm_actions        = var.alarm_sns_topic_arns
+  error_rate_threshold = 5 # percent
+  datapoints_to_alarm  = 5
+  evaluation_periods   = 5
+  insights_enabled     = true
+  duration_setting     = aws_lambda_function.cloudtrail_requeue.timeout
+}
+
 resource "aws_lambda_function" "cloudtrail_processor" {
   filename      = var.lambda_kms_ct_processor_zip
   function_name = local.ct_processor_lambda_name
@@ -814,6 +1047,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
       DEBUG               = var.kmslog_lambda_debug
       DRY_RUN             = var.kmslog_lambda_dry_run
       CT_QUEUE_URL        = aws_sqs_queue.kms_ct_events.id
+      CT_REQUEUE_URL      = aws_sqs_queue.cloudtrail_requeue.id
       RETENTION_DAYS      = var.dynamodb_retention_days
       DDB_TABLE           = aws_dynamodb_table.kms_events.id
       SNS_EVENT_TOPIC_ARN = aws_sns_topic.kms_logging_events.arn
@@ -826,7 +1060,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
   #source = "../lambda_alerts"
 
   enabled              = 1
@@ -836,6 +1070,7 @@ module "ct-processor-github-alerts" {
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
+  duration_setting     = aws_lambda_function.cloudtrail_processor.timeout
 }
 
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
@@ -916,18 +1151,28 @@ data "aws_iam_policy_document" "ctprocessor_sns" {
 
 data "aws_iam_policy_document" "ctprocessor_sqs" {
   statement {
-    sid    = "SQS"
+    sid    = "SQSPrimary"
     effect = "Allow"
     actions = [
       "sqs:DeleteMessage",
       "sqs:ChangeMessageVisibility",
       "sqs:ReceiveMessage",
-      "sqs:SendMessage",
       "sqs:GetQueueAttributes",
     ]
 
     resources = [
       aws_sqs_queue.kms_ct_events.arn,
+    ]
+  }
+  statement {
+    sid    = "SQSRequeue"
+    effect = "Allow"
+    actions = [
+      "sqs:SendMessage",
+    ]
+
+    resources = [
+      aws_sqs_queue.cloudtrail_requeue.arn,
     ]
   }
 }
@@ -1023,7 +1268,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b7933bfe952caa1df591bdbb12c5209a9184aa25"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
   #source = "../lambda_alerts"
 
   enabled              = 1
@@ -1033,6 +1278,7 @@ module "cw-processor-github-alerts" {
   datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
+  duration_setting     = aws_lambda_function.cloudwatch_processor.timeout
 }
 
 resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
