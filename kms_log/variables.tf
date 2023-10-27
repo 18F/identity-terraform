@@ -30,8 +30,9 @@ variable "ct_queue_delay_seconds" {
 }
 
 variable "ct_queue_max_message_size" {
-  default     = 2048
-  description = "Max message size in kb"
+  default     = 4096
+  type        = number
+  description = "Max message size in bytes"
 }
 
 variable "ct_queue_visibility_timeout_seconds" {
