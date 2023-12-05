@@ -22,6 +22,11 @@ variable "alarm_actions" {
   description = "A list of ARNs to notify when the squid denied alarm fires"
 }
 
+variable "runbook_url" {
+  type        = string
+  description = "A URL to a runbook to help triage alerts"
+}
+
 locals {
   log_group_name = var.log_group_name_override == "" ? "${var.env_name}_/var/log/squid/access.log" : var.log_group_name_override
 }
@@ -52,7 +57,12 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_denied" {
 
 resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
   alarm_name        = "${var.env_name}-squid-denials"
-  alarm_description = "Alarm when the Squid access log shows any denied requests [TF]"
+  alarm_description = <<EOM
+The outbound proxy has denied too many outbound requests.
+
+Runbook: ${var.runbook_url}
+EOM
+
   namespace         = var.metric_namespace
   metric_name       = "${var.env_name}/DeniedRequests"
 
@@ -71,7 +81,11 @@ resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
 
 resource "aws_cloudwatch_metric_alarm" "squid_total_requests" {
   alarm_name        = "${var.env_name}-squid-total-requests"
-  alarm_description = "Alarm when the Squid access log total requests fall below threshold [TF]"
+  alarm_description = <<EOM
+The outbound proxy throughput is below the expected volume.
+
+Runbook: ${var.runbook_url}
+EOM
   namespace         = var.metric_namespace
   metric_name       = "${var.env_name}/TotalRequests"
 
