@@ -76,6 +76,8 @@ resource "aws_lambda_function" "slack_lambda" {
       slack_channel               = var.slack_channel,
       slack_username              = var.slack_username,
       slack_icon                  = var.slack_icon
+      slack_alarm_emoji           = var.slack_alarm_emoji
+      slack_ok_emoji              = var.slack_ok_emoji
     }
   }
 
