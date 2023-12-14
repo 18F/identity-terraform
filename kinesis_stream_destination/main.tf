@@ -25,12 +25,14 @@ data "aws_iam_policy_document" "cloudwatch_assume" {
   }
 }
 
-data "aws_iam_policy_document" "cloudwatch_firehose_access" {
+data "aws_iam_policy_document" "cloudwatch_kinesis_access" {
   statement {
-    effect  = "Allow"
-    actions = ["firehose:*"]
+    effect = "Allow"
+    actions = [
+      "kinesis:PutRecord"
+    ]
     resources = [
-      "arn:aws:firehose:region:${local.dest_acct_id}:*"
+      var.stream_arn
     ]
   }
 }
@@ -46,7 +48,7 @@ data "aws_iam_policy_document" "subscription_access" {
     }
 
     resources = [
-      aws_cloudwatch_log_destination.firehose.arn
+      aws_cloudwatch_log_destination.kinesis.arn
     ]
   }
 }
@@ -54,23 +56,23 @@ data "aws_iam_policy_document" "subscription_access" {
 # Resources
 
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
-  name               = local.destination_name
+  name               = local.identifier_name
   assume_role_policy = data.aws_iam_policy_document.cloudwatch_assume.json
 }
 
-resource "aws_iam_role_policy" "cloudwatch_firehose_access" {
-  name   = "${local.destination_name}_firehose_access"
+resource "aws_iam_role_policy" "cloudwatch_kinesis_access" {
+  name   = "${local.identifier_name}-access"
   role   = aws_iam_role.cloudwatch_to_kinesis.id
-  policy = data.aws_iam_policy_document.cloudwatch_firehose_access.json
+  policy = data.aws_iam_policy_document.cloudwatch_kinesis_access.json
 }
 
-resource "aws_cloudwatch_log_destination" "firehose" {
-  name       = local.destination_name
+resource "aws_cloudwatch_log_destination" "kinesis" {
+  name       = local.identifier_name
   role_arn   = aws_iam_role.cloudwatch_to_kinesis.arn
-  target_arn = local.kinesis_firehose_arn
+  target_arn = var.stream_arn
 }
 
 resource "aws_cloudwatch_log_destination_policy" "subscription_access" {
-  destination_name = aws_cloudwatch_log_destination.firehose.name
+  destination_name = aws_cloudwatch_log_destination.kinesis.name
   access_policy    = data.aws_iam_policy_document.subscription_access.json
 }
