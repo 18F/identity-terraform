@@ -637,6 +637,10 @@ resource "aws_cloudwatch_log_destination" "datastream" {
   name       = local.kinesis_stream_name
   role_arn   = aws_iam_role.cloudwatch_to_kinesis.arn
   target_arn = aws_kinesis_stream.datastream.arn
+
+  depends_on = [
+    aws_kinesis_stream.datastream
+  ]
 }
 
 # configure policy to allow subscription acccess
