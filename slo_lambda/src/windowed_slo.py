@@ -161,6 +161,7 @@ class SLI:
         self,
         numerator: List[Dict],
         denominator: List[Dict],
+        description: str = "",
         window_days: int = WINDOW_DAYS,
     ):
         if window_days is None:
