@@ -96,7 +96,7 @@
           }
         ]
       }
-    ]
+    ],
     "denominator": [
       {
         "namespace": "test/sli",
