@@ -2,6 +2,8 @@
 include: 
  - template: Jobs/SAST-IaC.gitlab-ci.yml  
  - template: Security/Secret-Detection.gitlab-ci.yml 
+ - template: Security/SAST.gitlab-ci.yml
+ - template: Jobs/Dependency-Scanning.gitlab-ci.yml
 
 secret_detection:
   allow_failure: false
