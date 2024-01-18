@@ -64,3 +64,9 @@
 #   target_id = "${var.env_name}-sns"
 #   arn       = var.aws_sns_topic.kms_events.arn
 # }
+
+# resource "aws_cloudwatch_event_target" "mr_replica_delete_kms_key" {
+#   rule      = aws_cloudwatch_event_rule.mr_replica_delete_kms_key.name
+#   target_id = "${var.env_name}-sns"
+#   arn       = var.alarm_sns_topic_arn
+# }

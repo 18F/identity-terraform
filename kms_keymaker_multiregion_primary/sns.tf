@@ -69,3 +69,9 @@ resource "aws_cloudwatch_event_target" "update_primary_region" {
   target_id = "${var.env_name}-sns"
   arn       = var.alarm_sns_topic_arn
 }
+
+resource "aws_cloudwatch_event_target" "mr_primary_delete_kms_key" {
+  rule      = aws_cloudwatch_event_rule.mr_primary_delete_kms_key.name
+  target_id = "${var.env_name}-sns"
+  arn       = var.alarm_sns_topic_arn
+}

@@ -87,3 +87,18 @@ resource "aws_cloudwatch_event_rule" "update_primary_region" {
 }
 PATTERN
 }
+
+resource "aws_cloudwatch_event_rule" "mr_replica_delete_kms_key" {
+  name        = "${var.env_name}-mr-replica-delete-kms-key"
+  description = "Capture delete KMS key events"
+
+  event_pattern = <<PATTERN
+{
+    "eventName": ["DeleteKey"],
+    "eventSource": ["kms.amazonaws.com"],
+    "requestParameters": {
+        "keyId": [ "${aws_kms_key.login_dot_gov_keymaker_multi_region_replica.key_id}" ]
+    }
+}
+PATTERN
+}
