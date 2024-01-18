@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "kms" {
   }
 }
 
-# iam policy for sqs that allows cloudwatch events to 
+# iam policy for sqs that allows cloudwatch events to
 # deliver events to the queue
 data "aws_iam_policy_document" "sqs_kms_ct_events_policy" {
   statement {
@@ -165,6 +165,8 @@ module "unmatched_queue_alerts" {
 
   queue_name       = aws_sqs_queue.unmatched.name
   max_message_size = aws_sqs_queue.unmatched.max_message_size
+  alarm_actions    = var.sqs_alarm_actions
+  ok_actions       = var.sqs_ok_actions
 }
 
 resource "aws_sqs_queue_policy" "events_to_sqs" {
@@ -386,7 +388,7 @@ module "reqeue_queue_alerts" {
   age_of_oldest_message_threshold = 7200 # 2 Hours
 }
 
-# create dead letter queue for kms cloudtrail requeue service 
+# create dead letter queue for kms cloudtrail requeue service
 resource "aws_sqs_queue" "cloudtrail_requeue_dead_letter" {
   name                              = "${var.env_name}-kms-ct-requeue-dead-letter"
   kms_master_key_id                 = aws_kms_key.kms_logging.arn
@@ -506,7 +508,7 @@ resource "aws_dynamodb_table" "kms_events" {
 }
 
 # sns topic for metrics and events sent
-# by the lambda that process the cloudtrail 
+# by the lambda that process the cloudtrail
 # events
 resource "aws_sns_topic" "kms_logging_events" {
   name              = "${var.env_name}-kms-logging-events"
@@ -618,7 +620,7 @@ data "aws_iam_policy_document" "cloudwatch_access" {
   }
 }
 
-# kinesis role 
+# kinesis role
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
   name               = local.kinesis_stream_name
   path               = "/"
@@ -666,7 +668,7 @@ resource "aws_cloudwatch_log_destination_policy" "subscription" {
   access_policy    = data.aws_iam_policy_document.subscription.json
 }
 
-# create subscription filter 
+# create subscription filter
 # this filter will send the kms.log events to kinesis
 resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
   depends_on = [null_resource.kms_log_found]

@@ -9,7 +9,7 @@ variable "enabled" {
   description = "Enables the set of alerts defined in this module"
 }
 
-variable "ok_actions_actions" {
+variable "ok_actions" {
   type        = list(string)
   description = "A list of ARNs to notify when the alarm returns to an OK state"
 }
