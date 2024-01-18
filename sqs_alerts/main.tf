@@ -12,6 +12,8 @@ resource "aws_cloudwatch_metric_alarm" "inflight_messages" {
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
   threshold                 = local.inflight_messages_limit * (var.inflight_threshold * 0.01)
+  alarm_actions             = var.alarm_actions
+  ok_actions                = var.ok_actions
   insufficient_data_actions = []
 
   metric_name = "ApproximateNumberOfMessagesNotVisible"
@@ -36,6 +38,8 @@ resource "aws_cloudwatch_metric_alarm" "age_of_oldest_message" {
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
   threshold                 = var.age_of_oldest_message_threshold
+  alarm_actions             = var.alarm_actions
+  ok_actions                = var.ok_actions
   insufficient_data_actions = []
 
   metric_name = "ApproximateAgeOfOldestMessage"
@@ -60,6 +64,8 @@ resource "aws_cloudwatch_metric_alarm" "message_size" {
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
   threshold                 = var.max_message_size * (var.message_size_threshold * 0.01)
+  alarm_actions             = var.alarm_actions
+  ok_actions                = var.ok_actions
   insufficient_data_actions = []
 
   metric_name = "SentMessageSize"
