@@ -159,3 +159,14 @@ variable "lambda_slack_batch_processor_zip" {
   description = "Lambda source code that batches KMS events for notification"
   type        = string
 }
+
+variable "sqs_alarm_actions" {
+  type        = list(string)
+  description = "A list of ARNs to notify when the sqs alarms fire"
+}
+
+variable "sqs_ok_actions" {
+  type        = list(string)
+  description = "A list of ARNs to notify when the sqs alarms return to an OK state"
+}
+

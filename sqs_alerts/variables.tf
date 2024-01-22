@@ -1,7 +1,17 @@
+variable "alarm_actions" {
+  type        = list(string)
+  description = "A list of ARNs to notify when the alarm fires"
+}
+
 variable "enabled" {
   type        = bool
   default     = true
   description = "Enables the set of alerts defined in this module"
+}
+
+variable "ok_actions" {
+  type        = list(string)
+  description = "A list of ARNs to notify when the alarm returns to an OK state"
 }
 
 variable "queue_name" {
