@@ -63,8 +63,8 @@ The outbound proxy has denied too many outbound requests.
 Runbook: ${var.runbook_url}
 EOM
 
-  namespace         = var.metric_namespace
-  metric_name       = "${var.env_name}/DeniedRequests"
+  namespace   = var.metric_namespace
+  metric_name = "${var.env_name}/DeniedRequests"
 
   # alert when sum(denials) >= 1 for any 1 minute out of 15 eval periods
   statistic           = "Sum"
