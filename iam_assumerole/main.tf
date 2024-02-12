@@ -50,6 +50,19 @@ variable "permissions_boundary_policy_arn" {
 (REQUIRED) ARN of an existing IAM policy (from another module/source)
 which will be used as the Permissions Boundary for the IAM role.
 EOM
+  type        = string
+
+  validation {
+    # regex(...) fails if it cannot find a match
+    condition = can(regex(
+      "^arn:aws:iam::[\\d]{12}:policy\\/[\\w+=,.@-]+$",
+      var.permissions_boundary_policy_arn
+    ))
+    error_message = <<EOM
+The permissions_boundary_policy_arn variable must be a valid AWS ARN,
+e.g.: arn:aws:iam::123456789012:policy/XCompanyBoundaries
+EOM
+  }
 }
 
 # -- Resources --

@@ -5,8 +5,9 @@
 - [Overview](#overview)
 - [Enabling DNSSEC Signing with a KSK](#enabling-dnssec-signing-with-a-ksk)
 - [KSK Key Rotation](#ksk-key-rotation)
-- [The Future: Resource Protection Using Lifecycle Rules](#the-future-resource-protection-using-lifecycle-rules)
-  - [Recommended: IAM Policy to Prevent Deletion/Disablement Of Resources](#recommended-iam-policy-to-prevent-deletiondisablement-of-resources)
+- [Resource Protection Using the `DNSSecDisablePrevent` Policy](#resource-protection-using-the-dnssecdisableprevent-policy)
+  - [Why Use Such A Restrictive Policy?](#why-use-such-a-restrictive-policy)
+  - [What About Lifecycle Rules?](#what-about-lifecycle-rules)
 - [Example Implementation](#example-implementation)
 - [Variables](#variables)
   - [CloudWatch Alarm Description Fill-Ins](#cloudwatch-alarm-description-fill-ins)
@@ -74,21 +75,9 @@ More info about how DNSSEC management and KSKs work in AWS can be found in the [
     }
   ```
 
-## The Future: Resource Protection Using Lifecycle Rules
+## Resource Protection Using the `DNSSecDisablePrevent` Policy
 
-The possibility of accidental destruction of the 'DNSSEC-signing-enabled' resource, the KSK(s)/KMS key(s), and/or the Hosted Zone itself, is much higher when using Terraform or another third-party (i.e. non-AWS) tool to manage infrastructure (as critical warnings about such actions appear through AWS services, such as the console, but not in response to API calls made by Terraform). *This precise destruction -- via Terraform, in fact! -- [caused a minor, but long lasting, Slack outage in September 2021](https://slack.engineering/what-happened-during-slacks-dnssec-rollout/), even after extensive DNSSEC testing/prep on their part.*
-
-However, for this module, the `lifecycle { prevent_destroy = true }` safeguard is **not** attached to the various DNSSEC resources. Doing so would add significant complexity, and manual work, to the key rotation process, as explained below:
-
-Key rotation requires the ability to destroy the old, deactivated keys once they are fully confirmed to no longer be in use, and [lifecycle rules currently (as of 2022-08-11) do not support interpolation.](https://www.terraform.io/docs/language/meta-arguments/lifecycle.html#literal-values-only) Thus, logic cannot be written to change a lifecycle rule automatically when marking a key as inactive / commenting out a key in the `dnssec_ksks` string map. One would need to manually override/comment out the `lifecycle` block (in a local copy of `main.tf`), or remove it from the actual Terraform statefile (via `state pull` / `state push` commands), and run an *extra* `terraform apply` command, in order to remove the resources and keep Terraform's state accurate.
-
-Until such time that they *can* be configured with interpolation, the `lifecycle` blocks for these resources are commented out, with the hope to include them as an additional safeguard in the future. Terraform *has* indicated an intent to implement this feature request in the near future, and further discussion and planning can be found within the `hashicorp/terraform` repo:
-- https://github.com/hashicorp/terraform/issues/3116
-- https://github.com/hashicorp/terraform/issues/30937
-
-### Recommended: IAM Policy to Prevent Deletion/Disablement Of Resources
-
-While the resources for KMS/KSK keys, aliases, and DNSSEC status itself don't currently have lifecycle blocks applied, we instead recommend creating and implmenting an IAM policy that uses an explicit **Deny** against any actions that could delete/disable the resources involved in this module, i.e.:
+If the boolean variable `protect_resources` is set to **true** (also its default value), this module will create an IAM policy, `DNSSecDisablePrevent`, which adds an explicit **Deny** against any actions that could delete/disable the resources involved in this module, i.e.:
 
 - deactivation/deletion of KSK(s) / the respective KMS key(s)
 - disabling DNSSEC signing
@@ -96,7 +85,21 @@ While the resources for KMS/KSK keys, aliases, and DNSSEC status itself don't cu
 
 This IAM policy can then be attached to roles/users/groups as desired -- as an example, it could be one of the `custom_policy_arns` used when [creating roles via the `iam_assumerole` module (also in this repo!)](https://github.com/18F/identity-terraform/tree/main/iam_assumerole)
 
-For even MORE protection, that policy CAN include a `lifecycle { prevent_destroy = true }` rule. Using this will require an additional Terraform operation to reverse said lifecycle rule if needing to delete the policy. This is an extra safeguard to help prevent resource removals/deletions, and you may want to still leave it in place even if/when lifecycle rule interpolation in Terraform is supported.
+### Why Use Such A Restrictive Policy?
+
+The possibility of accidental destruction of the 'DNSSEC-signing-enabled' resource, the KSK(s)/KMS key(s), and/or the Hosted Zone itself, is much higher when using Terraform or another third-party (i.e. non-AWS) tool to manage infrastructure (as critical warnings about such actions appear through AWS services, such as the console, but not in response to API calls made by Terraform). *This precise destruction -- via Terraform, in fact! -- [caused a minor, but long lasting, Slack outage in September 2021](https://slack.engineering/what-happened-during-slacks-dnssec-rollout/), even after extensive DNSSEC testing/prep on their part.*
+
+### What About Lifecycle Rules?
+
+For this module, the `lifecycle { prevent_destroy = true }` safeguard is **not** attached to the various DNSSEC resources. Doing so would add significant complexity, and manual work, to the key rotation process, as explained below:
+
+Key rotation requires the ability to destroy the old, deactivated keys once they are fully confirmed to no longer be in use, and [lifecycle rules currently (as of 2022-08-11) do not support interpolation.](https://www.terraform.io/docs/language/meta-arguments/lifecycle.html#literal-values-only) Thus, logic cannot be written to change a lifecycle rule automatically when marking a key as inactive / commenting out a key in the `dnssec_ksks` string map. One would need to manually override/comment out the `lifecycle` block (in a local copy of `main.tf`), or remove it from the actual Terraform statefile (via `state pull` / `state push` commands), and run an *extra* `terraform apply` command, in order to remove the resources and keep Terraform's state accurate.
+
+Until such time that they *can* be configured with interpolation, the `lifecycle` blocks for these resources are commented out, with the hope to include them as an additional safeguard in the future. Terraform *has* indicated an intent to implement this feature request in the near future, and further discussion and planning can be found within the `hashicorp/terraform` repo:
+- https://github.com/hashicorp/terraform/issues/3116
+- https://github.com/hashicorp/terraform/issues/30937
+
+***Additionally:*** While the resources for KMS/KSK keys, aliases, and DNSSEC status itself don't currently have lifecycle blocks applied, the `DNSSecDisablePrevent` IAM policy -- conditionally created, with `var.protect_resources` set to `true` -- has `lifecycle { prevent_destroy = true }`, thus requiring an additional Terraform operation to reverse said lifecycle rule if needing to delete the policy. This is an extra safeguard to help prevent resource removals/deletions, and will (most likely) be left in place if/when lifecycle rule interpolation is supported.
 
 ## Example Implementation
 
@@ -118,6 +121,7 @@ module "dnssec" {
   dnssec_zone_id                    = module.common_dns.primary_zone_id
   alarm_actions                     = [module.sns_slack.sns_topic_arn]
   dnssec_ksks                       = var.dnssec_ksks
+  protect_resources                 = true
 }
 ```
 
@@ -162,3 +166,4 @@ The implementation above uses a `local` variable, `dnssec_runbook_prefix`, to ad
 `dnssec_ksks` - Map of Key Signing Keys (KSKs) to provision for each hosted zone.
 `dnssec_zone_name` - Name of the Route53 DNS domain where DNSSEC signing will be enabled.
 `dnssec_zone_id` - ID of the Route53 DNS domain where DNSSEC signing will be enabled.
+`protect_resources` - Whether or not to create the IAM policy that prevents disabling/destruction of DNSSEC itself, the associated KSKs/KMS keys/aliases, and the Route53 Hosted Zone.
