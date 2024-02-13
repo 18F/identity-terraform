@@ -154,7 +154,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
-  threshold                 = var.duration_threshold
+  threshold                 = local.duration_settings_in_milliseconds * (var.duration_threshold * 0.01)
   insufficient_data_actions = []
   datapoints_to_alarm       = var.datapoints_to_alarm
   treat_missing_data        = var.treat_missing_data
