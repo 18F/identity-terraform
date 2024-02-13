@@ -1073,7 +1073,7 @@ module "ct-processor-github-alerts" {
   function_name        = local.ct_processor_lambda_name
   alarm_actions        = var.alarm_sns_topic_arns
   error_rate_threshold = 5 # percent
-  datapoints_to_alarm  = 1
+  datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
   duration_setting     = aws_lambda_function.cloudtrail_processor.timeout
@@ -1281,7 +1281,7 @@ module "cw-processor-github-alerts" {
   function_name        = local.cw_processor_lambda_name
   alarm_actions        = var.alarm_sns_topic_arns
   error_rate_threshold = 5 # percent
-  datapoints_to_alarm  = 1
+  datapoints_to_alarm  = 5
   evaluation_periods   = 5
   insights_enabled     = true
   duration_setting     = aws_lambda_function.cloudwatch_processor.timeout
