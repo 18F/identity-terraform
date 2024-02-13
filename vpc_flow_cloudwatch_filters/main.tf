@@ -68,7 +68,7 @@ variable "vpc_flow_rejections_total_fields" {
 variable "vpc_flow_rejections_internal_fields" {
   type = any
   default = {
-    action = "action=REJECT"
+    action  = "action=REJECT"
     srcAddr = "srcAddr=172.16.*"
   }
 }
@@ -76,7 +76,7 @@ variable "vpc_flow_rejections_internal_fields" {
 variable "vpc_flow_rejections_unexpected_fields" {
   type = any
   default = {
-    action = "action=REJECT"
+    action  = "action=REJECT"
     srcAddr = "srcAddr=172.16.*"
     dstAddr = "dstAddr!=192.88.99.255"
     srcPort = "srcPort!=26 && srcPort!=443 && srcPort!=3128 && srcPort!=5044"
@@ -85,10 +85,10 @@ variable "vpc_flow_rejections_unexpected_fields" {
 
 
 locals {
-  log_group_name = var.log_group_name_override == "" ? "${var.env_name}_flow_log_group" : var.log_group_name_override
-  vpc_flow_rejections_total_fields = join( ", ", [for i, v in var.default_field_list: coalesce(try(var.vpc_flow_rejections_total_fields[v], null), v)])
-  vpc_flow_rejections_internal_fields = join( ", ", [for i, v in var.default_field_list: coalesce(try(var.vpc_flow_rejections_internal_fields[v], null), v)])
-  vpc_flow_rejections_unexpected_fields = join( ", ", [for i, v in var.default_field_list: coalesce(try(var.vpc_flow_rejections_unexpected_fields[v], null), v)])
+  log_group_name                        = var.log_group_name_override == "" ? "${var.env_name}_flow_log_group" : var.log_group_name_override
+  vpc_flow_rejections_total_fields      = join(", ", [for i, v in var.default_field_list : coalesce(try(var.vpc_flow_rejections_total_fields[v], null), v)])
+  vpc_flow_rejections_internal_fields   = join(", ", [for i, v in var.default_field_list : coalesce(try(var.vpc_flow_rejections_internal_fields[v], null), v)])
+  vpc_flow_rejections_unexpected_fields = join(", ", [for i, v in var.default_field_list : coalesce(try(var.vpc_flow_rejections_unexpected_fields[v], null), v)])
 }
 
 resource "aws_cloudwatch_log_metric_filter" "vpc_flow_rejections_total" {
