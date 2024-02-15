@@ -169,7 +169,7 @@ data "aws_iam_policy_document" "manage_your_account" {
   statement {
     sid    = "BlockMostAccessUnlessSignedInWithMFA"
     effect = "Deny"
-    actions = [
+    not_actions = [
       "iam:CreateVirtualMFADevice",
       "iam:ChangePassword",
       "iam:EnableMFADevice",
