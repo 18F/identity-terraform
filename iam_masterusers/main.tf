@@ -182,7 +182,7 @@ data "aws_iam_policy_document" "manage_your_account" {
       ]
     }
   }
-statement {
+  statement {
     sid    = "BlockMostAccessUnlessSignedInWithMFA"
     effect = "Deny"
     actions = [
