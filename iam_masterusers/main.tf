@@ -132,7 +132,7 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:CreateVirtualMFADevice",
       "iam:DeleteVirtualMFADevice",
     ]
-   resources = [
+    resources = [
       "arn:${var.partition}:iam::*:mfa/$${aws:username}*",
     ]
   }
@@ -145,7 +145,7 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:ListMFADevices",
       "iam:ResyncMFADevice",
     ]
-   resources = [
+    resources = [
       "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
