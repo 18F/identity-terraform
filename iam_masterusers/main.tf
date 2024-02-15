@@ -119,33 +119,33 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:ListUserPolicies",
       "iam:ListAttachedUserPolicies",
       "iam:ListGroupsForUser",
+      "iam:ListUserTags",
     ]
     resources = [
       "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
   statement {
-    sid    = "AllowIndividualUserToListOnlyTheirOwnMFA"
+    sid    = "AllowIndividualUserToManageTheirOwnVirtualMFA"
     effect = "Allow"
     actions = [
-      "iam:ListMFADevices",
+      "iam:CreateVirtualMFADevice",
+      "iam:DeleteVirtualMFADevice",
     ]
-    resources = [
-      "arn:${var.partition}:iam::*:mfa/*",
-      "arn:${var.partition}:iam::*:user/$${aws:username}",
+   resources = [
+      "arn:${var.partition}:iam::*:mfa/$${aws:username}*",
     ]
   }
   statement {
     sid    = "AllowIndividualUserToManageTheirOwnMFA"
     effect = "Allow"
     actions = [
-      "iam:CreateVirtualMFADevice",
-      "iam:DeleteVirtualMFADevice",
       "iam:EnableMFADevice",
+      "iam:GetMFADevice",
+      "iam:ListMFADevices",
       "iam:ResyncMFADevice",
     ]
-    resources = [
-      "arn:${var.partition}:iam::*:mfa/$${aws:username}",
+   resources = [
       "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
@@ -156,7 +156,6 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:DeactivateMFADevice",
     ]
     resources = [
-      "arn:${var.partition}:iam::*:mfa/$${aws:username}",
       "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
     condition {
@@ -171,25 +170,14 @@ data "aws_iam_policy_document" "manage_your_account" {
     sid    = "BlockMostAccessUnlessSignedInWithMFA"
     effect = "Deny"
     actions = [
-      "iam:DeleteVirtualMFADevice",
-      "iam:DeleteLoginProfile",
-      "iam:DeleteAccessKey",
-      "iam:DeactivateMFADevice",
-      "iam:ResyncMFADevice",
-      "iam:ListSSHPublicKeys",
-      "iam:DeleteSSHPublicKey",
-      "iam:UpdateSSHPublicKey",
-      "iam:UploadSSHPublicKey",
-      "iam:ListAccessKeys",
-      "iam:GetAccessKeyLastUsed",
-      "iam:ListServiceSpecificCredentials",
-      "iam:GetAccountSummary",
+      "iam:CreateVirtualMFADevice",
+      "iam:ChangePassword",
+      "iam:EnableMFADevice",
       "iam:GetUser",
-      "iam:ListUserPolicies",
-      "iam:ListAttachedUserPolicies",
-      "iam:ListGroupsForUser",
-      "iam:GetPolicyVersion",
-      "sts:AssumeRole",
+      "iam:ListMFADevices",
+      "iam:ListVirtualMFADevices",
+      "iam:ResyncMFADevice",
+      "sts:GetSessionToken",
     ]
     resources = [
       "*",
