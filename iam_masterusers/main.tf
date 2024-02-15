@@ -130,7 +130,6 @@ data "aws_iam_policy_document" "manage_your_account" {
     effect = "Allow"
     actions = [
       "iam:CreateVirtualMFADevice",
-      "iam:DeleteVirtualMFADevice",
     ]
     resources = [
       "arn:${var.partition}:iam::*:mfa/$${aws:username}*",
@@ -157,6 +156,23 @@ data "aws_iam_policy_document" "manage_your_account" {
     ]
     resources = [
       "arn:${var.partition}:iam::*:user/$${aws:username}",
+    ]
+    condition {
+      test     = "Bool"
+      variable = "aws:MultiFactorAuthPresent"
+      values = [
+        "true",
+      ]
+    }
+  }
+  statement {
+    sid    = "AllowIndividualUserToDeleteOnlyTheirOwnVirtualMFAOnlyWhenUsingMFA"
+    effect = "Allow"
+    actions = [
+      "iam:DeleteVirtualMFADevice",
+    ]
+    resources = [
+      "arn:${var.partition}:iam::*:mfa/$${aws:username}*",
     ]
     condition {
       test     = "Bool"
