@@ -182,18 +182,26 @@ data "aws_iam_policy_document" "manage_your_account" {
       ]
     }
   }
-  statement {
+statement {
     sid    = "BlockMostAccessUnlessSignedInWithMFA"
     effect = "Deny"
-    not_actions = [
-      "iam:CreateVirtualMFADevice",
-      "iam:ChangePassword",
-      "iam:EnableMFADevice",
+    actions = [
+      "iam:DeleteLoginProfile",
+      "iam:DeleteAccessKey",
+      "iam:ListSSHPublicKeys",
+      "iam:DeleteSSHPublicKey",
+      "iam:UpdateSSHPublicKey",
+      "iam:UploadSSHPublicKey",
+      "iam:ListAccessKeys",
+      "iam:GetAccessKeyLastUsed",
+      "iam:ListServiceSpecificCredentials",
+      "iam:GetAccountSummary",
       "iam:GetUser",
-      "iam:ListMFADevices",
-      "iam:ListVirtualMFADevices",
-      "iam:ResyncMFADevice",
-      "sts:GetSessionToken",
+      "iam:ListUserPolicies",
+      "iam:ListAttachedUserPolicies",
+      "iam:ListGroupsForUser",
+      "iam:GetPolicyVersion",
+      "sts:AssumeRole",
     ]
     resources = [
       "*",
@@ -207,3 +215,4 @@ data "aws_iam_policy_document" "manage_your_account" {
     }
   }
 }
+
