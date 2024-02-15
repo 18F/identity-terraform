@@ -119,33 +119,32 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:ListUserPolicies",
       "iam:ListAttachedUserPolicies",
       "iam:ListGroupsForUser",
+      "iam:ListUserTags",
     ]
     resources = [
       "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
   statement {
-    sid    = "AllowIndividualUserToListOnlyTheirOwnMFA"
+    sid    = "AllowIndividualUserToManageTheirOwnVirtualMFA"
     effect = "Allow"
     actions = [
-      "iam:ListMFADevices",
+      "iam:CreateVirtualMFADevice",
     ]
     resources = [
-      "arn:${var.partition}:iam::*:mfa/*",
-      "arn:${var.partition}:iam::*:user/$${aws:username}",
+      "arn:${var.partition}:iam::*:mfa/$${aws:username}*",
     ]
   }
   statement {
     sid    = "AllowIndividualUserToManageTheirOwnMFA"
     effect = "Allow"
     actions = [
-      "iam:CreateVirtualMFADevice",
-      "iam:DeleteVirtualMFADevice",
       "iam:EnableMFADevice",
+      "iam:GetMFADevice",
+      "iam:ListMFADevices",
       "iam:ResyncMFADevice",
     ]
     resources = [
-      "arn:${var.partition}:iam::*:mfa/$${aws:username}",
       "arn:${var.partition}:iam::*:user/$${aws:username}",
     ]
   }
@@ -156,8 +155,24 @@ data "aws_iam_policy_document" "manage_your_account" {
       "iam:DeactivateMFADevice",
     ]
     resources = [
-      "arn:${var.partition}:iam::*:mfa/$${aws:username}",
       "arn:${var.partition}:iam::*:user/$${aws:username}",
+    ]
+    condition {
+      test     = "Bool"
+      variable = "aws:MultiFactorAuthPresent"
+      values = [
+        "true",
+      ]
+    }
+  }
+  statement {
+    sid    = "AllowIndividualUserToDeleteOnlyTheirOwnVirtualMFAOnlyWhenUsingMFA"
+    effect = "Allow"
+    actions = [
+      "iam:DeleteVirtualMFADevice",
+    ]
+    resources = [
+      "arn:${var.partition}:iam::*:mfa/$${aws:username}*",
     ]
     condition {
       test     = "Bool"
@@ -171,11 +186,8 @@ data "aws_iam_policy_document" "manage_your_account" {
     sid    = "BlockMostAccessUnlessSignedInWithMFA"
     effect = "Deny"
     actions = [
-      "iam:DeleteVirtualMFADevice",
       "iam:DeleteLoginProfile",
       "iam:DeleteAccessKey",
-      "iam:DeactivateMFADevice",
-      "iam:ResyncMFADevice",
       "iam:ListSSHPublicKeys",
       "iam:DeleteSSHPublicKey",
       "iam:UpdateSSHPublicKey",
@@ -203,3 +215,4 @@ data "aws_iam_policy_document" "manage_your_account" {
     }
   }
 }
+
