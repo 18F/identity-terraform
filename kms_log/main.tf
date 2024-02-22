@@ -429,6 +429,8 @@ module "kms_ct_queue_alerts" {
 
   queue_name       = aws_sqs_queue.kms_ct_events.name
   max_message_size = aws_sqs_queue.kms_ct_events.max_message_size
+  alarm_actions    = var.sqs_alarm_actions
+  ok_actions       = var.sqs_ok_actions
 }
 
 resource "aws_sqs_queue_policy" "default" {
@@ -539,6 +541,8 @@ module "kms_cloudwatch_events_queue_alerts" {
 
   queue_name       = aws_sqs_queue.kms_cloudwatch_events.name
   max_message_size = aws_sqs_queue.kms_cloudwatch_events.max_message_size
+  alarm_actions    = var.sqs_alarm_actions
+  ok_actions       = var.sqs_ok_actions
 }
 
 resource "aws_sqs_queue_policy" "kms_cloudwatch_events" {
