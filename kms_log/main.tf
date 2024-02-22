@@ -142,7 +142,7 @@ resource "aws_kms_alias" "kms_logging" {
 resource "aws_sqs_queue" "unmatched" {
   name                              = "${var.env_name}-kms-unmatched-events"
   delay_seconds                     = 5
-  max_message_size                  = 1024
+  max_message_size                  = 2048
   visibility_timeout_seconds        = 120
   message_retention_seconds         = 345600 # 4 days
   kms_master_key_id                 = aws_kms_key.kms_logging.arn
