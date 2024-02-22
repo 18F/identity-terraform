@@ -160,7 +160,7 @@ POLICY
 }
 
 module "unmatched_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.unmatched.name
@@ -380,12 +380,14 @@ POLICY
 }
 
 module "reqeue_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
   #source = "../sqs_alerts"
 
   queue_name                      = aws_sqs_queue.cloudtrail_requeue.name
   max_message_size                = aws_sqs_queue.cloudtrail_requeue.max_message_size
-  age_of_oldest_message_threshold = 7200 # 2 Hours
+  age_of_oldest_message_threshold = 7200 # 2 hours
+  alarm_actions                   = var.sqs_alarm_actions
+  ok_actions                      = var.sqs_ok_actions
 }
 
 # create dead letter queue for kms cloudtrail requeue service
@@ -422,11 +424,13 @@ POLICY
 }
 
 module "kms_ct_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.kms_ct_events.name
   max_message_size = aws_sqs_queue.kms_ct_events.max_message_size
+  alarm_actions    = var.sqs_alarm_actions
+  ok_actions       = var.sqs_ok_actions
 }
 
 resource "aws_sqs_queue_policy" "default" {
@@ -532,11 +536,13 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
 }
 
 module "kms_cloudwatch_events_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=f507f414c8b1d537e574bcb14e0537fe37ee828e"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.kms_cloudwatch_events.name
   max_message_size = aws_sqs_queue.kms_cloudwatch_events.max_message_size
+  alarm_actions    = var.sqs_alarm_actions
+  ok_actions       = var.sqs_ok_actions
 }
 
 resource "aws_sqs_queue_policy" "kms_cloudwatch_events" {
