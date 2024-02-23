@@ -48,6 +48,18 @@ variable "slack_icon" {
   type        = string
 }
 
+variable "slack_alarm_emoji" {
+  description = "Emoji used by Slack for a CloudWatch ALARM message."
+  type        = string
+  default     = ":large_red_square:"
+}
+
+variable "slack_ok_emoji" {
+  description = "Emoji used by Slack for a CloudWatch OK message."
+  type        = string
+  default     = ":large_green_square:"
+}
+
 variable "slack_topic_arn" {
   description = "ARN of the SNS topic for the Lambda to subscribe to."
   type        = string

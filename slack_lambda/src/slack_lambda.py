@@ -10,6 +10,8 @@ ssm = boto3.client('ssm')
 slackChannel = os.environ['slack_channel']
 slackUsername = os.environ['slack_username']
 slackIcon = os.environ['slack_icon']
+slackAlarmEmoji = os.environ['slack_alarm_emoji']
+slackOkEmoji = os.environ['slack_ok_emoji']
 slackUrlParam = os.environ['slack_webhook_url_parameter']
 parameter = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)
 http = urllib3.PoolManager()
@@ -23,12 +25,16 @@ def lambda_handler(event, context):
       if 'detailType' in data and data['detailType'] == 'CodePipeline Pipeline Execution State Change':
         msgtext = 'auto-terraform:  ' + data['detail']['pipeline'] + ' pipeline ' + data['detail']['state'] + ' with execution ID ' + data['detail']['execution-id']
       elif 'AlarmName' in data and 'AlarmDescription' in data:
+        if data['NewStateValue'] == 'ALARM':
+          alertState = f'{slackAlarmEmoji} *ALARM:* '
+        else:
+          alertState = f'{slackOkEmoji} *OK:* '
         blocks = [
           {
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": f'*Alarm has gone off!*\n*{data["AlarmName"]}*',
+              "text": f'{alertState} *{data["AlarmName"]}*',
             },
           },
         ]
@@ -79,8 +85,7 @@ def lambda_handler(event, context):
         })
 
         msgtext = '\n'.join([
-          '*Alarm has gone off!*',
-          f'*{data["AlarmName"]}*',
+          f'{alertState} *{data["AlarmName"]}*',
           data["AlarmDescription"],
           data["NewStateReason"],
           f'*Time*: {formatted_time}',
