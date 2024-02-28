@@ -152,7 +152,7 @@
         "ExcludeGit": {
             "Description": "Choose False to omit the .git directory from the Git repository .zip file.",
             "Type": "String",
-            "Default": "True",
+            "Default": "False",
             "AllowedValues": [
                 "True",
                 "False"
