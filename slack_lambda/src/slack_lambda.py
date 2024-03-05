@@ -61,7 +61,7 @@ def lambda_handler(event, context):
             "action_id": "button-action",
           }
 
-          description_no_runbook = data["AlarmDescription"].split('Runbook:')[0]
+          description_no_runbook = re.sub('Runbook: (https://\S+)\n', '', data["AlarmDescription"])
           blocks[0]["text"]["text"] += f'\n{description_no_runbook}'
         else:
           blocks.append({
