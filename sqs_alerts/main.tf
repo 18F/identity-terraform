@@ -67,6 +67,7 @@ resource "aws_cloudwatch_metric_alarm" "message_size" {
   alarm_actions             = var.alarm_actions
   ok_actions                = var.ok_actions
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
 
   metric_name = "SentMessageSize"
   namespace   = "AWS/SQS"
