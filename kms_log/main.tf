@@ -160,7 +160,7 @@ POLICY
 }
 
 module "unmatched_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.unmatched.name
@@ -380,7 +380,7 @@ POLICY
 }
 
 module "reqeue_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
   #source = "../sqs_alerts"
 
   queue_name                      = aws_sqs_queue.cloudtrail_requeue.name
@@ -424,7 +424,7 @@ POLICY
 }
 
 module "kms_ct_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.kms_ct_events.name
@@ -536,7 +536,7 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
 }
 
 module "kms_cloudwatch_events_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=acec707ebba132ed2437e3d8ae4674d55fd53f1c"
+  source = "github.com/18F/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.kms_cloudwatch_events.name
