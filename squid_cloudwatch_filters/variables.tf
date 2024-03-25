@@ -28,6 +28,6 @@ variable "runbook_url" {
 }
 
 variable "slack_handles" {
-  type        = list
+  type        = list(any)
   description = "A list of Slack group handles to tag in the alarm description"
 }
