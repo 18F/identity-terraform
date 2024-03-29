@@ -104,26 +104,17 @@ resource "aws_sqs_queue" "dead_letter" {
 
 data "aws_iam_policy_document" "slack_processor" {
   statement {
-    sid    = "CreateLogGroup"
+    sid    = "CreateLogGroupAndEvents"
     effect = "Allow"
     actions = [
       "logs:CreateLogGroup",
-    ]
-
-    resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
-    ]
-  }
-  statement {
-    sid    = "PutLogEvents"
-    effect = "Allow"
-    actions = [
       "logs:CreateLogStream",
       "logs:PutLogEvents",
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.slack_processor_lambda_name}:*"
+      aws_cloudwatch_log_group.slack_processor.arn,
+      "${aws_cloudwatch_log_group.slack_processor.arn}:*"
     ]
   }
   statement {
@@ -166,6 +157,7 @@ resource "aws_iam_role" "slack_processor" {
 }
 
 resource "aws_iam_role_policy" "slack_processor" {
+  name   = "slack_processor"
   role   = aws_iam_role.slack_processor.name
   policy = data.aws_iam_policy_document.slack_processor.json
 
@@ -184,14 +176,29 @@ resource "aws_iam_role_policy" "unmatched_lambda_to_slack" {
   }
 }
 
-resource "aws_iam_role_policy" "lambda_kms" {
+resource "aws_iam_role_policy" "slack_processor_kms" {
+  name   = "slack_processor_kms"
   role   = aws_iam_role.slack_processor.id
   policy = data.aws_iam_policy_document.lambda_kms.json
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "slack_processor_insights" {
   role       = aws_iam_role.slack_processor.id
   policy_arn = data.aws_iam_policy.insights.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# manage log group in Terraform
+resource "aws_cloudwatch_log_group" "slack_processor" {
+  name              = "/aws/lambda/${local.slack_processor_lambda_name}"
+  retention_in_days = var.cloudwatch_retention_days
 }
 
 resource "aws_lambda_function" "slack_processor" {
@@ -220,6 +227,8 @@ resource "aws_lambda_function" "slack_processor" {
       length(var.alarm_sns_topic_arns) > 0 ? { arn = var.alarm_sns_topic_arns[0] } : {}
     )
   }
+
+  depends_on = [aws_cloudwatch_log_group.slack_processor]
 }
 
 module "slack-processor-github-alerts" {

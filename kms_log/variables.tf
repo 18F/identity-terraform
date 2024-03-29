@@ -49,8 +49,8 @@ variable "ct_queue_delay_seconds" {
 
 variable "ct_queue_max_message_size" {
   default     = 4096
-  type        = number
   description = "Max message size in bytes"
+  type        = number
 }
 
 variable "ct_queue_visibility_timeout_seconds" {
@@ -100,21 +100,27 @@ variable "ec2_kms_arns" {
 }
 
 variable "alarm_sns_topic_arns" {
+  default     = []
   description = "List of SNS Topic ARN for alarms"
   type        = list(string)
-  default     = []
 }
 
 variable "lambda_insights_account" {
+  default     = "580247275435"
   description = "The lambda insights account provided by AWS for monitoring"
   type        = string
-  default     = "580247275435"
 }
 
 variable "lambda_insights_version" {
+  default     = 38
   description = "The lambda insights layer version to use for monitoring"
   type        = number
-  default     = 38
+}
+
+variable "cloudwatch_retention_days" {
+  default     = 90
+  description = "Number of days to retain CloudWatch Logs for Lambda functions"
+  type        = number
 }
 
 ## Lambda KMS CloudWatch Processor Configuration

@@ -46,26 +46,17 @@ resource "aws_sqs_queue" "cloudtrail_requeue_dead_letter" {
 
 data "aws_iam_policy_document" "ctrequeue" {
   statement {
-    sid    = "CreateLogGroup"
+    sid    = "CreateLogGroupAndEvents"
     effect = "Allow"
     actions = [
       "logs:CreateLogGroup",
-    ]
-
-    resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:*",
-    ]
-  }
-  statement {
-    sid    = "PutLogEvents"
-    effect = "Allow"
-    actions = [
       "logs:CreateLogStream",
       "logs:PutLogEvents",
     ]
 
     resources = [
-      "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.ct_requeue_lambda_name}:*",
+      aws_cloudwatch_log_group.cloudtrail_requeue.arn,
+      "${aws_cloudwatch_log_group.cloudtrail_requeue.arn}:*"
     ]
   }
   statement {
@@ -118,11 +109,25 @@ resource "aws_iam_role_policy" "ctrequeue_kms" {
   name   = "ctrequeue_kms"
   role   = aws_iam_role.cloudtrail_requeue.id
   policy = data.aws_iam_policy_document.lambda_kms.json
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "ctrequeue_insights" {
   role       = aws_iam_role.cloudtrail_requeue.id
   policy_arn = data.aws_iam_policy.insights.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# manage log group in Terraform
+resource "aws_cloudwatch_log_group" "cloudtrail_requeue" {
+  name              = "/aws/lambda/${local.ct_requeue_lambda_name}"
+  retention_in_days = var.cloudwatch_retention_days
 }
 
 resource "aws_lambda_function" "cloudtrail_requeue" {
@@ -150,6 +155,8 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
   tags = {
     environment = var.env_name
   }
+
+  depends_on = [aws_cloudwatch_log_group.cloudtrail_requeue]
 }
 
 module "ct-requeue-alerts" {

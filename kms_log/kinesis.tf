@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "subscription" {
   }
 }
 
-# create destination polciy
+# create destination policy
 resource "aws_cloudwatch_log_destination_policy" "subscription" {
   destination_name = aws_cloudwatch_log_destination.datastream.name
   access_policy    = data.aws_iam_policy_document.subscription.json
