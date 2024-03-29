@@ -1,3 +1,21 @@
+## Locals
+
+locals {
+  lambda_insights_arn = join(":", [
+    "arn:aws:lambda:${var.region}:${var.lambda_insights_account}:layer",
+    "LambdaInsightsExtension:${var.lambda_insights_version}"
+  ])
+
+  kinesis_stream_name         = "${var.env_name}-kms-app-events"
+  ct_processor_lambda_name    = "${var.env_name}-cloudtrail-kms"
+  ct_requeue_lambda_name      = "${var.env_name}-kms-cloudtrail-requeue"
+  cw_processor_lambda_name    = "${var.env_name}-cloudwatch-kms"
+  event_processor_lambda_name = "${var.env_name}-kmslog-event-processor"
+  slack_processor_lambda_name = "${var.env_name}-kms-slack-batch-processor"
+}
+
+## Variables
+
 variable "env_name" {
   description = "Environment name"
 }
