@@ -1,4 +1,39 @@
 
+
+
+.merge_request:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_PIPELINE_SOURCE != "external_pull_request_event"'
+      when: never
+
+terraform-fmt:
+  image:
+    name: hashicorp/terraform
+    entrypoint: [""]
+  script:
+    - terraform fmt -recursive -diff -check .
+  rules:
+    - !reference [.merge_request, rules]
+ 
+
+# Scanning top level modules to avoid extreme duplication
+tfsec-check-soft:
+  image: aquasec/tfsec-ci:v1.26.3
+  script:
+    - tfsec --no-color --soft-fail .
+  rules:
+    - !reference [.merge_request, rules]
+  
+
+# Add folders that should be vuln free and STAY THAT WAY
+tfsec-check-enforce:
+  image: aquasec/tfsec-ci:v1.26.3
+  script:
+    - tfsec --no-color .
+  rules:
+    - !reference [.merge_request, rules]
+
+
 include: 
  - template: Jobs/SAST-IaC.gitlab-ci.yml  
  - template: Security/Secret-Detection.gitlab-ci.yml 
