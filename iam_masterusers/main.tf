@@ -40,7 +40,7 @@ resource "aws_iam_user" "master_user" {
       ec2_username = element(each.value["ec2_username"], 0)
     },
     element(lookup(each.value, "email", [""]), 0) == "" ? {
-      email = "${each.key}@${default_email_domain}"
+      email = "${each.key}@${var.default_email_domain}"
       } : {
       email = element(each.value["email"], 0)
     },
