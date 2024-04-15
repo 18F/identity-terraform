@@ -27,9 +27,16 @@ resource "aws_iam_user" "master_user" {
 
   name          = each.key
   force_destroy = true
-  tags = element(lookup(each.value, "ec2_username", [""]), 0) == "" ? {} : {
-    ec2_username = element(each.value["ec2_username"], 0)
-  }
+  tags = merge(
+    element(lookup(each.value, "ec2_username", [""]), 0) == "" ? {} : {
+      ec2_username = element(each.value["ec2_username"], 0)
+    },
+    element(lookup(each.value, "email", [""]), 0) == "" ? {
+      email = "${each.key}@gsa.gov"
+      } : {
+      email = element(each.value["email"], 0)
+    },
+  )
 }
 
 resource "aws_iam_group_membership" "master_group" {
