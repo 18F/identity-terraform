@@ -18,3 +18,14 @@ output "kms-cloudwatch-events-queue" {
   value       = aws_sqs_queue.kms_cloudwatch_events.arn
 }
 
+output "kms-log-groups" {
+  description = "Names of the CloudWatch Log Groups in this module."
+  value = [
+    aws_cloudwatch_log_group.cloudtrail_processor.name,
+    aws_cloudwatch_log_group.cloudtrail_requeue.name,
+    aws_cloudwatch_log_group.cloudwatch_processor.name,
+    aws_cloudwatch_log_group.event_processor.name,
+    aws_cloudwatch_log_group.slack_processor.name,
+    aws_cloudwatch_log_group.unmatched.name
+  ]
+}
