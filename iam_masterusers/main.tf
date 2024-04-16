@@ -20,6 +20,14 @@ EOM
   default     = null
 }
 
+variable "default_email_domain" {
+  description = <<EOM
+If a user does not have an explicit email address in the user_map,
+then their email is set to this domain: (their username)@(default_email_domain)
+EOM
+  type        = string
+}
+
 # -- Resources --
 
 resource "aws_iam_user" "master_user" {
@@ -27,9 +35,16 @@ resource "aws_iam_user" "master_user" {
 
   name          = each.key
   force_destroy = true
-  tags = element(lookup(each.value, "ec2_username", [""]), 0) == "" ? {} : {
-    ec2_username = element(each.value["ec2_username"], 0)
-  }
+  tags = merge(
+    element(lookup(each.value, "ec2_username", [""]), 0) == "" ? {} : {
+      ec2_username = element(each.value["ec2_username"], 0)
+    },
+    element(lookup(each.value, "email", [""]), 0) == "" ? {
+      email = "${each.key}@${var.default_email_domain}"
+      } : {
+      email = element(each.value["email"], 0)
+    },
+  )
 }
 
 resource "aws_iam_group_membership" "master_group" {
