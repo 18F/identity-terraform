@@ -53,9 +53,10 @@ resource "aws_launch_template" "template" {
   tag_specifications {
     resource_type = "volume"
     tags = {
-      Name   = "asg-${var.env}-${var.role}"
-      prefix = var.role
-      domain = "${var.env}.${var.root_domain}"
+      Name        = "asg-${var.env}-${var.role}"
+      prefix      = var.role
+      domain      = "${var.env}.${var.root_domain}"
+      environment = var.env
     }
   }
 
