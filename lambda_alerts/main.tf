@@ -1,3 +1,19 @@
+/* '''hcl
+* module "foo_bar" {
+*   source = "github.com/18F/identity-terraform//lambda_alerts"
+* 
+*   enabled              = 1
+*   function_name        = local.ct_requeue_lambda_name
+*   alarm_actions        = var.alarm_sns_topic_arns
+*   error_rate_threshold = 5 # percent
+*   datapoints_to_alarm  = 1
+*   evaluation_periods   = 5
+*   insights_enabled     = true
+*   duration_setting     = aws_lambda_function.cloudtrail_requeue.timeout
+* }
+* ```
+*/
+
 variable "enabled" {
   type        = number
   description = "Whether or not to create the Lambda alert monitor."

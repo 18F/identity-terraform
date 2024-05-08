@@ -3,6 +3,19 @@
 This module uses CloudWatch metrics to create alarms on AWS Lambda errors
 
 <!-- BEGIN_TF_DOCS -->
+module "foo\_bar" {
+  source = "github.com/18F/identity-terraform//lambda\_alerts"
+
+  enabled              = 1
+  function\_name        = local.ct\_requeue\_lambda\_name
+  alarm\_actions        = var.alarm\_sns\_topic\_arns
+  error\_rate\_threshold = 5 # percent
+  datapoints\_to\_alarm  = 1
+  evaluation\_periods   = 5
+  insights\_enabled     = true
+  duration\_setting     = aws\_lambda\_function.cloudtrail\_requeue.timeout
+}
+
 ## Requirements
 
 | Name | Version |
