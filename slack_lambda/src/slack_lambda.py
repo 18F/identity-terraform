@@ -5,6 +5,7 @@ import json
 import os
 import re
 import datetime
+import logging
 
 ssm = boto3.client('ssm')
 slackChannel = os.environ['slack_channel']
