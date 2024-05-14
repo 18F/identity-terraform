@@ -83,7 +83,7 @@ lambda-unit-tests:
   rules:
     - !reference [.merge_request, rules]
     - changes:
-        - terraform/**/*
+        - "**/src/*"
   artifacts:
     reports:
       coverage_report:
@@ -99,6 +99,6 @@ lambda-lint:
   rules:
     - !reference [.merge_request, rules]
     - changes:
-        - terraform/**/*
+        - "**/src/*"
 variables:
   ECR_REGISTRY: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
