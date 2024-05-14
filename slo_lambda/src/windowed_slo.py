@@ -179,7 +179,12 @@ class SLI:
         return self.numerator.sum() / self.denominator.sum()
 
 
-def publish_slis(slis: Dict[str, SLI], sli_namespace: str, sli_prefix: str, handle_exceptions: bool = True):
+def publish_slis(
+    slis: Dict[str, SLI],
+    sli_namespace: str,
+    sli_prefix: str,
+    handle_exceptions: bool = True,
+):
     """
     create_slis takes a dictionary of SLIs, gets their values and writes the
     associated Cloudwatch metrics.
