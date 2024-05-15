@@ -54,7 +54,7 @@ fi
 unittest="pytest"
 if $xml; then
   mkdir -p tmp/junit
-  unittest="xmlrunner --output-file tmp/unittest.xml"
+  unittest="$unittest --cov-report xml:tmp/junit/coverage.xml"
 fi
 
 $runner -m $unittest $(

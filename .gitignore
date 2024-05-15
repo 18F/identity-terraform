@@ -3,3 +3,7 @@ __pycache__/
 /*/src/*.zip
 **/.zip
 env/
+htmlcov
+.coverage
+coverage.xml
+tmp
