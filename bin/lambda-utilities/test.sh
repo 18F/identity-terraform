@@ -53,8 +53,8 @@ fi
 
 unittest="pytest"
 if $xml; then
-  mkdir -p tmp/junit
-  unittest="$unittest --cov-report xml:tmp/junit/coverage.xml"
+  mkdir -p tmp
+  unittest="$unittest --junitxml=tmp/unittest.xml"
 fi
 
 $runner -m $unittest $(
