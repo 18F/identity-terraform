@@ -1,7 +1,7 @@
 
 
 .merge_request:
-  rules:    
+  rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
 
@@ -14,7 +14,7 @@ terraform-fmt:
     - terraform fmt -recursive -diff -check .
   rules:
     - !reference [.merge_request, rules]
-  
+
 
 # Scanning top level modules to avoid extreme duplication
 tfsec-check-soft:
@@ -23,7 +23,7 @@ tfsec-check-soft:
     - tfsec --no-color --soft-fail .
   rules:
     - !reference [.merge_request, rules]
-  
+
 # Add folders that should be vuln free and STAY THAT WAY
 tfsec-check-enforce:
   image: aquasec/tfsec-ci:v1.26.3
@@ -33,9 +33,9 @@ tfsec-check-enforce:
     - !reference [.merge_request, rules]
 
 
-include: 
- - template: Jobs/SAST-IaC.gitlab-ci.yml  
- - template: Security/Secret-Detection.gitlab-ci.yml 
+include:
+ - template: Jobs/SAST-IaC.gitlab-ci.yml
+ - template: Security/Secret-Detection.gitlab-ci.yml
  - template: Security/SAST.gitlab-ci.yml
  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
 
@@ -74,3 +74,31 @@ secret_detection:
         echo "Skipping because this is not a PR or is not targeting main"
         exit 0
       fi
+
+lambda-unit-tests:
+  image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.9.18-alpine3.18"
+  script:
+    - apk add --no-cache bash git
+    - ./bin/lambda-utilities/test.sh --coverage --xml
+  rules:
+    - !reference [.merge_request, rules]
+    - changes:
+        - "**/src/*"
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+      junit: tmp/unittest.xml
+
+lambda-lint:
+  image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.9.18-alpine3.18"
+  script:
+    - apk add --no-cache bash git
+    - ./bin/lambda-utilities/lint.sh
+  rules:
+    - !reference [.merge_request, rules]
+    - changes:
+        - "**/src/*"
+variables:
+  ECR_REGISTRY: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
