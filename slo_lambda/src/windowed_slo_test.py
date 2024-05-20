@@ -2,6 +2,7 @@ import os
 import boto3
 import json
 from botocore.stub import Stubber, ANY
+from moto import mock_aws
 import pytest
 
 os.environ["WINDOW_DAYS"] = "24"
@@ -46,9 +47,9 @@ def put_metric_data(metric_name, value):
         },
     ]
 
-
+@mock_aws
 def test_simple_sli():
-    cw = boto3.client("cloudwatch")
+    cw = boto3.client("cloudwatch", region_name="us-west-2")
     with Stubber(cw) as stubber:
         stubber.add_response(*get_metric_statistics("HTTPCode_Target_2XX_Count", 2))
         stubber.add_response(*get_metric_statistics("RequestCount", 4))
@@ -101,9 +102,9 @@ def test_simple_sli():
         slis = parse_sli_json(json.dumps(sli_config), handle_exceptions=False)
         publish_slis(slis, SLI_NAMESPACE, SLI_PREFIX, handle_exceptions=False)
 
-
+@mock_aws
 def test_multiple_metric_sli():
-    cw = boto3.client("cloudwatch")
+    cw = boto3.client("cloudwatch", region_name="us-west-2")
 
     with Stubber(cw) as stubber:
         stubber.add_response(*get_metric_statistics("HTTPCode_Target_2XX_Count", 2))
@@ -195,7 +196,6 @@ def test_sad_config():
             parse_sli_json(f.read(), handle_exceptions=False)
 
     assert "unexpected keyword argument 'nomnomnomerator'" in str(excinfo.value)
-
 
 def test_happy_config():
     # Ensure we can actually parse
