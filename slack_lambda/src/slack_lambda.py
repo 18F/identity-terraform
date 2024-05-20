@@ -5,60 +5,142 @@ import json
 import os
 import re
 import datetime
-import logging
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+ssm = boto3.client("ssm")
+slackChannel = os.environ["slack_channel"]
+slackUsername = os.environ["slack_username"]
+slackIcon = os.environ["slack_icon"]
+slackAlarmEmoji = os.environ["slack_alarm_emoji"]
+slackOkEmoji = os.environ["slack_ok_emoji"]
+slackUrlParam = os.environ["slack_webhook_url_parameter"]
+parameter = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)
+http = urllib3.PoolManager()
 
 
 def lambda_handler(event, context):
+    url = parameter["Parameter"]["Value"]
     eventmsg = event["Records"][0]["Sns"]["Message"]
-
+    blocks = None
     try:
         data = json.loads(eventmsg)
-
         if (
-            "detail-type" in data
-            and data["detail-type"] == "CodePipeline Pipeline Execution State Change"
+            "detailType" in data
+            and data["detailType"] == "CodePipeline Pipeline Execution State Change"
         ):
-            codebuild_message(event, data)
+            msgtext = (
+                "auto-terraform:  "
+                + data["detail"]["pipeline"]
+                + " pipeline "
+                + data["detail"]["state"]
+                + " with execution ID "
+                + data["detail"]["execution-id"]
+            )
         elif "AlarmName" in data and "AlarmDescription" in data:
-            cloudwatch_alarm_message(event, data)
-        elif "detail-type" in data and data["detail-type"] == "AWS Health Event":
-            aws_health_event_message(event, data)
-        elif "IncidentManagerEvent" in data:
-            aws_incident_manager_message(event, data)
+            if data["NewStateValue"] == "ALARM":
+                alertState = f"{slackAlarmEmoji} *ALARM:* "
+            else:
+                alertState = f"{slackOkEmoji} *OK:* "
+            blocks = [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f'{alertState} *{data["AlarmName"]}*',
+                    },
+                },
+            ]
+
+            try:
+                iso_time = datetime.fromisoformat(
+                    data["StateChangeTime"].replace("+0000", "+00:00")
+                )
+                formatted_time = iso_time.strftime("%Y-%m-%d %H:%M:%S %Z")
+            except:
+                formatted_time = data["StateChangeTime"]
+
+            match = re.search(r"Runbook: (https://\S+)", data["AlarmDescription"])
+            if match:
+                runbook_url = match.group(1)
+
+                blocks[0]["accessory"] = {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "View Runbook :books:",
+                        "emoji": True,
+                    },
+                    "value": "runbook-id",
+                    "url": runbook_url,
+                    "action_id": "button-action",
+                }
+
+                description_no_runbook = re.sub(
+                    "Runbook: (https://\S+)\n", "", data["AlarmDescription"]
+                )
+                blocks[0]["text"]["text"] += f"\n{description_no_runbook}"
+            else:
+                blocks.append(
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": data["AlarmDescription"],
+                        },
+                    }
+                )
+
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "\n".join(
+                            [
+                                data["NewStateReason"],
+                                f"*Time*: {formatted_time}",
+                                f'*Region*: {data["Region"]}',
+                            ]
+                        ),
+                    },
+                }
+            )
+
+            msgtext = "\n".join(
+                [
+                    f'{alertState} *{data["AlarmName"]}*',
+                    data["AlarmDescription"],
+                    data["NewStateReason"],
+                    f"*Time*: {formatted_time}",
+                    f'*Region*: {data["Region"]}',
+                ]
+            )
+        elif "detailType" in data and data["detailType"] == "AWS Health Event":
+            blocks = aws_health_event(data)
+            msgtext = "".join(
+                [
+                    "*AWS Health Event*\n",
+                    f'*{data["detail"]["service"]}*\n',
+                    f'Event Type: {data["detail"]["eventTypeCode"]}\n',
+                    f'Status: {data["detail"]["statusCode"]}\n',
+                    data["detail"]["eventDescription"]["latestDescription"],
+                ]
+            )
         else:
-            generic_slack_message(event, eventmsg)
-
+            msgtext = eventmsg
     except Exception as e:
-        generic_slack_message(event, eventmsg)
-
-
-def notify_slack(
-    event={}, msgtext="", blocks=None, slackChannel="", slackUsername="", slackIcon=""
-):
-    ssm = boto3.client("ssm")
-    slackUrlParam = os.environ["slack_webhook_url_parameter"]
-    url = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)["Parameter"][
-        "Value"
-    ]
-
-    http = urllib3.PoolManager()
-
+        msgtext = eventmsg
     msg = {
         "channel": slackChannel,
         "username": slackUsername,
         "text": msgtext,
         "icon_emoji": slackIcon,
     }
-
     if blocks:
         msg["blocks"] = blocks
 
-    resp = http.request("POST", url, body=json.dumps(msg).encode("utf-8"))
-
-    logger.info(
+    encoded_msg = json.dumps(msg).encode("utf-8")
+    resp = http.request("POST", url, body=encoded_msg)
+    print(
         {
             "message": event["Records"][0]["Sns"]["Message"],
             "status_code": resp.status,
@@ -67,7 +149,7 @@ def notify_slack(
     )
 
 
-def format_aws_health_event(json_message):
+def aws_health_event(json_message):
     try:
         details = json_message["detail"]
         blocks = [
@@ -162,173 +244,3 @@ def format_aws_health_event(json_message):
         return blocks
     except:
         return None
-
-
-def codebuild_message(event, data):
-    msgtext = (
-        "auto-terraform:  "
-        + data["detail"]["pipeline"]
-        + " pipeline "
-        + data["detail"]["state"]
-        + " with execution ID "
-        + data["detail"]["execution-id"]
-    )
-    notify_slack(
-        event=event,
-        msgtext=msgtext,
-        blocks=blocks,
-        slackChannel=slackChannel,
-        slackUsername=slackUsername,
-        slackIcon=slackIcon,
-    )
-
-
-def cloudwatch_alarm_message(event, data):
-    slackAlarmEmoji = os.environ["slack_alarm_emoji"]
-    slackOkEmoji = os.environ["slack_ok_emoji"]
-
-    if data["NewStateValue"] == "ALARM":
-        alertState = f"{slackAlarmEmoji} *ALARM:* "
-    else:
-        alertState = f"{slackOkEmoji} *OK:* "
-
-    blocks = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f'{alertState} *{data["AlarmName"]}*',
-            },
-        },
-    ]
-
-    try:
-        iso_time = datetime.fromisoformat(
-            data["StateChangeTime"].replace("+0000", "+00:00")
-        )
-        formatted_time = iso_time.strftime("%Y-%m-%d %H:%M:%S %Z")
-    except:
-        formatted_time = data["StateChangeTime"]
-
-    match = re.search(r"Runbook: (https://\S+)", data["AlarmDescription"])
-    if match:
-        runbook_url = match.group(1)
-
-        blocks[0]["accessory"] = {
-            "type": "button",
-            "text": {
-                "type": "plain_text",
-                "text": "View Runbook :books:",
-                "emoji": True,
-            },
-            "value": "runbook-id",
-            "url": runbook_url,
-            "action_id": "button-action",
-        }
-
-        description_no_runbook = re.sub(
-            "Runbook: (https://\S+)\n", "", data["AlarmDescription"]
-        )
-        blocks[0]["text"]["text"] += f"\n{description_no_runbook}"
-    else:
-        blocks.append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": data["AlarmDescription"],
-                },
-            }
-        )
-
-    blocks.append(
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "\n".join(
-                    [
-                        data["NewStateReason"],
-                        f"*Time*: {formatted_time}",
-                        f'*Region*: {data["Region"]}',
-                    ]
-                ),
-            },
-        }
-    )
-
-    msgtext = "\n".join(
-        [
-            f'{alertState} *{data["AlarmName"]}*',
-            data["AlarmDescription"],
-            data["NewStateReason"],
-            f"*Time*: {formatted_time}",
-            f'*Region*: {data["Region"]}',
-        ]
-    )
-
-    notify_slack(
-        event=event,
-        msgtext=msgtext,
-        blocks=blocks,
-        slackChannel=slackChannel,
-        slackUsername="AWS Cloudwatch Alarm",
-        slackIcon=slackIcon,
-    )
-
-
-def aws_health_event_message(event, data):
-    blocks = format_aws_health_event(data)
-    msgtext = "".join(
-        [
-            "*AWS Health Event*\n",
-            f'*{data["detail"]["service"]}*\n',
-            f'Event Type: {data["detail"]["eventTypeCode"]}\n',
-            f'Status: {data["detail"]["statusCode"]}\n',
-            data["detail"]["eventDescription"]["latestDescription"],
-        ]
-    )
-
-    notify_slack(
-        event=event,
-        msgtext=msgtext,
-        blocks=blocks,
-        slackChannel=slackChannel,
-        slackUsername="AWS Health Event",
-        slackIcon=":aws:",
-    )
-
-
-def generic_slack_message(event, eventmsg):
-    msgtext = eventmsg
-    notify_slack(
-        event=event,
-        msgtext=msgtext,
-        blocks=blocks,
-        slackChannel=slackChannel,
-        slackUsername=slackUsername,
-        slackIcon=slackIcon,
-    )
-
-
-def aws_incident_manager_message(event, data):
-    blocks = []
-
-    msgtext = "".join(
-        [
-            "*AWS Health Event*\n",
-            f'*{data["detail"]["service"]}*\n',
-            f'Event Type: {data["detail"]["eventTypeCode"]}\n',
-            f'Status: {data["detail"]["statusCode"]}\n',
-            data["detail"]["eventDescription"]["latestDescription"],
-        ]
-    )
-
-    notify_slack(
-        event=event,
-        msgtext=msgtext,
-        blocks=blocks,
-        slackChannel=slackChannel,
-        slackUsername="AWS Incident Manager",
-        slackIcon=slackIcon,
-    )
