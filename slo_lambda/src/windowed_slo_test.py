@@ -47,6 +47,7 @@ def put_metric_data(metric_name, value):
         },
     ]
 
+
 @mock_aws
 def test_simple_sli():
     cw = boto3.client("cloudwatch", region_name="us-west-2")
@@ -101,6 +102,7 @@ def test_simple_sli():
         # The SLI config is assumed to be json, so convert the dict to json
         slis = parse_sli_json(json.dumps(sli_config), handle_exceptions=False)
         publish_slis(slis, SLI_NAMESPACE, SLI_PREFIX, handle_exceptions=False)
+
 
 @mock_aws
 def test_multiple_metric_sli():
@@ -196,6 +198,7 @@ def test_sad_config():
             parse_sli_json(f.read(), handle_exceptions=False)
 
     assert "unexpected keyword argument 'nomnomnomerator'" in str(excinfo.value)
+
 
 def test_happy_config():
     # Ensure we can actually parse
