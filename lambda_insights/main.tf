@@ -5,7 +5,7 @@
  *   source = github.com/18F/identity-terraform//lambda_insights?ref=main
  * }
  * ```
- */ 
+ */
 
 locals {
   layer_arn = join(":", [
