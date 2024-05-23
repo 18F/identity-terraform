@@ -3,6 +3,13 @@
 This module provides the minimum resources required for finding the insights layer ARN and required IAM policy. 
 
 <!-- BEGIN_TF_DOCS -->
+## Example:
+```hcl
+module "lambda_insights" {
+  source = github.com/18F/identity-terraform//lambda_insights?ref=main
+}
+```
+
 ## Requirements
 
 | Name | Version |
