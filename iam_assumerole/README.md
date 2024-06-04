@@ -18,7 +18,7 @@ Because Policy Documents have a size limit, it is often necessary to break polic
 
 ```hcl
 locals {
-  custom_policy_arns = [
+  custom_iam_policies = [
     aws_iam_policy.rds_delete_prevent.arn,
     aws_iam_policy.region_restriction.arn,
   ]
@@ -31,7 +31,7 @@ module "billing-assumerole" {
   role_name                = "BillingReadOnly"
   enabled                  = var.iam_billing_enabled
   master_assumerole_policy = local.master_assumerole_policy
-  custom_policy_arns       = local.custom_policy_arns
+  custom_iam_policies       = local.custom_iam_policies
 
   iam_policies = [
     {
@@ -60,9 +60,9 @@ module "billing-assumerole" {
 - `role_name` - **string**: Name of the IAM role to be created.
 - `role_duration` - **number**: Value of the `max_session_duration` for the role, in seconds. Defaults to _43200_ (12 hours).
 - `master_assumerole_policy` - **object**: JSON object of the policy document to attach to the role allowing AssumeRole access from a master account. Pass in using `data.aws_iam_policy_document.<DATA_SOURCE_NAME>.json` as shown in the example above.
-- `custom_policy_arns` - **list**: ARNs of any additional IAM policies to attach to the role.
+- `custom_iam_policies` - **list**: Names of any additional IAM policies to attach to the role.
 - `iam_policies` - **list(object)**: List of objects, each of which contains:
    - `policy_name` - **string**: Name of the IAM policy to be created.
    - `policy_description` - **string**: Description of the IAM policy.
    - `policy_document` - **list(object)**: List of Statements included in the policy document. Each _object_ in the list should include the contents of a Statement, i.e. the `sid`, `effect`, `actions`, and `resources`.
-- `permissions_boundary_policy_arn` - **string**: (REQUIRED) ARN of an existing IAM policy (from another module/source) which will be used as the Permissions Boundary for the IAM role.
+- `permissions_boundary_policy_arn` - **string**: ARN of an existing IAM policy (from another module/source) which will be used as the Permissions Boundary for the IAM role.
