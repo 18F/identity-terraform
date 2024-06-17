@@ -114,14 +114,6 @@ data "aws_iam_policy_document" "kms" {
   }
 }
 
-## Resources
-
-resource "null_resource" "kms_log_found" {
-  triggers = {
-    kms_log = "${var.env_name}_/srv/idp/shared/log/kms.log"
-  }
-}
-
 # DynamoDB table for event correlation
 resource "aws_dynamodb_table" "kms_events" {
   name         = "${var.env_name}-kms-logging"
