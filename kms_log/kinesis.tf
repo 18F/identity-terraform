@@ -97,13 +97,15 @@ resource "aws_cloudwatch_log_destination_policy" "subscription" {
   access_policy    = data.aws_iam_policy_document.subscription.json
 }
 
+data "aws_cloudwatch_log_group" "kinesis_source" {
+  name = var.kinesis_source_log_group
+}
+
 # create subscription filter
 # this filter will send the kms.log events to kinesis
 resource "aws_cloudwatch_log_subscription_filter" "kinesis" {
-  depends_on = [null_resource.kms_log_found]
-
   name            = "${var.env_name}-kms-app-log"
-  log_group_name  = "${var.env_name}_/srv/idp/shared/log/kms.log"
+  log_group_name  = data.aws_cloudwatch_log_group.kinesis_source.name
   filter_pattern  = var.cloudwatch_filter_pattern
   destination_arn = aws_kinesis_stream.datastream.arn
   role_arn        = aws_iam_role.cloudwatch_to_kinesis.arn
