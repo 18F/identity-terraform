@@ -105,6 +105,11 @@ variable "alarm_sns_topic_arns" {
   type        = list(string)
 }
 
+variable "kinesis_source_log_group" {
+  description = "The source log group the kinesis stream will consume events from"
+  type        = string
+}
+
 variable "lambda_insights_account" {
   default     = "580247275435"
   description = "The lambda insights account provided by AWS for monitoring"
