@@ -232,8 +232,8 @@ resource "aws_lambda_function" "slack_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.slack_processor_lambda_name
@@ -243,6 +243,7 @@ module "slack-processor-github-alerts" {
   evaluation_periods   = 5
   insights_enabled     = true
   duration_setting     = aws_lambda_function.slack_processor.timeout
+  treat_missing_data   = "ignore"
 }
 
 resource "aws_lambda_event_source_mapping" "sqs_to_batch_processor" {

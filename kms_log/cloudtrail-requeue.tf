@@ -160,8 +160,8 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
 }
 
 module "ct-requeue-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
-  #source = "../lambda_alerts"
+  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.ct_requeue_lambda_name
@@ -171,6 +171,7 @@ module "ct-requeue-alerts" {
   evaluation_periods   = 5
   insights_enabled     = true
   duration_setting     = aws_lambda_function.cloudtrail_requeue.timeout
+  treat_missing_data   = "ignore"
 }
 
 ## CloudWatch
