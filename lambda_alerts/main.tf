@@ -138,7 +138,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
   period      = var.period
   statistic   = "Maximum"
   dimensions = {
-    FunctionName = var.function_name
+    function_name = var.function_name
   }
 
   lifecycle {
