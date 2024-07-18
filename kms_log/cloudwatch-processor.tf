@@ -119,8 +119,8 @@ resource "aws_lambda_function" "cloudwatch_processor" {
 }
 
 module "cw-processor-github-alerts" {
-  #source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
-  source = "../lambda_alerts"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=e0e39adea82243d66c3c1218c7a4316b81f64560"
+  #source = "../lambda_alerts"
 
   enabled              = 1
   function_name        = local.cw_processor_lambda_name
