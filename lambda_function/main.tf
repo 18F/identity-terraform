@@ -23,7 +23,7 @@ module "lambda_code" {
 resource "aws_lambda_function" "lambda" {
   filename      = module.lambda_code.zip_output_path
   function_name = var.function_name
-  role          = aws_iam_role.incident_manager_actions_lambda_role.arn
+  role          = var.role_arn
   description   = var.description
   handler       = "${replace(var.function_name, "-", "_")}.${var.handler}"
 
@@ -47,7 +47,6 @@ resource "aws_lambda_function" "lambda" {
 }
 
 module "lambda_alerts" {
-  for_each = local.teams
   source   = "github.com/18F/identity-terraform//lambda_alerts?ref=b4c39660e888c87e56fb910cca3104bd6a12b093"
   #source = "../../../../identity-terraform/lambda_alerts"
 
