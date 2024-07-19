@@ -49,8 +49,8 @@ variable "environment_variables" {
   type        = map(any)
 }
 
-variable "role" {
-  description = "Lambda function IAM role"
+variable "role_arn" {
+  description = "Lambda function IAM role ARN"
   type        = string
 }
 
