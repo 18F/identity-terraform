@@ -1,0 +1,9 @@
+{
+  "Records": [
+    {
+      "Sns": {
+        "Message": "{\"IncidentManagerEvent\": \"ShiftChange\", \"Details\": {\"RotationName\": \"Platform Primary\", \"ContactName\": \"j_doe\", \"Status\": \"OFF\"}}"
+      }
+    }
+  ]
+}
