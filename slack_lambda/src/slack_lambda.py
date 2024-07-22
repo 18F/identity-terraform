@@ -187,7 +187,9 @@ class SlackNotificationFormatter:
         elif data["IncidentManagerEvent"] == "IncidentClosed":
             msgtext = f"**INCIDENT CLOSED:** {data['Details']['title']}"
         elif data["IncidentManagerEvent"] == "ResponderPaged":
-            msgtext = f"**RESPONDER PAGED:** {data['Details']['contactArn'].split('/')[-1]}"
+            msgtext = (
+                f"**RESPONDER PAGED:** {data['Details']['contactArn'].split('/')[-1]}"
+            )
         elif data["IncidentManagerEvent"] == "ResponderAcknowledged":
             msgtext = f"**REPONDER ACKNOWLEDGED:** {data['Details']['contactArn'].split('/')[-1]}"
 
