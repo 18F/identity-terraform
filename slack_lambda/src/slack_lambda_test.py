@@ -93,9 +93,9 @@ class SlackNotificationsTest(unittest.TestCase):
         assert payload["text"] == "This is a generic text message"
         assert payload["icon_emoji"] == os.environ["slack_icon"]
 
-    def test_format_aws_incident_manager_message(self):
+    def test_format_aws_incident_manager_shift_message(self):
 
-        event = self.load_file("aws_incident_manager_message")
+        event = self.load_file("aws_incident_manager_shift_message")
         payload = SlackNotificationFormatter(
             event=event,
             default_slack_username=os.environ["slack_username"],
@@ -109,7 +109,7 @@ class SlackNotificationsTest(unittest.TestCase):
         assert payload["username"] == "AWS Incident Manager"
         assert (
             payload["text"]
-            == "**ON-CALL CHANGE:** j_doe is OFF for the Platform Primary rotation"
+            == "*ON-CALL CHANGE:* j_doe is OFF for the Platform Primary rotation"
         )
         assert payload["icon_emoji"] == os.environ["slack_icon"]
 

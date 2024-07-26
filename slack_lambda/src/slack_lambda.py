@@ -21,9 +21,10 @@ class SlackNotificationFormatter:
         self.slack_channel = slack_channel
 
     def format_aws_health_event(self, data={}, slack_username="", slack_icon=""):
+
         details = data["detail"]
         blocks = [
-            self.section(
+            self.blocks_section(
                 "\n".join(
                     [
                         "*AWS Health Event*",
@@ -35,11 +36,15 @@ class SlackNotificationFormatter:
             )
         ]
 
-        blocks.append(self.section(details["eventArn"]))
+        blocks.append(self.blocks_section(details["eventArn"]))
         blocks.append(
-            self.section(
+            self.blocks_section(
                 "\n".join(
-                    ["```", details["eventDescription"][0]["latestDescription"], "```"]
+                    [
+                        "```",
+                        details["eventDescription"][0]["latestDescription"],
+                        "```",
+                    ]
                 )
             )
         )
@@ -50,10 +55,10 @@ class SlackNotificationFormatter:
             for resource in data["resources"]:
                 affected_resources = f"{resource}\n"
 
-            blocks.append(self.section(affected_resources))
+            blocks.append(self.blocks_section(affected_resources))
 
         blocks.append(
-            self.section(
+            self.blocks_section(
                 "\n".join(
                     [
                         f"Account: {details['account']}",
@@ -80,7 +85,7 @@ class SlackNotificationFormatter:
         if "lastUpdatedTime" in details:
             time_information += f"\nLast Updated: {details['lastUpdatedTime']}"
 
-        blocks.append(self.section(time_information))
+        blocks.append(self.blocks_section(time_information))
 
         msgtext = "\n".join(
             [
@@ -117,7 +122,7 @@ class SlackNotificationFormatter:
         else:
             alertState = f"{slackOkEmoji} *OK:* "
 
-        blocks = [self.section(f'{alertState} *{data["AlarmName"]}*')]
+        blocks = [self.blocks_section(f'{alertState} *{data["AlarmName"]}*')]
 
         try:
             iso_time = datetime.fromisoformat(
@@ -131,17 +136,17 @@ class SlackNotificationFormatter:
         if match:
             runbook_url = match.group(1)
 
-            blocks[0]["accessory"] = self.runbook_button(runbook_url)
+            blocks[0]["accessory"] = self.runbook_blocks_button(runbook_url)
 
             description_no_runbook = re.sub(
                 "Runbook: (https://\\S+)\n", "", data["AlarmDescription"]
             )
             blocks[0]["text"]["text"] += f"\n{description_no_runbook}"
         else:
-            blocks.append(self.section(data["AlarmDescription"]))
+            blocks.append(self.blocks_section(data["AlarmDescription"]))
 
         blocks.append(
-            self.section(
+            self.blocks_section(
                 "\n".join(
                     [
                         data["NewStateReason"],
@@ -181,20 +186,27 @@ class SlackNotificationFormatter:
         self, data={}, slack_username="", slack_icon=""
     ):
         if data["IncidentManagerEvent"] == "ShiftChange":
-            msgtext = f"**ON-CALL CHANGE:** {data['Details']['ContactName']} is {data['Details']['Status']} for the {data['Details']['RotationName']} rotation"
-        elif data["IncidentManagerEvent"] == "IncidentOpened":
-            msgtext = f"**INCIDENT OPENED:** {data['Details']['title']}"
-        elif data["IncidentManagerEvent"] == "IncidentClosed":
-            msgtext = f"**INCIDENT CLOSED:** {data['Details']['title']}"
-        elif data["IncidentManagerEvent"] == "ResponderPaged":
-            msgtext = (
-                f"**RESPONDER PAGED:** {data['Details']['contactArn'].split('/')[-1]}"
-            )
-        elif data["IncidentManagerEvent"] == "ResponderAcknowledged":
-            msgtext = f"**REPONDER ACKNOWLEDGED:** {data['Details']['contactArn'].split('/')[-1]}"
+            msgtext = f"*ON-CALL CHANGE:* {data['Details']['ContactName']} is {data['Details']['Status']} for the {data['Details']['RotationName']} rotation"
+
+        if data["IncidentManagerEvent"] == "IncidentOpened":
+            msgtext = f"*INCIDENT OPENED:* {data['Details']['title']}"
+
+        if data["IncidentManagerEvent"] == "IncidentClosed":
+            msgtext = f"*INCIDENT CLOSED:* {data['Details']['title']}"
+
+        if data["IncidentManagerEvent"] == "ResponderPaged":
+            msgtext = f"*RESPONDER PAGED:* {json.loads(data['Details']['eventData'])['contactArn'].split('/')[-1]}"
+
+        if data["IncidentManagerEvent"] == "ResponderAcknowledged":
+            msgtext = f"*RESPONDER ACKNOWLEDGED:* {json.loads(data['Details']['eventData'])['contactArn'].split('/')[-1]}"
+
+        blocks = [self.blocks_section(msgtext)]
 
         return self.compose_payload(
-            text=msgtext, slack_username=slack_username, slack_icon=slack_icon
+            text=msgtext,
+            blocks=blocks,
+            slack_username=slack_username,
+            slack_icon=slack_icon,
         )
 
     def compose_payload(self, text="", blocks=None, slack_username="", slack_icon=""):
@@ -212,10 +224,10 @@ class SlackNotificationFormatter:
 
         return msg
 
-    def section(self, txt):
+    def blocks_section(self, txt):
         return {"type": "section", "text": {"type": "mrkdwn", "text": txt}}
 
-    def runbook_button(self, runbook_url):
+    def runbook_blocks_button(self, runbook_url):
         return {
             "type": "button",
             "text": {
@@ -251,12 +263,13 @@ def get_slack_message_payload(event):
                 slack_username="AWS CodePipeline",
             )
         elif "AlarmName" in data and "AlarmDescription" in data:
+            logger.info("cloudwatch")
             return formatter.format_cloudwatch_alarm_message(
                 data,
                 slack_username="AWS Cloudwatch Alarm",
                 slack_icon=":aws:",
             )
-        elif "source" in data and data["detail-type"] == "AWS Health Event":
+        elif "detail-type" in data and data["detail-type"] == "AWS Health Event":
             logger.info("health")
             return formatter.format_aws_health_event(
                 data,
@@ -264,6 +277,7 @@ def get_slack_message_payload(event):
                 slack_icon=":aws:",
             )
         elif "IncidentManagerEvent" in data:
+            logger.info("incidentmanager")
             return formatter.format_aws_incident_manager_message(
                 data,
                 slack_username="AWS Incident Manager",
@@ -275,12 +289,20 @@ def get_slack_message_payload(event):
             )
 
     except Exception as e:
+        logger.info("exception")
+        logger.error(e)
         return formatter.format_generic_slack_message(
             eventmsg,
         )
 
 
 def send_slack_notification(payload):
+    """
+    Function to forward messages to Slack
+
+    :param payload: Slack message payload
+    :returns: urllib3.response
+    """
     ssm = boto3.client("ssm")
     slackUrlParam = os.environ["slack_webhook_url_parameter"]
     url = ssm.get_parameter(Name=slackUrlParam, WithDecryption=True)["Parameter"][
@@ -304,7 +326,7 @@ def lambda_handler(event, context):
 
     response = send_slack_notification(payload)
 
-    if json.loads(response)["code"] != 200:
+    if response.status != 200:
         return logger.error(
             {
                 "status_code": response.status,
