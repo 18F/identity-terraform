@@ -37,11 +37,11 @@ class SlackNotificationsTest(unittest.TestCase):
             slack_channel=os.environ["slack_channel"],
         ).compose_payload(text="TEST", blocks=["a", "b", "c"])
 
-        assert payload["channel"] == os.environ["slack_channel"]
-        assert payload["username"] == os.environ["slack_username"]
-        assert payload["text"] == "TEST"
-        assert payload["blocks"] == ["a", "b", "c"]
-        assert payload["icon_emoji"] == os.environ["slack_icon"]
+        self.assertEqual(payload["channel"], os.environ["slack_channel"])
+        self.assertEqual(payload["username"], os.environ["slack_username"])
+        self.assertEqual(payload["text"], "TEST")
+        self.assertEqual(payload["blocks"], ["a", "b", "c"])
+        self.assertEqual(payload["icon_emoji"], os.environ["slack_icon"])
 
     def test_format_codebuild_message(self):
         event = self.load_file("codebuild_message")
@@ -54,11 +54,11 @@ class SlackNotificationsTest(unittest.TestCase):
             json.loads(event["Records"][0]["Sns"]["Message"]),
             slack_username="AWS CodePipeline",
         )
-        assert payload["channel"] == os.environ["slack_channel"]
-        assert payload["username"] == "AWS CodePipeline"
-        assert "with execution ID" in payload["text"]
-        assert "b83a8ad1-f05c-4876-bb7a-485890298729" in payload["text"]
-        assert payload["icon_emoji"] == os.environ["slack_icon"]
+        self.assertEqual(payload["channel"], os.environ["slack_channel"])
+        self.assertEqual(payload["username"], "AWS CodePipeline")
+        self.assertIn("with execution ID", payload["text"])
+        self.assertIn("b83a8ad1-f05c-4876-bb7a-485890298729", payload["text"])
+        self.assertEqual(payload["icon_emoji"], os.environ["slack_icon"])
 
     def test_format_cloudwatch_alarm_message(self):
         event = self.load_file("cloudwatch_alarm_message")
@@ -72,10 +72,10 @@ class SlackNotificationsTest(unittest.TestCase):
             slack_username="AWS Cloudwatch Alarm",
             slack_icon=":aws:",
         )
-        assert payload["channel"] == os.environ["slack_channel"]
-        assert payload["username"] == "AWS Cloudwatch Alarm"
-        assert "test-idp-unhealthy-instances" in payload["text"]
-        assert payload["icon_emoji"] == ":aws:"
+        self.assertEqual(payload["channel"], os.environ["slack_channel"])
+        self.assertEqual(payload["username"], "AWS Cloudwatch Alarm")
+        self.assertIn("test-idp-unhealthy-instances", payload["text"])
+        self.assertEqual(payload["icon_emoji"], ":aws:")
 
     def test_format_generic_slack_message(self):
         event = self.load_file("generic_message")
@@ -88,10 +88,10 @@ class SlackNotificationsTest(unittest.TestCase):
         ).format_generic_slack_message(
             eventmsg,
         )
-        assert payload["channel"] == os.environ["slack_channel"]
-        assert payload["username"] == os.environ["slack_username"]
-        assert payload["text"] == "This is a generic text message"
-        assert payload["icon_emoji"] == os.environ["slack_icon"]
+        self.assertEqual(payload["channel"], os.environ["slack_channel"])
+        self.assertEqual(payload["username"], os.environ["slack_username"])
+        self.assertEqual(payload["text"], "This is a generic text message")
+        self.assertEqual(payload["icon_emoji"], os.environ["slack_icon"])
 
     def test_format_aws_incident_manager_shift_message(self):
 
@@ -105,13 +105,13 @@ class SlackNotificationsTest(unittest.TestCase):
             json.loads(event["Records"][0]["Sns"]["Message"]),
             slack_username="AWS Incident Manager",
         )
-        assert payload["channel"] == os.environ["slack_channel"]
-        assert payload["username"] == "AWS Incident Manager"
-        assert (
-            payload["text"]
-            == "*ON-CALL CHANGE:* j_doe is OFF for the Platform Primary rotation"
+        self.assertEqual(payload["channel"], os.environ["slack_channel"])
+        self.assertEqual(payload["username"], "AWS Incident Manager")
+        self.assertEqual(
+            payload["text"],
+            "*ON-CALL CHANGE:* j_doe is OFF for the Platform Primary rotation",
         )
-        assert payload["icon_emoji"] == os.environ["slack_icon"]
+        self.assertEqual(payload["icon_emoji"], os.environ["slack_icon"])
 
     def load_file(self, filename):
         with open(os.path.join(os.path.dirname(__file__), f"{filename}.json")) as f:
