@@ -180,7 +180,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
 }
 
 module "ct-processor-github-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=e0e39adea82243d66c3c1218c7a4316b81f64560"
   #source = "../lambda_alerts"
 
   enabled              = 1
@@ -191,6 +191,7 @@ module "ct-processor-github-alerts" {
   evaluation_periods   = 5
   insights_enabled     = true
   duration_setting     = aws_lambda_function.cloudtrail_processor.timeout
+  treat_missing_data   = "ignore"
 }
 
 resource "aws_lambda_event_source_mapping" "cloudtrail_processor" {
