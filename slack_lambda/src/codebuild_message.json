@@ -1,0 +1,11 @@
+{
+  "Records": [
+    {
+      "Sns": {
+      "Message": "{ \"account\": \"100000000001\", \"detail-type\": \"CodePipeline Pipeline Execution State Change\", \"region\": \"us-west-2\", \"source\": \"aws.codepipeline\", \"time\": \"2024-05-21T16:56:56Z\", \"notificationRuleArn\": \"arn:aws:codestar-notifications:us-west-2:100000000001:notificationrule/8554765b869f2601f2a73c4819abfc8e53b18e11\", \"detail\": { \"pipeline\": \"auto_terraform_all_test_\", \"execution-id\": \"b83a8ad1-f05c-4876-bb7a-485890298729\", \"start-time\": \"2024-05-21T16:55:44.443Z\", \"state\": \"FAILED\", \"version\": 34.0, \"pipeline-execution-attempt\": 1.0 }, \"resources\": [ \"arn:aws:codepipeline:us-west-2:100000000001:auto_terraform_all_sandbox_\" ], \"additionalAttributes\": {} }"
+      }
+    }
+  ]
+}
+
+

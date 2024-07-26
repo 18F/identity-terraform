@@ -1,0 +1,9 @@
+{
+  "Records": [
+    {
+      "Sns": {
+        "Message": "{\"AlarmName\": \"test-idp-unhealthy-instances\",\"AlarmDescription\": \"test-idp: Previously healthy instances have fallen ill\",\"AWSAccountId\": \"100000000001\",\"AlarmConfigurationUpdatedTimestamp\": \"2020-09-23T20:54:28.256+0000\",\"NewStateValue\": \"ALARM\",\"NewStateReason\": \"Threshold Crossed: 1 datapoint [1.0 (21/05/24 08:29:00)] was greater than the threshold (0.0).\",\"StateChangeTime\": \"2024-05-21T08:35:10.393+0000\",\"Region\": \"US West (Oregon)\",\"AlarmArn\": \"arn:aws:cloudwatch:us-west-2:100000000001:alarm:test-idp-unhealthy-instances\",\"OldStateValue\": \"OK\",\"OKActions\": [\"arn:aws:sns:us-west-2:100000000001:slack-otherevents\"],\"AlarmActions\": [\"arn:aws:sns:us-west-2:100000000001:slack-otherevents\"],\"InsufficientDataActions\": [],\"Trigger\": {\"MetricName\": \"UnHealthyHostCount\",\"Namespace\": \"AWS/ApplicationELB\",\"StatisticType\": \"Statistic\",\"Statistic\": \"MAXIMUM\",\"Unit\": null,\"Dimensions\": [{\"value\": \"targetgroup/test-ssl-target-group/cd55f79e5f49f3f3\",\"name\": \"TargetGroup\"},{\"value\": \"app/login-idp-alb-test/6924b3f01ae8ec6f\",\"name\": \"LoadBalancer\"}],\"Period\": 300,\"EvaluationPeriods\": 1,\"ComparisonOperator\": \"GreaterThanThreshold\",\"Threshold\": 0.0,\"TreatMissingData\": \"notBreaching\",\"EvaluateLowSampleCountPercentile\": \"\"}}"
+      }
+    }
+  ]
+}

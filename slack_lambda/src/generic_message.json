@@ -1,0 +1,9 @@
+{
+  "Records": [
+    {
+      "Sns": {
+      "Message": "This is a generic text message"
+      }
+    }
+  ]
+}
