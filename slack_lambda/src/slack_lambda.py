@@ -28,9 +28,9 @@ class SlackNotificationFormatter:
                 "\n".join(
                     [
                         "*AWS Health Event*",
-                        f'*Service: {details["service"]}*',
-                        f'Event Type: {details["eventTypeCode"]}',
-                        f'Status: {details["statusCode"]}',
+                        f'*Service:* {details["service"]}',
+                        f'*Event Type:* {details["eventTypeCode"]}',
+                        f'*Status:* {details["statusCode"]}',
                     ]
                 )
             )
@@ -50,7 +50,7 @@ class SlackNotificationFormatter:
         )
 
         if len(data["resources"]) > 0:
-            affected_resources = "Affected Resources:\n"
+            affected_resources = "*Affected Resources:*\n"
 
             for resource in data["resources"]:
                 affected_resources = f"{resource}\n"
@@ -61,8 +61,8 @@ class SlackNotificationFormatter:
             self.blocks_section(
                 "\n".join(
                     [
-                        f"Account: {details['account']}",
-                        f"Region: {details['eventRegion']}",
+                        f"*Account:* {details['affectedAccount']}",
+                        f"*Region:* {details['eventRegion']}",
                     ]
                 )
             )
@@ -74,16 +74,16 @@ class SlackNotificationFormatter:
         except:
             formatted_time = data["time"]
 
-        time_information = f"Notification Time: {formatted_time}"
+        time_information = f"*Notification Time:* {formatted_time}"
 
         if "startTime" in details:
-            time_information += f"\nStart Time: {details['startTime']}"
+            time_information += f"\n*Start Time:* {details['startTime']}"
 
         if "endTime" in details:
-            time_information += f"\nEnd Time: {details['endTime']}"
+            time_information += f"\n*End Time:* {details['endTime']}"
 
         if "lastUpdatedTime" in details:
-            time_information += f"\nLast Updated: {details['lastUpdatedTime']}"
+            time_information += f"\n*Last Updated:* {details['lastUpdatedTime']}"
 
         blocks.append(self.blocks_section(time_information))
 
