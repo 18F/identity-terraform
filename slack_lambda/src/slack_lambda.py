@@ -42,7 +42,7 @@ class SlackNotificationFormatter:
                 "\n".join(
                     [
                         "```",
-                        details["eventDescription"][0]["latestDescription"],
+                        f"{details['eventDescription'][0]['latestDescription']}".replace('\\n', '\n'),
                         "```",
                     ]
                 )
