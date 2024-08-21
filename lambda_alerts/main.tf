@@ -14,6 +14,18 @@ variable "alarm_actions" {
   description = "A list of ARNs to notify when the alarm fires"
 }
 
+variable "runbook" {
+  type        = string
+  description = "A link to a runbook associated with any metric in this module"
+  default     = ""
+}
+
+variable "error_rate_operator" {
+  type        = string
+  description = "The operator used to compare a calculated error rate against a threshold"
+  default     = "GreaterThanOrEqualToThreshold"
+}
+
 variable "error_rate_threshold" {
   type        = number
   description = "The threshold error rate (as a percentage) for triggering an alert"
@@ -73,9 +85,12 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   count = var.enabled
 
   alarm_name        = "LambdaErrorRate_${var.function_name}"
-  alarm_description = "Lambda error rate has exceeded ${var.error_rate_threshold}%"
+  alarm_description = <<EOM
+  Lambda error rate has exceeded ${var.error_rate_threshold}%
+  ${var.runbook}
+  EOM
 
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  comparison_operator       = var.error_rate_operator
   evaluation_periods        = var.evaluation_periods
   threshold                 = var.error_rate_threshold
   insufficient_data_actions = []
@@ -123,7 +138,10 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
   count = var.enabled == 1 && var.insights_enabled ? 1 : 0
 
   alarm_name        = "LambdaMemoryUsage_${var.function_name}"
-  alarm_description = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%"
+  alarm_description = <<EOM
+  Lambda memory usage has exceeded ${var.memory_usage_threshold}%
+  ${var.runbook}
+  EOM
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
@@ -150,7 +168,10 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   count = var.enabled
 
   alarm_name        = "LambdaDuration_${var.function_name}"
-  alarm_description = "Lambda duration has exceeded ${var.duration_threshold}%"
+  alarm_description = <<EOM
+  Lambda duration has exceeded ${var.duration_threshold}%
+  ${var.runbook}
+  EOM
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
