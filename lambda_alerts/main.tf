@@ -9,6 +9,12 @@ variable "function_name" {
   description = "Name of the lambda function to monitor"
 }
 
+variable "env_name" {
+  type        = string
+  description = "Name of the environment in which the lambda function lives"
+  default     = ""
+}
+
 variable "alarm_actions" {
   type        = list(string)
   description = "A list of ARNs to notify when the alarm fires"
@@ -84,7 +90,11 @@ locals {
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   count = var.enabled
 
-  alarm_name        = "LambdaErrorRate_${var.function_name}"
+  alarm_name = (
+    length(var.env_name) > 0 ?
+    "${var.env_name}-${var.function_name}-LambdaErrorRate" :
+    "${var.function_name}-LambdaErrorRate"
+  )
   alarm_description = <<EOM
   Lambda error rate has exceeded ${var.error_rate_threshold}%
   ${var.runbook}
@@ -137,7 +147,11 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
 resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
   count = var.enabled == 1 && var.insights_enabled ? 1 : 0
 
-  alarm_name        = "LambdaMemoryUsage_${var.function_name}"
+  alarm_name = (
+    length(var.env_name) > 0 ?
+    "${var.env_name}-${var.function_name}-LambdaMemoryUsage" :
+    "${var.function_name}-LambdaMemoryUsage"
+  )
   alarm_description = <<EOM
   Lambda memory usage has exceeded ${var.memory_usage_threshold}%
   ${var.runbook}
@@ -167,7 +181,11 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
 resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   count = var.enabled
 
-  alarm_name        = "LambdaDuration_${var.function_name}"
+  alarm_name = (
+    length(var.env_name) > 0 ?
+    "${var.env_name}-${var.function_name}-LambdaDuration" :
+    "${var.function_name}-LambdaDuration"
+  )
   alarm_description = <<EOM
   Lambda duration has exceeded ${var.duration_threshold}%
   ${var.runbook}
