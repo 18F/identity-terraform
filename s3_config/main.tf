@@ -28,6 +28,11 @@ variable "inventory_bucket_arn" {
   type        = string
 }
 
+variable "logging_bucket_id" {
+  description = "ID of the S3 bucket used for collecting the S3 access events"
+  type        = string
+}
+
 variable "optional_fields" {
   description = "List of optional data fields to collect in S3 Inventory reports."
   type        = list(string)
@@ -93,4 +98,11 @@ resource "aws_s3_bucket_inventory" "daily" {
   }
 
   optional_fields = var.optional_fields
+}
+
+resource "aws_s3_bucket_logging" "access_logging" {
+  bucket = local.bucket_fullname
+
+  target_bucket = var.logging_bucket_id
+  target_prefix = "${local.bucket_fullname}/"
 }
