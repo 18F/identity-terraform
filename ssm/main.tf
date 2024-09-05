@@ -1,6 +1,28 @@
 data "aws_caller_identity" "current" {
 }
 
+data "aws_iam_policy_document" "s3_require_secure_connections" {
+  statement {
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    actions = [
+      "s3:*",
+    ]
+    effect = "Deny"
+    resources = [
+      aws_s3_bucket.ssm_logs.arn,
+      "${aws_s3_bucket.ssm_logs.arn}/*"
+    ]
+    condition {
+      test     = "Bool"
+      values   = ["false"]
+      variable = "aws:SecureTransport"
+    }
+  }
+}
+
 # KMS keys
 data "aws_iam_policy_document" "kms_ssm" {
   statement {
@@ -74,6 +96,11 @@ resource "aws_s3_bucket" "ssm_logs" {
   tags = {
     environment = var.env_name
   }
+}
+
+resource "aws_s3_bucket_policy" "ssm_logs" {
+  bucket = aws_s3_bucket.ssm_logs.id
+  policy = data.aws_iam_policy_document.s3_require_secure_connections.json
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "ssm_logs" {

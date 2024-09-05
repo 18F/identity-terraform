@@ -22,6 +22,7 @@ SSM documents are created from individual object blocks within the `ssm_*_map` v
 ```
 
 In this example:
+
 - The resulting SSM document will be named `<ENV>-ssm-document-sudo`
 - Starting a session using this document is done via `aws ssm start-session --document <ENV>-ssm-document-sudo`
 - Session data will NOT be logged to the console, as `logging = false` (see note below)
@@ -38,7 +39,7 @@ cloudWatchEncryptionEnabled: true
 cloudWatchStreamingEnabled: true
 ```
 
-If enabled, this means _everything_ that is printed to the console, i.e. commands run, output/error output, etc. will be logged to S3 and CloudWatch logs. As there may be cases where logging this data is undesirable -- e.g. when running commands on an instance that may print PII to the console -- this option can be set to `false`, which will change the above `inputs` to:
+If enabled, this means *everything* that is printed to the console, i.e. commands run, output/error output, etc. will be logged to S3 and CloudWatch logs. As there may be cases where logging this data is undesirable -- e.g. when running commands on an instance that may print PII to the console -- this option can be set to `false`, which will change the above `inputs` to:
 
 ```yaml
 s3EncryptionEnabled: false
@@ -71,17 +72,71 @@ module "ssm" {
   }
 }
 ```
+<!-- BEGIN_TF_DOCS -->
+## Requirements
 
-## Variables
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.5 |
 
-| Name                    | Type                 | Description                                                              | Required | Default                                                                                                                                                    |
-| -----                   | -----                | -----                                                                    | -----    | -----                                                                                                                                                      |
-| `ssm_doc_map`           | **map(map(string))** | Map of data for SSM `Standard_Session` documents                         | YES      | <pre>{<br> "default" = {<br>  description = "Login shell"<br>  command   = "cd ; /bin/bash"<br>  logging   = true<br> },<br>}</pre>                        |
-| `ssm_cmd_doc_map`       | **map(any)**         | Map of data for SSM `Command` documents                                  | YES      | <pre>{<br> "uptime" = {<br>  description = "Verify host uptime"<br>  command   = ["uptime"]<br>  logging   = false<br>  parameters  = []<br> },<br>}</pre> |
-| `ssm_doc_map`           | **map(any)**         | Map of data for SSM `InteractiveCommand` documents                       | YES      | <pre>{<br> "ifconfig" = {<br>  description = "Check network interface configuration"<br>  command   = ["ifconfig"]<br>  parameters  = []<br> },<br>}</pre> |
-| `session_timeout`       | **number**           | Amount of time (in minutes) of inactivity to allow before a session ends | YES      | 15                                                                                                                                                         |
-| `region`                | **string**           | AWS Region                                                               | YES      |                                                                                                                                                            |
-| `env_name`              | **string**           | Environment name                                                         | YES      |                                                                                                                                                            |
-| `bucket_name_prefix`    | **string**           | First substring in S3 bucket name                                        | YES      |                                                                                                                                                            |
-| `log_bucket_name`       | **string**           | Override name of the bucket used for S3 logging                          | NO       | <blank>                                                                                                                                                    |
-| `inventory_bucket_name` | **string**           | Override name of the S3 bucket used for S3 Inventory reports             | NO       | <blank>                                                                                                                                                    |
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_ssm_logs_bucket_config"></a> [ssm\_logs\_bucket\_config](#module\_ssm\_logs\_bucket\_config) | github.com/18F/identity-terraform//s3_config | 91f5c8a84c664fc5116ef970a5896c2edadff2b1 |
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_cloudwatch_event_rule.ssm_cmd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.ssm_cmds](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_log_group.ssm_cmd_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.ssm_session_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_kms_alias.kms_ssm](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_key.kms_ssm](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_s3_bucket.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
+| [aws_s3_bucket_acl.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl) | resource |
+| [aws_s3_bucket_lifecycle_configuration.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
+| [aws_s3_bucket_logging.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_logging) | resource |
+| [aws_s3_bucket_ownership_controls.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
+| [aws_s3_bucket_policy.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
+| [aws_s3_bucket_server_side_encryption_configuration.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
+| [aws_s3_bucket_versioning.ssm_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
+| [aws_ssm_document.ssm_cmd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document) | resource |
+| [aws_ssm_document.ssm_interactive_cmd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document) | resource |
+| [aws_ssm_document.ssm_session](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.kms_ssm](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.s3_require_secure_connections](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.ssm_access_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_bucket_name_prefix"></a> [bucket\_name\_prefix](#input\_bucket\_name\_prefix) | REQUIRED. First substring in S3 bucket name of<br>$bucket\_name\_prefix.$env\_name-ssm-logs.$account\_id-$region | `string` | n/a | yes |
+| <a name="input_env_name"></a> [env\_name](#input\_env\_name) | REQUIRED. Environment name | `string` | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | REQUIRED. AWS Region | `string` | n/a | yes |
+| <a name="input_inventory_bucket_name"></a> [inventory\_bucket\_name](#input\_inventory\_bucket\_name) | (OPTIONAL) Override name of the S3 bucket used for S3 Inventory reports.<br>Will default to $bucket\_name\_prefix.s3-inventory.$account\_id-$region<br>if not explicitly declared. | `string` | `""` | no |
+| <a name="input_log_bucket_name"></a> [log\_bucket\_name](#input\_log\_bucket\_name) | (OPTIONAL) Override name of the bucket used for S3 logging.<br>Will default to $bucket\_name\_prefix.s3-access-logs.$account\_id-$region<br>if not explicitly declared. | `string` | `""` | no |
+| <a name="input_session_timeout"></a> [session\_timeout](#input\_session\_timeout) | REQUIRED. Amount of time (in minutes) of inactivity<br>to allow before a session ends. | `number` | `15` | no |
+| <a name="input_ssm_cmd_doc_map"></a> [ssm\_cmd\_doc\_map](#input\_ssm\_cmd\_doc\_map) | REQUIRED. Map of data for SSM Command Documents. Each must include the document name,<br>description, command to run, any parameter(s) used to configure said command, and<br>whether to log the commands/output from the given session/document. | `map(any)` | <pre>{<br>  "uptime": {<br>    "command": [<br>      "uptime"<br>    ],<br>    "description": "Verify host uptime",<br>    "logging": false,<br>    "parameters": []<br>  }<br>}</pre> | no |
+| <a name="input_ssm_doc_map"></a> [ssm\_doc\_map](#input\_ssm\_doc\_map) | REQUIRED. Map of data for SSM Session Documents. Each must include the document name,<br>description, command(s) to run at login, and whether to log the commands/output<br>from the given session/document. | `map(map(string))` | <pre>{<br>  "default": {<br>    "command": "cd ; /bin/bash",<br>    "description": "Login shell",<br>    "exit": true,<br>    "logging": false<br>  }<br>}</pre> | no |
+| <a name="input_ssm_interactive_cmd_map"></a> [ssm\_interactive\_cmd\_map](#input\_ssm\_interactive\_cmd\_map) | REQUIRED. Map of data for SSM InteractiveCommand Session Documents. Each must<br>include the document name, description, command to run, and any parameter(s) used<br>to configure said command. | `map(any)` | <pre>{<br>  "ifconfig": {<br>    "command": [<br>      "ifconfig"<br>    ],<br>    "description": "Check network interface configuration",<br>    "parameters": []<br>  }<br>}</pre> | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_ssm_access_role_policy"></a> [ssm\_access\_role\_policy](#output\_ssm\_access\_role\_policy) | Body of the ssm\_access\_role\_policy, in JSON |
+| <a name="output_ssm_cmd_logs"></a> [ssm\_cmd\_logs](#output\_ssm\_cmd\_logs) | Name of the CloudWatch Log Group for SSM command logging. |
+| <a name="output_ssm_kms_arn"></a> [ssm\_kms\_arn](#output\_ssm\_kms\_arn) | ARN of the KMS key used for S3/session/log encryption. |
+| <a name="output_ssm_session_logs"></a> [ssm\_session\_logs](#output\_ssm\_session\_logs) | Name of the CloudWatch Log Group for SSM access logging. |
+<!-- END_TF_DOCS -->
