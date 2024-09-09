@@ -99,6 +99,6 @@ If desiring to *remove* these resources (e.g. when doing a complete infrastructu
 
 | Name | Description |
 |------|-------------|
-| <a name="output_inventory_bucket_arn"></a> [inventory\_bucket\_arn](#output\_inventory\_bucket\_arn) | n/a |
-| <a name="output_s3_access_log_bucket"></a> [s3\_access\_log\_bucket](#output\_s3\_access\_log\_bucket) | n/a |
+| <a name="output_inventory_bucket_arn"></a> [inventory\_bucket\_arn](#output\_inventory\_bucket\_arn) | ARN of the S3 Inventory Bucket |
+| <a name="output_s3_access_log_bucket"></a> [s3\_access\_log\_bucket](#output\_s3\_access\_log\_bucket) | ID/Name of the S3 Access Logging Bucket |
 <!-- END_TF_DOCS -->
