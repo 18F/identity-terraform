@@ -71,8 +71,8 @@ variable "alarm_actions" {
 
 variable "insights_enabled" {
   description = ""
-  default     = true
-  type        = bool
+  default     = 1
+  type        = number
 }
 
 variable "treat_missing_data" {

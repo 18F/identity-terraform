@@ -46,7 +46,7 @@ This module provides a consistent framework for creating and monitoring Lambda f
 | <a name="input_log_skip_destroy"></a> [log\_skip\_destroy](#input\_log\_skip\_destroy) | Skip log destruction | `bool` | n/a | yes |
 | <a name="input_memory_size"></a> [memory\_size](#input\_memory\_size) | Memory allocated to the Lambda function | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-west-2"` | no |
-| <a name="input_role"></a> [role](#input\_role) | Lambda function IAM role | `string` | n/a | yes |
+| <a name="input_role_arn"></a> [role\_arn](#input\_role\_arn) | Lambda function IAM role ARN | `string` | n/a | yes |
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | Lambda function runtime | `string` | n/a | yes |
 | <a name="input_source_code_filename"></a> [source\_code\_filename](#input\_source\_code\_filename) | Name of the file containing the Lambda source code | `string` | n/a | yes |
 | <a name="input_source_dir"></a> [source\_dir](#input\_source\_dir) | Directory containing the Lambda source code | `string` | n/a | yes |

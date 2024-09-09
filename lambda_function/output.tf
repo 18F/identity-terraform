@@ -1,7 +1,7 @@
 output "function_name" {
-  value = ""
+  value = aws_lambda_function.lambda.name
 }
 
 output "lambda_arn" {
-  value = ""
+  value = aws_lambda_function.lambda.arn
 }

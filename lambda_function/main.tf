@@ -1,4 +1,5 @@
 module "lambda_insights" {
+  count = var.insights_enabled
   source = "github.com/18F/identity-terraform//lambda_insights?ref=5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9"
   #source = "../../../../identity-terraform/lambda_insights"
 
@@ -32,22 +33,26 @@ resource "aws_lambda_function" "lambda" {
   runtime          = var.lambda_runtime
   timeout          = var.lambda_timeout
 
+  layers = compact([
+    var.insights_enabled == 1 ? module.lambda_insights[0].layer_arn : ""
+  ])
+
   environment {
     variables = var.environment_variables
   }
 
-  layers = [
-    module.lambda_insights.layer_arn
-  ]
+  logging_config {
+    log_format  = "Text"
+    log_group = aws_cloudwatch_log_group.lambda
+  }
 
   depends_on = [
     module.lambda_code.resource_check,
-    aws_cloudwatch_log_group.lambda
   ]
 }
 
 module "lambda_alerts" {
-  source   = "github.com/18F/identity-terraform//lambda_alerts?ref=b4c39660e888c87e56fb910cca3104bd6a12b093"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b4c39660e888c87e56fb910cca3104bd6a12b093"
   #source = "../../../../identity-terraform/lambda_alerts"
 
   function_name      = aws_lambda_function.lambda.function_name
