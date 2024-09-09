@@ -15,13 +15,13 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_ct-processor-github-alerts"></a> [ct-processor-github-alerts](#module\_ct-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f |
-| <a name="module_ct-requeue-alerts"></a> [ct-requeue-alerts](#module\_ct-requeue-alerts) | github.com/18F/identity-terraform//lambda_alerts | f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f |
-| <a name="module_cw-processor-github-alerts"></a> [cw-processor-github-alerts](#module\_cw-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f |
+| <a name="module_ct-processor-github-alerts"></a> [ct-processor-github-alerts](#module\_ct-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
+| <a name="module_ct-requeue-alerts"></a> [ct-requeue-alerts](#module\_ct-requeue-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
+| <a name="module_cw-processor-github-alerts"></a> [cw-processor-github-alerts](#module\_cw-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
 | <a name="module_kms_cloudwatch_events_queue_alerts"></a> [kms\_cloudwatch\_events\_queue\_alerts](#module\_kms\_cloudwatch\_events\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
 | <a name="module_kms_ct_queue_alerts"></a> [kms\_ct\_queue\_alerts](#module\_kms\_ct\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
 | <a name="module_reqeue_queue_alerts"></a> [reqeue\_queue\_alerts](#module\_reqeue\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
-| <a name="module_slack-processor-github-alerts"></a> [slack-processor-github-alerts](#module\_slack-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | f6bb6ede0d969ea8f62ebba3cbcedcba834aee2f |
+| <a name="module_slack-processor-github-alerts"></a> [slack-processor-github-alerts](#module\_slack-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
 | <a name="module_unmatched_queue_alerts"></a> [unmatched\_queue\_alerts](#module\_unmatched\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
 
 ## Resources
@@ -98,6 +98,7 @@
 | [aws_sqs_queue_policy.events_to_sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy) | resource |
 | [aws_sqs_queue_policy.kms_cloudwatch_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_cloudwatch_log_group.kinesis_source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/cloudwatch_log_group) | data source |
 | [aws_iam_policy.insights](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy) | data source |
 | [aws_iam_policy_document.assume_role_kinesis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.assume_role_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -131,7 +132,7 @@
 | <a name="input_sqs_alarm_actions"></a> [sqs\_alarm\_actions](#input\_sqs\_alarm\_actions) | A list of ARNs to notify when the sqs alarms fire | `list(string)` | n/a | yes |
 | <a name="input_sqs_ok_actions"></a> [sqs\_ok\_actions](#input\_sqs\_ok\_actions) | A list of ARNs to notify when the sqs alarms return to an OK state | `list(string)` | n/a | yes |
 | <a name="input_alarm_sns_topic_arns"></a> [alarm\_sns\_topic\_arns](#input\_alarm\_sns\_topic\_arns) | List of SNS Topic ARN for alarms | `list(string)` | `[]` | no |
-| <a name="input_cloudwatch_filter_pattern"></a> [cloudwatch\_filter\_pattern](#input\_cloudwatch\_filter\_pattern) | Filter pattern for CloudWatch kms.log file | `string` | `"[(json = *decrypt* && json = *pii-encryption*) || (json = *decrypt* && json = *password-digest*)]"` | no |
+| <a name="input_cloudwatch_filter_pattern"></a> [cloudwatch\_filter\_pattern](#input\_cloudwatch\_filter\_pattern) | Filter pattern for CloudWatch kms.log file | `string` | `"{ ($.kms.action = \"decrypt\" && $.kms.encryption_context.context = %password-digest+|pii-encryption+% ) }"` | no |
 | <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | Number of days to retain CloudWatch Logs for Lambda functions | `number` | `90` | no |
 | <a name="input_ct_queue_delay_seconds"></a> [ct\_queue\_delay\_seconds](#input\_ct\_queue\_delay\_seconds) | Number of seconds after the message is placed on the queue before it is able to be received | `number` | `60` | no |
 | <a name="input_ct_queue_max_message_size"></a> [ct\_queue\_max\_message\_size](#input\_ct\_queue\_max\_message\_size) | Max message size in bytes | `number` | `4096` | no |
