@@ -6,6 +6,11 @@ variable "inventory_bucket_arn" {
   type        = string
 }
 
+variable "logging_bucket_id" {
+  description = "Id of the S3 bucket used for collecting the S3 access events"
+  type        = string
+}
+
 # To give ELBs the ability to upload logs to an S3 bucket, we need to create a
 # policy that gives permission to a magical AWS account ID to upload logs to our
 # bucket, which differs by region.  This table contaings those mappings, and was
@@ -192,11 +197,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
 
 
 module "s3_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "github.com/18F/identity-terraform//s3_config?ref=c1ccb75a70894f3c74beed564c0505415d1d1353"
   #source = "../s3_config"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = "elb-logs"
   region               = var.region
   inventory_bucket_arn = var.inventory_bucket_arn
+  logging_bucket_id    = var.logging_bucket_id
 }
