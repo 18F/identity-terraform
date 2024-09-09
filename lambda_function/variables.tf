@@ -80,9 +80,20 @@ variable "cloudwatch_retention_days" {
   type    = number
 }
 
-variable "permissions" {
+variable "iam_permissions" {
   default     = []
   type        = list(any)
   description = "List of IAM permissions for the lambda function"
 }
 
+variable "schedule_expression" {
+  default     = ""
+  description = "Cron or rate expression to trigger lambda"
+  type        = string
+}
+
+variable "event_pattern" {
+  default     = ""
+  description = "EventBridge pattern to trigger lambda"
+  type        = string
+}

@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "lambda" {
   }
 
   dynamic "statement" {
-    for_each = var.permissions
+    for_each = var.iam_permissions
     content {
       sid       = statement.value["sid"]
       effect    = statement.value["effect"]
