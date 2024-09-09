@@ -18,6 +18,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3-access-logs" {
   }
 }
 
+resource "aws_s3_bucket_policy" "s3_access_logs" {
+  bucket = aws_s3_bucket.s3-access-logs.id
+  policy = data.aws_iam_policy_document.s3_reject_non_secure_operations[aws_s3_bucket.s3-access-logs.arn].json
+}
+
 resource "aws_s3_bucket_versioning" "s3-access-logs" {
   bucket = aws_s3_bucket.s3-access-logs.id
 
@@ -71,6 +76,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
 data "aws_s3_bucket" "tf-state" {
   count  = var.remote_state_enabled
   bucket = local.state_bucket
+}
+
+resource "aws_s3_bucket_policy" "tf_state" {
+  count  = var.remote_state_enabled
+  bucket = data.aws_s3_bucket.tf-state[0].id
+  policy = data.aws_iam_policy_document.s3_reject_non_secure_operations[data.aws_s3_bucket.tf-state[0].arn].json
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "tf-state" {
