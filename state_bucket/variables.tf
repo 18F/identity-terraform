@@ -11,6 +11,7 @@ variable "bucket_name_prefix" {
 
 variable "region" {
   description = "AWS Region"
+  type        = string
 }
 
 variable "remote_state_enabled" {
@@ -19,11 +20,13 @@ Whether to manage the remote state bucket
 and DynamoDB lock table (1 for true, 0 for false).
 EOM
   default     = 1
+  type        = number
 }
 
 variable "state_lock_table" {
   description = "Name of the DynamoDB table to use for state locking with the S3 state backend, e.g. 'terraform_locks'"
   default     = "terraform_locks"
+  type        = string
 }
 
 variable "sse_algorithm" {
