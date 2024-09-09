@@ -15,7 +15,7 @@ variable "description" {
 }
 
 variable "handler" {
-  description = "Lambda handler functionn ame"
+  description = "Lambda handler functionn name"
   type        = string
 }
 
@@ -49,11 +49,6 @@ variable "environment_variables" {
   type        = map(any)
 }
 
-variable "role_arn" {
-  description = "Lambda function IAM role ARN"
-  type        = string
-}
-
 variable "log_retention_in_days" {
   description = "How long to retain log files"
   type        = number
@@ -66,7 +61,7 @@ variable "log_skip_destroy" {
 
 variable "alarm_actions" {
   description = "ARNs for Cloudwatch Alarm actions"
-  type        = string
+  type        = list(any)
 }
 
 variable "insights_enabled" {
@@ -78,5 +73,16 @@ variable "insights_enabled" {
 variable "treat_missing_data" {
   default = "nonBreaching"
   type    = string
+}
+
+variable "cloudwatch_retention_days" {
+  default = 30
+  type    = number
+}
+
+variable "permissions" {
+  default     = []
+  type        = list(any)
+  description = "List of IAM permissions for the lambda function"
 }
 

@@ -1,5 +1,5 @@
 module "lambda_insights" {
-  count = var.insights_enabled
+  count  = var.insights_enabled
   source = "github.com/18F/identity-terraform//lambda_insights?ref=5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9"
   #source = "../../../../identity-terraform/lambda_insights"
 
@@ -18,20 +18,20 @@ module "lambda_code" {
 
   source_code_filename = var.source_code_filename
   source_dir           = var.source_dir
-  zip_filename         = "${replace(var.function_name, "-", "_")}_code"
+  zip_filename         = "${replace(var.function_name, "-", "_")}_code.zip"
 }
 
 resource "aws_lambda_function" "lambda" {
   filename      = module.lambda_code.zip_output_path
   function_name = var.function_name
-  role          = var.role_arn
+  role          = aws_iam_role.lambda.arn
   description   = var.description
   handler       = "${replace(var.function_name, "-", "_")}.${var.handler}"
 
   source_code_hash = module.lambda_code.zip_output_base64sha256
   memory_size      = var.memory_size
-  runtime          = var.lambda_runtime
-  timeout          = var.lambda_timeout
+  runtime          = var.runtime
+  timeout          = var.timeout
 
   layers = compact([
     var.insights_enabled == 1 ? module.lambda_insights[0].layer_arn : ""
@@ -42,8 +42,8 @@ resource "aws_lambda_function" "lambda" {
   }
 
   logging_config {
-    log_format  = "Text"
-    log_group = aws_cloudwatch_log_group.lambda
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.lambda.arn
   }
 
   depends_on = [
@@ -56,9 +56,8 @@ module "lambda_alerts" {
   #source = "../../../../identity-terraform/lambda_alerts"
 
   function_name      = aws_lambda_function.lambda.function_name
-  alarm_actions      = [var.slack_notification_arn]
+  alarm_actions      = var.alarm_actions
   insights_enabled   = true
   duration_setting   = aws_lambda_function.lambda.timeout
   treat_missing_data = var.treat_missing_data
 }
-
