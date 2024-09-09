@@ -197,9 +197,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
 
 
 module "s3_config" {
-  # Source SHA Will be updated once dependencies have been merged
-  #source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
-  source = "../s3_config"
+  source = "github.com/18F/identity-terraform//s3_config?ref=c1ccb75a70894f3c74beed564c0505415d1d1353"
+  #source = "../s3_config"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = "elb-logs"

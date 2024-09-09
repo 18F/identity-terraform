@@ -21,7 +21,7 @@ name to the caller.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_s3_config"></a> [s3\_config](#module\_s3\_config) | ../s3_config | n/a |
+| <a name="module_s3_config"></a> [s3\_config](#module\_s3\_config) | github.com/18F/identity-terraform//s3_config | c1ccb75a70894f3c74beed564c0505415d1d1353 |
 
 ## Resources
 
