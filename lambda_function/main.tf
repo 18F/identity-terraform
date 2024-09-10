@@ -33,9 +33,10 @@ resource "aws_lambda_function" "lambda" {
   runtime          = var.runtime
   timeout          = var.timeout
 
-  layers = compact([
-    var.insights_enabled == 1 ? module.lambda_insights[0].layer_arn : ""
-  ])
+  layers = compact(flatten([
+    var.insights_enabled == 1 ? module.lambda_insights[0].layer_arn : "",
+    var.layers
+  ]))
 
   environment {
     variables = var.environment_variables
@@ -43,7 +44,7 @@ resource "aws_lambda_function" "lambda" {
 
   logging_config {
     log_format = "Text"
-    log_group  = aws_cloudwatch_log_group.lambda.arn
+    log_group  = aws_cloudwatch_log_group.lambda.name
   }
 
   depends_on = [

@@ -80,6 +80,12 @@ variable "cloudwatch_retention_days" {
   type    = number
 }
 
+variable "layers" {
+  default     = []
+  type        = list(any)
+  description = "List of layers for the lambda function"
+}
+
 variable "iam_permissions" {
   default     = []
   type        = list(any)

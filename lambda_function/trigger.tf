@@ -1,15 +1,15 @@
 locals {
   enable_trigger = (
-    var.schedule_expression == "" && var.event_pattern != "" ) || (
-    var.schedule_expression != "" && var.event_pattern == "" )
+    var.schedule_expression == "" && var.event_pattern != "") || (
+  var.schedule_expression != "" && var.event_pattern == "")
 }
 
 resource "aws_cloudwatch_event_rule" "lambda" {
-  count         = local.enable_trigger ? 1 : 0
-  name          = var.function_name
-  description   = "Trigger ${var.function_name} by EventBridge"
+  count               = local.enable_trigger ? 1 : 0
+  name                = var.function_name
+  description         = "Trigger ${var.function_name} from EventBridge"
   schedule_expression = var.schedule_expression
-  event_pattern = var.event_pattern
+  event_pattern       = var.event_pattern
 }
 
 resource "aws_cloudwatch_event_target" "lambda" {
