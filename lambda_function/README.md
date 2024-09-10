@@ -11,7 +11,7 @@ module "sample_function" {
   region               = var.region
   function_name        = "sample-function"
   description          = "My sample function"
-  source_code_filename = "aws_audit.py"
+  source_code_filename = "sample_function.py"
   source_dir           = "${path.module}/lambda/aws-audit"
   runtime              = "python3.12"
 
