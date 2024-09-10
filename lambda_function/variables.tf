@@ -17,6 +17,7 @@ variable "description" {
 variable "handler" {
   description = "Lambda handler functionn name"
   type        = string
+  default     = "lambda_handler"
 }
 
 variable "source_code_filename" {
@@ -32,6 +33,7 @@ variable "source_dir" {
 variable "memory_size" {
   description = "Memory allocated to the Lambda function"
   type        = string
+  default     = "128"
 }
 
 variable "runtime" {
@@ -42,6 +44,7 @@ variable "runtime" {
 variable "timeout" {
   description = "Lambda timeout"
   type        = number
+  default     = 120
 }
 
 variable "environment_variables" {
@@ -57,6 +60,7 @@ variable "log_retention_in_days" {
 variable "log_skip_destroy" {
   description = "Skip log destruction"
   type        = bool
+  default     = false
 }
 
 variable "alarm_actions" {
