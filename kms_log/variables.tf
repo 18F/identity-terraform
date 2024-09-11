@@ -38,7 +38,7 @@ variable "kinesis_retention_hours" {
 # this filter will parse and only send log events that have
 # an encryption context of pii-encryption or password-digest
 variable "cloudwatch_filter_pattern" {
-  default     = "{ ($.kms.action = \"decrypt\" && $.kms.encryption_context.context = %password-digest+|pii-encryption+% ) }"
+  default     = "{ $.kms.action = "decrypt" && ($.kms.encryption_context.context = "pii-encryption" || $.kms.encryption_context.context = "password-digest") }"
   description = "Filter pattern for CloudWatch kms.log file"
 }
 
