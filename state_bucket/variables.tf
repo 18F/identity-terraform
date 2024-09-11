@@ -34,3 +34,9 @@ variable "sse_algorithm" {
   type        = string
   default     = "aws:kms"
 }
+
+variable "terraform_lock_deletion_protection" {
+  description = "Wheter to enable deletion protection for DynamoDB table."
+  type        = bool
+  default     = true
+}
