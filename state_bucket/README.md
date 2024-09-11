@@ -94,6 +94,7 @@ If desiring to *remove* these resources (e.g. when doing a complete infrastructu
 | <a name="input_remote_state_enabled"></a> [remote\_state\_enabled](#input\_remote\_state\_enabled) | Whether to manage the remote state bucket<br>and DynamoDB lock table (1 for true, 0 for false). | `number` | `1` | no |
 | <a name="input_sse_algorithm"></a> [sse\_algorithm](#input\_sse\_algorithm) | SSE algorithm to use to encrypt reports in S3 Inventory bucket. | `string` | `"aws:kms"` | no |
 | <a name="input_state_lock_table"></a> [state\_lock\_table](#input\_state\_lock\_table) | Name of the DynamoDB table to use for state locking with the S3 state backend, e.g. 'terraform\_locks' | `string` | `"terraform_locks"` | no |
+| <a name="input_terraform_lock_deletion_protection"></a> [terraform\_lock\_deletion\_protection](#input\_terraform\_lock\_deletion\_protection) | Wheter to enable deletion protection for DynamoDB table. | `bool` | `true` | no |
 
 ## Outputs
 

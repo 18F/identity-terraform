@@ -203,7 +203,7 @@ resource "aws_dynamodb_table" "tf-lock-table" {
     enabled = true
   }
 
-  deletion_protection_enabled = true
+  deletion_protection_enabled = var.terraform_lock_deletion_protection
 
   lifecycle {
     prevent_destroy = true
