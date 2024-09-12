@@ -87,7 +87,7 @@ module "sample_function" {
 | <a name="input_alarm_actions"></a> [alarm\_actions](#input\_alarm\_actions) | ARNs for Cloudwatch Alarm actions | `list(any)` | n/a | yes |
 | <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | n/a | `number` | `30` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda function | `string` | n/a | yes |
-| <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variable for the Lambda function | `map(any)` | n/a | yes |
+| <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the Lambda function. Individual variables must be<br>  of a type that terraform can convert to strings. Lists and maps must be<br>  `jsonencode`ed. | `map(any)` | n/a | yes |
 | <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | EventBridge pattern to trigger lambda | `string` | `""` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of the Lambda function | `string` | n/a | yes |
 | <a name="input_handler"></a> [handler](#input\_handler) | Lambda handler functionn name | `string` | `"lambda_handler"` | no |
@@ -95,7 +95,7 @@ module "sample_function" {
 | <a name="input_insights_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | n/a | `number` | `1` | no |
 | <a name="input_layers"></a> [layers](#input\_layers) | List of layers for the lambda function | `list(any)` | `[]` | no |
 | <a name="input_log_retention_in_days"></a> [log\_retention\_in\_days](#input\_log\_retention\_in\_days) | How long to retain log files | `number` | n/a | yes |
-| <a name="input_log_skip_destroy"></a> [log\_skip\_destroy](#input\_log\_skip\_destroy) | Skip log destruction | `bool` | n/a | yes |
+| <a name="input_log_skip_destroy"></a> [log\_skip\_destroy](#input\_log\_skip\_destroy) | Skip log destruction | `bool` | `false` | no |
 | <a name="input_memory_size"></a> [memory\_size](#input\_memory\_size) | Memory allocated to the Lambda function | `string` | `"128"` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-west-2"` | no |
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | Lambda function runtime | `string` | n/a | yes |

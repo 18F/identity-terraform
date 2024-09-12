@@ -48,7 +48,11 @@ variable "timeout" {
 }
 
 variable "environment_variables" {
-  description = "Environment variable for the Lambda function"
+  description = <<EOM
+  Environment variables for the Lambda function. Individual variables must be
+  of a type that terraform can convert to strings. Lists and maps must be
+  `jsonencode`ed.
+  EOM
   type        = map(any)
 }
 
