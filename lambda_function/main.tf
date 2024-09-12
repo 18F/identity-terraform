@@ -1,5 +1,5 @@
 module "lambda_insights" {
-  count  = var.insights_enabled
+  count  = var.insights_enabled ? 1 : 0
   source = "github.com/18F/identity-terraform//lambda_insights?ref=5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9"
   #source = "../../../../identity-terraform/lambda_insights"
 
@@ -34,7 +34,7 @@ resource "aws_lambda_function" "lambda" {
   timeout          = var.timeout
 
   layers = compact(flatten([
-    var.insights_enabled == 1 ? module.lambda_insights[0].layer_arn : "",
+    var.insights_enabled ? module.lambda_insights[0].layer_arn : "",
     var.layers
   ]))
 
@@ -58,7 +58,7 @@ module "lambda_alerts" {
 
   function_name      = aws_lambda_function.lambda.function_name
   alarm_actions      = var.alarm_actions
-  insights_enabled   = true
+  insights_enabled   = var.insights_enabled
   duration_setting   = aws_lambda_function.lambda.timeout
   treat_missing_data = var.treat_missing_data
 }

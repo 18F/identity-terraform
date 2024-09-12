@@ -68,9 +68,9 @@ variable "alarm_actions" {
 }
 
 variable "insights_enabled" {
-  description = ""
-  default     = 1
-  type        = number
+  description = "Whether the lambda has Lambda Insights enabled"
+  default     = true
+  type        = bool
 }
 
 variable "treat_missing_data" {
