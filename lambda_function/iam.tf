@@ -17,7 +17,7 @@ resource "aws_iam_role" "lambda" {
 
 data "aws_iam_policy_document" "lambda" {
   statement {
-    sid    = "CreateLogGroupAndEvents"
+    sid    = "CreateLogStreamAndEvents"
     effect = "Allow"
     actions = [
       "logs:CreateLogStream",
