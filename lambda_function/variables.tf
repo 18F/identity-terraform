@@ -56,11 +56,6 @@ variable "environment_variables" {
   type        = map(any)
 }
 
-variable "log_retention_in_days" {
-  description = "How long to retain log files"
-  type        = number
-}
-
 variable "log_skip_destroy" {
   description = "Skip log destruction"
   type        = bool
