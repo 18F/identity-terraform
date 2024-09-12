@@ -9,7 +9,7 @@ module "lambda_insights" {
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/${var.function_name}"
   retention_in_days = var.cloudwatch_retention_days
-  skip_destroy      = false
+  skip_destroy      = var.log_skip_destroy
 }
 
 module "lambda_code" {
