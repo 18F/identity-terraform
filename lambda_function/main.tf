@@ -13,7 +13,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
 }
 
 module "lambda_code" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=6cdd1037f2d1b14315cc8c59b889f4be557b9c17"
+  source = "github.com/18F/identity-terraform//null_archive?ref=2d05076e1d089d9e9ab251fa0f11a2e2ceb132a3"
   #source = "../../../../identity-terraform/null_archive"
 
   source_code_filename = var.source_code_filename
@@ -53,7 +53,7 @@ resource "aws_lambda_function" "lambda" {
 }
 
 module "lambda_alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=b4c39660e888c87e56fb910cca3104bd6a12b093"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=2d05076e1d089d9e9ab251fa0f11a2e2ceb132a3"
   #source = "../../../../identity-terraform/lambda_alerts"
 
   function_name      = aws_lambda_function.lambda.function_name
