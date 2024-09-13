@@ -16,6 +16,7 @@ resource "aws_iam_role" "lambda" {
 }
 
 data "aws_iam_policy_document" "lambda" {
+  source_policy_documents = length(var.iam_permissions) > 0 ? [var.iam_permissions] : []
   statement {
     sid    = "CreateLogStreamAndEvents"
     effect = "Allow"
@@ -30,15 +31,6 @@ data "aws_iam_policy_document" "lambda" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = var.iam_permissions
-    content {
-      sid       = statement.value["sid"]
-      effect    = statement.value["effect"]
-      actions   = statement.value["actions"]
-      resources = statement.value["resources"]
-    }
-  }
 }
 
 resource "aws_iam_role_policy" "lambda" {

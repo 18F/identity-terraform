@@ -29,18 +29,7 @@ module "sample_function" {
   schedule_expression = "rate(1 day)"
 
   # IAM permissions
-  iam_permissions = [
-    {
-      sid    = "PublishToSNS"
-      effect = "Allow"
-      actions = [
-        "sns:Publish"
-      ]
-      resources = [
-        var.slack_notification_arn
-      ]
-    }
-  ]
+  iam_permissions = data.aws_iam_policy_document.custom_permissions.json
 }
 
 ```

@@ -90,9 +90,9 @@ variable "layers" {
 }
 
 variable "iam_permissions" {
-  default     = []
-  type        = list(any)
-  description = "List of IAM permissions for the lambda function"
+  default     = ""
+  type        = string
+  description = "IAM permissions for the lambda function. Use a data.aws_iam_policy_document to construct"
 }
 
 variable "schedule_expression" {
