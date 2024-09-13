@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "lambda" {
-  name               = "aws-audit-lambda-role"
+  name               = "${var.function_name}-lambda-role"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
