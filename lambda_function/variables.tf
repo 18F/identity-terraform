@@ -79,7 +79,7 @@ variable "treat_missing_data" {
 }
 
 variable "cloudwatch_retention_days" {
-  default = 30
+  default = 2192
   type    = number
 }
 
