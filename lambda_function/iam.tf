@@ -16,7 +16,7 @@ resource "aws_iam_role" "lambda" {
 }
 
 data "aws_iam_policy_document" "lambda" {
-  source_policy_documents = length(var.iam_permissions) > 0 ? [var.iam_permissions] : []
+  source_policy_documents = length(var.lambda_iam_policy_document) > 0 ? [var.lambda_iam_policy_document] : []
   statement {
     sid    = "CreateLogStreamAndEvents"
     effect = "Allow"

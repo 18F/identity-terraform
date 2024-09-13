@@ -89,7 +89,7 @@ variable "layers" {
   description = "List of layers for the lambda function"
 }
 
-variable "iam_permissions" {
+variable "lambda_iam_policy_document" {
   default     = ""
   type        = string
   description = "IAM permissions for the lambda function. Use a data.aws_iam_policy_document to construct"
