@@ -51,8 +51,8 @@ module "sample_function" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_lambda_alerts"></a> [lambda\_alerts](#module\_lambda\_alerts) | github.com/18F/identity-terraform//lambda_alerts | b4c39660e888c87e56fb910cca3104bd6a12b093 |
-| <a name="module_lambda_code"></a> [lambda\_code](#module\_lambda\_code) | github.com/18F/identity-terraform//null_archive | 6cdd1037f2d1b14315cc8c59b889f4be557b9c17 |
+| <a name="module_lambda_alerts"></a> [lambda\_alerts](#module\_lambda\_alerts) | github.com/18F/identity-terraform//lambda_alerts | 2d05076e1d089d9e9ab251fa0f11a2e2ceb132a3 |
+| <a name="module_lambda_code"></a> [lambda\_code](#module\_lambda\_code) | github.com/18F/identity-terraform//null_archive | 2d05076e1d089d9e9ab251fa0f11a2e2ceb132a3 |
 | <a name="module_lambda_insights"></a> [lambda\_insights](#module\_lambda\_insights) | github.com/18F/identity-terraform//lambda_insights | 5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9 |
 
 ## Resources
@@ -74,16 +74,16 @@ module "sample_function" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_alarm_actions"></a> [alarm\_actions](#input\_alarm\_actions) | ARNs for Cloudwatch Alarm actions | `list(any)` | n/a | yes |
-| <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | n/a | `number` | `30` | no |
+| <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | n/a | `number` | `2192` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda function | `string` | n/a | yes |
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the Lambda function. Individual variables must be<br>  of a type that terraform can convert to strings. Lists and maps must be<br>  `jsonencode`ed. | `map(any)` | n/a | yes |
 | <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | EventBridge pattern to trigger lambda | `string` | `""` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of the Lambda function | `string` | n/a | yes |
-| <a name="input_handler"></a> [handler](#input\_handler) | Lambda handler functionn name | `string` | `"lambda_handler"` | no |
-| <a name="input_iam_permissions"></a> [iam\_permissions](#input\_iam\_permissions) | List of IAM permissions for the lambda function | `list(any)` | `[]` | no |
-| <a name="input_insights_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | n/a | `number` | `1` | no |
+| <a name="input_handler"></a> [handler](#input\_handler) | Full Lambda handler string | `string` | `""` | no |
+| <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | Lambda handler function name | `string` | `"lambda_handler"` | no |
+| <a name="input_insights_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | Whether the lambda has Lambda Insights enabled | `bool` | `true` | no |
+| <a name="input_lambda_iam_policy_document"></a> [lambda\_iam\_policy\_document](#input\_lambda\_iam\_policy\_document) | IAM permissions for the lambda function. Use a data.aws\_iam\_policy\_document to construct | `string` | `""` | no |
 | <a name="input_layers"></a> [layers](#input\_layers) | List of layers for the lambda function | `list(any)` | `[]` | no |
-| <a name="input_log_retention_in_days"></a> [log\_retention\_in\_days](#input\_log\_retention\_in\_days) | How long to retain log files | `number` | n/a | yes |
 | <a name="input_log_skip_destroy"></a> [log\_skip\_destroy](#input\_log\_skip\_destroy) | Skip log destruction | `bool` | `false` | no |
 | <a name="input_memory_size"></a> [memory\_size](#input\_memory\_size) | Memory allocated to the Lambda function | `string` | `"128"` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-west-2"` | no |

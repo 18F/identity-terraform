@@ -15,7 +15,13 @@ variable "description" {
 }
 
 variable "handler" {
-  description = "Lambda handler functionn name"
+  description = "Full Lambda handler string"
+  type        = string
+  default     = ""
+}
+
+variable "handler_function_name" {
+  description = "Lambda handler function name"
   type        = string
   default     = "lambda_handler"
 }

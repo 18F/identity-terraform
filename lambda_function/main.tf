@@ -26,7 +26,11 @@ resource "aws_lambda_function" "lambda" {
   function_name = var.function_name
   role          = aws_iam_role.lambda.arn
   description   = var.description
-  handler       = "${replace(var.function_name, "-", "_")}.${var.handler}"
+  handler = var.handler != "" ? (
+    var.handler
+    ) : (
+    "${replace(var.source_code_filename, "/\\..*/", "")}.${var.handler_function_name}"
+  )
 
   source_code_hash = module.lambda_code.zip_output_base64sha256
   memory_size      = var.memory_size
