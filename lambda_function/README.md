@@ -2,7 +2,7 @@
 
 This module provides a consistent framework for creating and monitoring Lambda functions.
 
-```
+```terraform
 module "sample_function" {
   #source = "github.com/18F/identity-terraform//lambda_function?ref="
   source = "../../../../identity-terraform/lambda_function"
@@ -21,15 +21,15 @@ module "sample_function" {
   }
 
   # Logging and alarms
-  log_retention_in_days = var.cloudwatch_retention_days
-  alarm_actions = [var.slack_notification_arn]
-  treat_missing_data = "notBreaching"
+  cloudwatch_retention_days = var.cloudwatch_retention_days
+  alarm_actions             = [var.slack_notification_arn]
+  treat_missing_data        = "notBreaching"
 
   # Lambda trigger (EventBridge event or schedule)
   schedule_expression = "rate(1 day)"
 
   # IAM permissions
-  iam_permissions = data.aws_iam_policy_document.custom_permissions.json
+  lambda_iam_policy_document = data.aws_iam_policy_document.custom_permissions.json
 }
 
 ```
