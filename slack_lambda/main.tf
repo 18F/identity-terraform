@@ -64,7 +64,7 @@ resource "aws_lambda_function" "slack_lambda" {
   description      = var.lambda_description
   role             = aws_iam_role.slack_lambda.arn
   handler          = "slack_lambda.lambda_handler"
-  runtime          = "python3.9"
+  runtime          = "python3.12"
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory
   source_code_hash = module.lambda_code.zip_output_base64sha256

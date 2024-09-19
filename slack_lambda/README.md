@@ -43,7 +43,7 @@ module "slack_login_otherevents" {
 `lambda_description` - Description for the Lambda function.
 `lambda_timeout` - Timeout value for the Lambda function.
 `lambda_memory` - Memory allocated to Lambda function, 128MB to 3,008MB in 64MB increments.
-`lambda_runtime` - Lambda runtime (offered as a variable, but should be set to `python3.9` to function properly)
+`lambda_runtime` - Lambda runtime (offered as a variable, but should be set to `python3.12` to function properly)
 `slack_webhook_url` - Slack Webhook URL.
 `slack_channel` - Name of the Slack channel to send messages to. *DO NOT include the # sign.*
 `slack_username` - Displayed username of the posted message.

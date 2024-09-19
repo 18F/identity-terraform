@@ -207,7 +207,7 @@ resource "aws_lambda_function" "slack_processor" {
   description   = "KMS Slack Batch Processor"
   role          = aws_iam_role.slack_processor.arn
   handler       = "kms_slack_batch_processor.lambda_handler"
-  runtime       = "python3.9"
+  runtime       = "python3.12"
   timeout       = 120 # seconds
 
   layers = [
