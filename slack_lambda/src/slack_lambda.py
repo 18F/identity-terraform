@@ -1,4 +1,4 @@
-#!/usr/bin/python3.9
+#!/usr/bin/python3.12
 import boto3
 import urllib3
 import json

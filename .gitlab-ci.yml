@@ -76,7 +76,7 @@ secret_detection:
       fi
 
 lambda-unit-tests:
-  image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.9.18-alpine3.18"
+  image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.12.0-alpine3.18"
   script:
     - apk add --no-cache bash git
     - ./bin/lambda-utilities/test.sh --coverage --xml
@@ -92,7 +92,7 @@ lambda-unit-tests:
       junit: tmp/unittest.xml
 
 lambda-lint:
-  image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.9.18-alpine3.18"
+  image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.12.0-alpine3.18"
   script:
     - apk add --no-cache bash git
     - ./bin/lambda-utilities/lint.sh
