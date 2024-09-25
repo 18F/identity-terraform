@@ -1,17 +1,51 @@
+locals {
+  // default descriptions
+  default_lambda_error_rate_description = <<EOM
+  Lambda error rate has exceeded ${var.error_rate_threshold}%
+  ${var.runbook}
+  EOM
+
+  default_lambda_memory_usage_decription = <<EOM
+  Lambda memory usage has exceeded ${var.memory_usage_threshold}%
+  ${var.runbook}
+  EOM
+
+  default_lambda_duration_decription = <<EOM
+  Lambda duration has exceeded ${var.duration_threshold}%
+  ${var.runbook}
+  EOM
+
+  // overide descriptions
+  override_lambda_error_rate_description = <<EOM
+  One or more errors were detected running the ${var.function_name} lambda function, error rate has exceeded ${var.error_rate_threshold}%.
+  EOM
+
+  override_lambda_memory_usage_decription = <<EOM
+  The memory used by the ${var.function_name} lambda function, exceeded ${var.error_rate_threshold}% of the AWS.
+  ${var.runbook}
+  EOM
+
+  override_lambda_duration_decription = <<EOM
+  The runtime of the ${var.function_name} lambda function exceeded ${var.duration_threshold}% of the AWS maximum runtime limit of 15 minutes.
+  ${var.runbook}
+  EOM
+
+  lambda_error_rate_description = length(var.alarm_name_override) > 0 ? local.override_lambda_error_rate_description : local.default_lambda_error_rate_description
+  lambda_memory_usage_description = length(var.alarm_name_override) > 0 ? local.override_lambda_memory_usage_decription : local.default_lambda_memory_usage_decription
+  lambda_duration_description = length(var.alarm_name_override) > 0 ? local.override_lambda_duration_decription : local.default_lambda_duration_decription
+}
+
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   count = var.enabled
 
-  alarm_name = join("-", compact([
+  alarm_name = length(var.alarm_name_override) > 0 ? "${var.alarm_name_override}-errorDetected" : join("-", compact([
     var.env_name,
     var.function_name,
     "LambdaErrorRate"
     ])
   )
 
-  alarm_description = <<EOM
-  Lambda error rate has exceeded ${var.error_rate_threshold}%
-  ${var.runbook}
-  EOM
+  alarm_description = local.lambda_error_rate_description
 
   comparison_operator       = var.error_rate_operator
   evaluation_periods        = var.evaluation_periods
@@ -60,17 +94,13 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
 resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
   count = var.enabled == 1 && var.insights_enabled ? 1 : 0
 
-  alarm_name = join("-", compact([
+  alarm_name = length(var.alarm_name_override) > 0 ? "${var.alarm_name_override}-memoryUsageHigh" : join("-", compact([
     var.env_name,
     var.function_name,
     "LambdaMemoryUsage"
     ])
   )
-
-  alarm_description = <<EOM
-  Lambda memory usage has exceeded ${var.memory_usage_threshold}%
-  ${var.runbook}
-  EOM
+  alarm_description = local.lambda_memory_usage_description
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
@@ -96,16 +126,13 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
 resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   count = var.enabled
 
-  alarm_name = join("-", compact([
+  alarm_name = length(var.alarm_name_override) > 0 ? "${var.alarm_name_override}-durationLong" : join("-", compact([
     var.env_name,
     var.function_name,
     "LambdaDuration"
     ])
   )
-  alarm_description = <<EOM
-  Lambda duration has exceeded ${var.duration_threshold}%
-  ${var.runbook}
-  EOM
+  alarm_description = local.lambda_duration_description
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
