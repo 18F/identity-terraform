@@ -18,15 +18,19 @@ locals {
   // overide descriptions
   override_lambda_error_rate_description = <<EOM
   One or more errors were detected running the ${var.function_name} lambda function, error rate has exceeded ${var.error_rate_threshold}%.
+
+  ${var.runbook}
   EOM
 
   override_lambda_memory_usage_decription = <<EOM
   The memory used by the ${var.function_name} lambda function, exceeded ${var.error_rate_threshold}% of the AWS.
+
   ${var.runbook}
   EOM
 
   override_lambda_duration_decription = <<EOM
   The runtime of the ${var.function_name} lambda function exceeded ${var.duration_threshold}% of the AWS maximum runtime limit of 15 minutes.
+
   ${var.runbook}
   EOM
 
