@@ -23,7 +23,7 @@ locals {
   EOM
 
   override_lambda_memory_usage_decription = <<EOM
-  The memory used by the ${var.function_name} lambda function, exceeded ${var.error_rate_threshold}% of the AWS.
+  The memory used by the ${var.function_name} lambda function, exceeded ${var.error_rate_threshold}% of the AWS maximum memory limit of 10 GB.
 
   ${var.runbook}
   EOM
