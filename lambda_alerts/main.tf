@@ -58,6 +58,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   datapoints_to_alarm       = var.datapoints_to_alarm
   treat_missing_data        = var.treat_missing_data
   alarm_actions             = var.alarm_actions
+  ok_actions                = var.ok_actions != "" ? var.ok_actions : null
 
   metric_query {
     id          = "error_rate"

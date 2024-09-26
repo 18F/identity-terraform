@@ -20,6 +20,11 @@ variable "alarm_actions" {
   description = "A list of ARNs to notify when the alarm fires"
 }
 
+variable "ok_actions" {
+  type        = list(string)
+  description = "A list of ARNs to notify when the alarm goes to ok state"
+}
+
 variable "runbook" {
   type        = string
   description = "A link to a runbook associated with any metric in this module"
