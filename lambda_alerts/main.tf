@@ -34,9 +34,9 @@ locals {
   ${var.runbook}
   EOM
 
-  lambda_error_rate_description = length(var.alarm_name_override) > 0 ? local.override_lambda_error_rate_description : local.default_lambda_error_rate_description
+  lambda_error_rate_description   = length(var.alarm_name_override) > 0 ? local.override_lambda_error_rate_description : local.default_lambda_error_rate_description
   lambda_memory_usage_description = length(var.alarm_name_override) > 0 ? local.override_lambda_memory_usage_decription : local.default_lambda_memory_usage_decription
-  lambda_duration_description = length(var.alarm_name_override) > 0 ? local.override_lambda_duration_decription : local.default_lambda_duration_decription
+  lambda_duration_description     = length(var.alarm_name_override) > 0 ? local.override_lambda_duration_decription : local.default_lambda_duration_decription
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {

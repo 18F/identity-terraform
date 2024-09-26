@@ -89,9 +89,9 @@ variable "insights_enabled" {
 }
 
 variable "alarm_name_override" {
-  type = string
+  type        = string
   description = "Overrides the default alarm naming convention with a custom name"
-  default = ""
+  default     = ""
 }
 locals {
   duration_settings_in_milliseconds = var.duration_setting * 1000
