@@ -114,6 +114,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
   datapoints_to_alarm       = var.datapoints_to_alarm
   treat_missing_data        = var.treat_missing_data
   alarm_actions             = var.alarm_actions
+  ok_actions                = var.ok_actions != "" ? var.ok_actions : null
 
   metric_name = "memory_utilization"
   namespace   = "LambdaInsights"
@@ -146,6 +147,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   datapoints_to_alarm       = var.datapoints_to_alarm
   treat_missing_data        = var.treat_missing_data
   alarm_actions             = var.alarm_actions
+  ok_actions                = var.ok_actions != "" ? var.ok_actions : null
 
   metric_name = "Duration"
   namespace   = "AWS/Lambda"
