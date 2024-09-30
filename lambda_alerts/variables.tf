@@ -124,9 +124,9 @@ variable "duration_alarm_description" {
 }
 
 locals {
-  duration_settings_in_milliseconds         = var.duration_setting * 1000
-  duration_settings_in_minutes              = var.duration_setting / 60
-  default_error_rate_alarm_description      = "Lambda error rate has exceeded ${var.error_rate_threshold}%\n\n${var.runbook}"
-  default_memory_usage_alarm_description    = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%\n\n${var.runbook}"
-  default_duration_alarm_description        = "Lambda duration has exceeded ${var.duration_threshold}%\n\n${var.runbook}"
+  duration_settings_in_milliseconds      = var.duration_setting * 1000
+  duration_settings_in_minutes           = var.duration_setting / 60
+  default_error_rate_alarm_description   = "Lambda error rate has exceeded ${var.error_rate_threshold}%\n\n${var.runbook}"
+  default_memory_usage_alarm_description = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%\n\n${var.runbook}"
+  default_duration_alarm_description     = "Lambda duration has exceeded ${var.duration_threshold}%\n\n${var.runbook}"
 }
