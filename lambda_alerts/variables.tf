@@ -108,29 +108,19 @@ variable "duration_alarm_name_override" {
 variable "error_rate_alarm_description" {
   type        = string
   description = "Overrides the default alarm description for error rate alarm"
-  default     = <<EOM
-  Lambda error rate has exceeded ${var.error_rate_threshold}%
-
-  ${var.runbook}
-  EOM
+  default     = "Lambda error rate has exceeded ${var.error_rate_threshold}%\n\n${var.runbook}"
 }
+
 variable "memory_usage_alarm_description" {
   type        = string
   description = "Overrides the default alarm description for memory usage alarm"
-  default     =  <<EOM
-  Lambda memory usage has exceeded ${var.memory_usage_threshold}%
-
-  ${var.runbook}
-  EOM
+  default     = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%\n\n${var.runbook}"
 }
+
 variable "duration_alarm_description" {
   type        = string
   description = "Overrides the default alarm description for duration alarm"
-  default     = <<EOM
-  Lambda duration has exceeded ${var.duration_threshold}%
-
-  ${var.runbook}
-  EOM
+  default     = "Lambda duration has exceeded ${var.duration_threshold}%\n\n${var.runbook}"
 }
 
 locals {
