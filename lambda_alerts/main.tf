@@ -8,7 +8,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
     ])
   )
 
-  alarm_description         = length(var.error_rate_alarm_name_override) > 0 ? var.error_rate_alarm_description_override : local.default_lambda_error_rate_description
+  alarm_description         = var.error_rate_alarm_description
 
   comparison_operator       = var.error_rate_operator
   evaluation_periods        = var.evaluation_periods
@@ -64,7 +64,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
     "LambdaMemoryUsage"
     ])
   )
-  alarm_description         = length(var.memory_usage_alarm_name_override) > 0 ? var.memory_usage_alarm_description_override : local.default_lambda_memory_usage_decription
+  alarm_description         = var.memory_usage_alarm_description
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
@@ -97,7 +97,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
     "LambdaDuration"
     ])
   )
-  alarm_description         = length(var.duration_alarm_name_override) > 0 ? var.duration_alarm_description_override : local.default_lambda_duration_decription
+  alarm_description         = var.duration_alarm_description
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods

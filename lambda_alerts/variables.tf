@@ -55,11 +55,6 @@ variable "duration_setting" {
   description = "The duration setting of the lambda to monitor (in seconds)"
 }
 
-variable "memory_size" {
-  type        = number
-  description = "The memory size of the lambda (in MB)"
-}
-
 variable "duration_threshold" {
   type        = number
   description = "The duration threshold (as a percentage) for triggering an alert"
@@ -110,29 +105,29 @@ variable "duration_alarm_name_override" {
   default     = ""
 }
 
-variable "error_rate_alarm_description_override" {
+variable "error_rate_alarm_description" {
   type        = string
   description = "Overrides the default alarm description for error rate alarm"
   default     = <<EOM
-  One or more errors were detected running the ${var.function_name} lambda function, error rate has exceeded ${var.error_rate_threshold}%.
+  Lambda error rate has exceeded ${var.error_rate_threshold}%
 
   ${var.runbook}
   EOM
 }
-variable "memory_usage_alarm_description_override" {
+variable "memory_usage_alarm_description" {
   type        = string
   description = "Overrides the default alarm description for memory usage alarm"
-  default     = <<EOM
-  The memory used by the ${var.function_name} lambda function, exceeded ${var.error_rate_threshold}% of the maximum memory limit of ${var.memory_size} MB.
+  default     =  <<EOM
+  Lambda memory usage has exceeded ${var.memory_usage_threshold}%
 
   ${var.runbook}
   EOM
 }
-variable "duration_alarm_description_override" {
+variable "duration_alarm_description" {
   type        = string
   description = "Overrides the default alarm description for duration alarm"
   default     = <<EOM
-  The runtime of the ${var.function_name} lambda function exceeded ${var.duration_threshold}% of the maximum runtime limit of ${ local.duration_settings_in_minutes } minutes.
+  Lambda duration has exceeded ${var.duration_threshold}%
 
   ${var.runbook}
   EOM
@@ -141,19 +136,4 @@ variable "duration_alarm_description_override" {
 locals {
   duration_settings_in_milliseconds = var.duration_setting * 1000
   duration_settings_in_minutes      = var.duration_setting / 60
-
-  default_lambda_error_rate_description = <<EOM
-    Lambda error rate has exceeded ${var.error_rate_threshold}%
-    ${var.runbook}
-  EOM
-
-  default_lambda_memory_usage_decription = <<EOM
-    Lambda memory usage has exceeded ${var.memory_usage_threshold}%
-    ${var.runbook}
-  EOM
-
-  default_lambda_duration_decription = <<EOM
-    Lambda duration has exceeded ${var.duration_threshold}%
-    ${var.runbook}
-  EOM
 }
