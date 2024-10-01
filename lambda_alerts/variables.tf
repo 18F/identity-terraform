@@ -20,6 +20,12 @@ variable "alarm_actions" {
   description = "A list of ARNs to notify when the alarm fires"
 }
 
+variable "ok_actions" {
+  type        = list(string)
+  description = "A list of ARNs to notify when the alarm goes to ok state"
+  default     = []
+}
+
 variable "runbook" {
   type        = string
   description = "A link to a runbook associated with any metric in this module"
@@ -83,6 +89,43 @@ variable "insights_enabled" {
   default     = false
 }
 
+variable "error_rate_alarm_name_override" {
+  type        = string
+  description = "Overrides the default alarm naming convention with a custom name"
+  default     = ""
+}
+variable "memory_usage_alarm_name_override" {
+  type        = string
+  description = "Overrides the default alarm naming convention with a custom name"
+  default     = ""
+}
+variable "duration_alarm_name_override" {
+  type        = string
+  description = "Overrides the default alarm naming convention with a custom name"
+  default     = ""
+}
+
+variable "error_rate_alarm_description" {
+  type        = string
+  description = "Overrides the default alarm description for error rate alarm"
+  default     = ""
+}
+
+variable "memory_usage_alarm_description" {
+  type        = string
+  description = "Overrides the default alarm description for memory usage alarm"
+  default     = ""
+}
+
+variable "duration_alarm_description" {
+  type        = string
+  description = "Overrides the default alarm description for duration alarm"
+  default     = ""
+}
+
 locals {
-  duration_settings_in_milliseconds = var.duration_setting * 1000
+  duration_settings_in_milliseconds      = var.duration_setting * 1000
+  default_error_rate_alarm_description   = "Lambda error rate has exceeded ${var.error_rate_threshold}%\n\n${var.runbook}"
+  default_memory_usage_alarm_description = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%\n\n${var.runbook}"
+  default_duration_alarm_description     = "Lambda duration has exceeded ${var.duration_threshold}%\n\n${var.runbook}"
 }
