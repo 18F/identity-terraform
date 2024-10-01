@@ -80,7 +80,7 @@ variable "insights_enabled" {
 }
 
 variable "treat_missing_data" {
-  default = "nonBreaching"
+  default = "notBreaching"
   type    = string
 }
 
@@ -110,5 +110,11 @@ variable "schedule_expression" {
 variable "event_pattern" {
   default     = ""
   description = "EventBridge pattern to trigger lambda"
+  type        = string
+}
+
+variable "role_name_prefix" {
+  default     = null
+  description = "Name prefix for multi region lambda deploys"
   type        = string
 }
