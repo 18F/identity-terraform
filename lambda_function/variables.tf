@@ -62,10 +62,32 @@ variable "environment_variables" {
   type        = map(any)
 }
 
+variable "role_name_prefix" {
+  default     = null
+  description = "Name prefix for multi region lambda deploys"
+  type        = string
+}
+
 variable "log_skip_destroy" {
   description = "Skip log destruction"
   type        = bool
   default     = false
+}
+
+variable "alarm_actions" {
+  description = "ARNs for Cloudwatch Alarm actions"
+  type        = list(any)
+}
+
+variable "insights_enabled" {
+  description = "Whether the lambda has Lambda Insights enabled"
+  default     = true
+  type        = bool
+}
+
+variable "treat_missing_data" {
+  default = "notBreaching"
+  type    = string
 }
 
 variable "cloudwatch_retention_days" {
