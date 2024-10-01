@@ -1,3 +1,9 @@
+locals {
+  lambda_role_name = var.role_name_prefix == null ? "${var.function_name}-lambda-role" : null
+  role_name_prefix = var.role_name_prefix != null ? substr(var.role_name_prefix, 0, 38) : null
+
+}
+
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -10,7 +16,8 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "lambda" {
-  name               = "${var.function_name}-lambda-role"
+  name               = local.lambda_role_name
+  name_prefix        = local.role_name_prefix
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
