@@ -27,6 +27,11 @@ variable "private_hook_enabled" {
   default     = 1
 }
 
+variable "complete_hook_enabled" {
+  description = "Whether to create the $prefix-complete lifecycle hook"
+  default     = 1
+}
+
 variable "main_heartbeat_timeout" {
   description = "How long to wait before the main lifecycle hook times out"
   default     = 1800 # 30 minutes
@@ -37,9 +42,15 @@ variable "private_heartbeat_timeout" {
   default     = 900 # 15 minutes
 }
 
+variable "complete_heartbeat_timeout" {
+  description = "How long to wait before the complete lifecycle hook times out"
+  default     = 900 # 15 minutes
+}
+
 locals {
   main_hook_count    = var.enabled * var.main_hook_enabled
   private_hook_count = var.enabled * var.private_hook_enabled
+  complete_hook_count = var.enabled * var.complete_hook_enabled
 }
 
 resource "aws_autoscaling_lifecycle_hook" "provision-private" {
@@ -61,6 +72,17 @@ resource "aws_autoscaling_lifecycle_hook" "provision-main" {
   heartbeat_timeout      = var.main_heartbeat_timeout
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 }
+
+resource "aws_autoscaling_lifecycle_hook" "provision-complete" {
+  count = local.complete_hook_count
+
+  name                   = "${var.lifecycle_name_prefix}-complete"
+  autoscaling_group_name = var.asg_name
+  default_result         = "ABANDON"
+  heartbeat_timeout      = var.main_heartbeat_timeout
+  lifecycle_transition   = "autoscaling:CompleteLifecycleAction"
+}
+
 
 output "lifecycle_hook_names" {
   value = concat(
