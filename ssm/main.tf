@@ -339,6 +339,37 @@ properties:
   DOC
 }
 
+# SSM Port Forwarding Docs
+resource "aws_ssm_document" "ssm_portforward_cmd" {
+  for_each = var.ssm_portforward_cmd_map
+  lifecycle { create_before_destroy = false }
+  name            = "${var.env_name}-ssm-document-${each.key}"
+  document_type   = "Session"
+  document_format = "YAML"
+  content         = <<DOC
+---
+schemaVersion: '1.0'
+description: ${each.value["description"]}
+sessionType: Port
+inputs:
+  s3EncryptionEnabled: false
+  cloudWatchEncryptionEnabled: false
+  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
+  idleSessionTimeout: ${var.session_timeout}
+parameters:
+  %{for ssm_parameter in each.value["parameters"]}
+  ${ssm_parameter.name}:
+    type: ${ssm_parameter.type}
+    default: "${ssm_parameter.default}"
+    description: ${ssm_parameter.description}
+  %{endfor}
+properties:
+  %{for k, v in { for param in each.value["parameters"] : param.name => param.default } }
+  ${k}: "${v}"%{endfor}
+  type: LocalPortForwarding
+DOC
+}
+
 # log when SSM commands are used, even if session data is not
 resource "aws_cloudwatch_event_rule" "ssm_cmd" {
   for_each = local.all_docs_and_cmds

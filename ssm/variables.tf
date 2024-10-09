@@ -48,6 +48,17 @@ EOM
   }
 }
 
+variable "ssm_portforward_cmd_map" {
+  description = <<EOM
+REQUIRED. Map of data for SSM Port Forwarding Documents. Each must
+include the document name, description, command to run, and any parameter(s) used
+to configure said command.
+EOM
+  type        = map(any)
+  default     = {}
+}
+
+
 variable "session_timeout" {
   description = <<EOM
 REQUIRED. Amount of time (in minutes) of inactivity
