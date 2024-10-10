@@ -59,7 +59,7 @@ resource "aws_iam_role" "slack_lambda" {
 
 moved {
   from = aws_lambda_function.slack_lambda
-  to = module.slack_lambda.aws_lambda_function.lambda
+  to   = module.slack_lambda.aws_lambda_function.lambda
 }
 
 moved {
