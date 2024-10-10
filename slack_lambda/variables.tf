@@ -54,6 +54,18 @@ variable "slack_alarm_emoji" {
   default     = ":large_red_square:"
 }
 
+variable "slack_warn_emoji" {
+  description = "Emoji used by Slack for a CloudWatch ALARM message."
+  type        = string
+  default     = ":large_orange_square:"
+}
+
+variable "slack_notice_emoji" {
+  description = "Emoji used by Slack for a CloudWatch ALARM message."
+  type        = string
+  default     = ":large_yellow_square:"
+}
+
 variable "slack_ok_emoji" {
   description = "Emoji used by Slack for a CloudWatch OK message."
   type        = string
