@@ -86,6 +86,7 @@ resource "aws_lambda_function" "slack_lambda" {
 
 resource "aws_iam_role" "slack_lambda" {
   name_prefix        = substr(var.lambda_name, 0, 38)
+  description        = "Allows the associated Lambda function to write to AWS CloudWatch."
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 

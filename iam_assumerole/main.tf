@@ -45,6 +45,11 @@ variable "role_name" {
   description = "Name of the IAM role."
 }
 
+variable "role_description" {
+  description = "A description/summary of the IAM role being created."
+  default     = ""
+}
+
 variable "permissions_boundary_policy_arn" {
   description = <<EOM
 (REQUIRED) ARN of an existing IAM policy (from another module/source)
@@ -117,6 +122,7 @@ resource "aws_iam_role" "iam_assumable_role" {
   count = var.enabled ? 1 : 0
 
   name                 = var.role_name
+  description          = var.role_description
   assume_role_policy   = var.master_assumerole_policy
   path                 = "/"
   max_session_duration = var.role_duration #seconds
