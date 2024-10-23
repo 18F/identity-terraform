@@ -74,11 +74,14 @@ module "sample_function" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_alarm_actions"></a> [alarm\_actions](#input\_alarm\_actions) | ARNs for Cloudwatch Alarm actions | `list(any)` | n/a | yes |
-| <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | n/a | `number` | `2192` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda function | `string` | n/a | yes |
-| <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the Lambda function. Individual variables must be<br>  of a type that terraform can convert to strings. Lists and maps must be<br>  `jsonencode`ed. | `map(any)` | n/a | yes |
-| <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | EventBridge pattern to trigger lambda | `string` | `""` | no |
+| <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the Lambda function. Individual variables must be<br/>  of a type that terraform can convert to strings. Lists and maps must be<br/>  `jsonencode`ed. | `map(any)` | n/a | yes |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of the Lambda function | `string` | n/a | yes |
+| <a name="input_runtime"></a> [runtime](#input\_runtime) | Lambda function runtime | `string` | n/a | yes |
+| <a name="input_source_code_filename"></a> [source\_code\_filename](#input\_source\_code\_filename) | Name of the file containing the Lambda source code | `string` | n/a | yes |
+| <a name="input_source_dir"></a> [source\_dir](#input\_source\_dir) | Directory containing the Lambda source code | `string` | n/a | yes |
+| <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | n/a | `number` | `2192` | no |
+| <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | EventBridge pattern to trigger lambda | `string` | `""` | no |
 | <a name="input_handler"></a> [handler](#input\_handler) | Full Lambda handler string | `string` | `""` | no |
 | <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | Lambda handler function name | `string` | `"lambda_handler"` | no |
 | <a name="input_insights_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | Whether the lambda has Lambda Insights enabled | `bool` | `true` | no |
@@ -87,10 +90,7 @@ module "sample_function" {
 | <a name="input_log_skip_destroy"></a> [log\_skip\_destroy](#input\_log\_skip\_destroy) | Skip log destruction | `bool` | `false` | no |
 | <a name="input_memory_size"></a> [memory\_size](#input\_memory\_size) | Memory allocated to the Lambda function | `string` | `"128"` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-west-2"` | no |
-| <a name="input_runtime"></a> [runtime](#input\_runtime) | Lambda function runtime | `string` | n/a | yes |
 | <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | Cron or rate expression to trigger lambda | `string` | `""` | no |
-| <a name="input_source_code_filename"></a> [source\_code\_filename](#input\_source\_code\_filename) | Name of the file containing the Lambda source code | `string` | n/a | yes |
-| <a name="input_source_dir"></a> [source\_dir](#input\_source\_dir) | Directory containing the Lambda source code | `string` | n/a | yes |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | Lambda timeout | `number` | `120` | no |
 | <a name="input_treat_missing_data"></a> [treat\_missing\_data](#input\_treat\_missing\_data) | n/a | `string` | `"nonBreaching"` | no |
 
@@ -99,6 +99,7 @@ module "sample_function" {
 | Name | Description |
 |------|-------------|
 | <a name="output_function_name"></a> [function\_name](#output\_function\_name) | n/a |
-| <a name="output_lambda_arn"></a> [lambda\_arn](#output\_lambda\_arn) | n/a |
-| <a name="output_lambda_role_name"></a> [lambda\_role\_name](#output\_lambda\_role\_name) | n/a |
+| <a name="output_lambda_arn"></a> [lambda\_arn](#output\_lambda\_arn) | The ARN of the Lambda Function |
+| <a name="output_lambda_role_name"></a> [lambda\_role\_name](#output\_lambda\_role\_name) | The name of the IAM Role associated with the lambda |
+| <a name="output_log_group_name"></a> [log\_group\_name](#output\_log\_group\_name) | The name of the cloudwatch log group associated with the lambda |
 <!-- END_TF_DOCS -->
