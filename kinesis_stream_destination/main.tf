@@ -39,8 +39,11 @@ data "aws_iam_policy_document" "cloudwatch_kinesis_access" {
 
 data "aws_iam_policy_document" "subscription_access" {
   statement {
-    sid     = "SubscriptionFilterAccess"
-    actions = ["logs:PutSubscriptionFilter"]
+    sid = "SubscriptionFilterAccess"
+    actions = [
+      "logs:PutSubscriptionFilter",
+      "logs:PutAccountPolicy"
+    ]
 
     principals {
       type        = "AWS"
