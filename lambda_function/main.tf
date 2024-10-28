@@ -62,6 +62,7 @@ module "lambda_alerts" {
 
   function_name      = aws_lambda_function.lambda.function_name
   alarm_actions      = var.alarm_actions
+  ok_actions         = var.ok_actions
   insights_enabled   = var.insights_enabled
   duration_setting   = aws_lambda_function.lambda.timeout
   treat_missing_data = var.treat_missing_data

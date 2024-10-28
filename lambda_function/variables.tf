@@ -73,6 +73,12 @@ variable "alarm_actions" {
   type        = list(any)
 }
 
+variable "ok_actions" {
+  description = "ARNs for Cloudwatch OK actions"
+  type        = list(any)
+  default     = []
+}
+
 variable "insights_enabled" {
   description = "Whether the lambda has Lambda Insights enabled"
   default     = true
