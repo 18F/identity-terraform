@@ -57,11 +57,12 @@ resource "aws_lambda_function" "lambda" {
 }
 
 module "lambda_alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=2d05076e1d089d9e9ab251fa0f11a2e2ceb132a3"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=4aeddc5892df73f6b162ee7fdd010b32864f6ba9"
   #source = "../../../../identity-terraform/lambda_alerts"
 
   function_name      = aws_lambda_function.lambda.function_name
   alarm_actions      = var.alarm_actions
+  ok_actions         = var.ok_actions
   insights_enabled   = var.insights_enabled
   duration_setting   = aws_lambda_function.lambda.timeout
   treat_missing_data = var.treat_missing_data
