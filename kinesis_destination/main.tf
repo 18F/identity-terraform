@@ -16,30 +16,33 @@ data "aws_iam_policy_document" "cloudwatch_assume" {
 
     condition {
       test = "StringLike"
-      values = [
-        "arn:aws:logs:${local.region}:${var.source_account_id}:*",
+      values = distinct(flatten([
+        formatlist("arn:aws:logs:${local.region}:%s:*", var.source_account_ids),
         "arn:aws:logs:${local.region}:${local.dest_acct_id}:*",
-      ]
+      ]))
       variable = "aws:SourceArn"
     }
   }
 }
 
-data "aws_iam_policy_document" "cloudwatch_firehose_access" {
+data "aws_iam_policy_document" "cloudwatch_kinesis_access" {
   statement {
     effect = "Allow"
     actions = [
-      "firehose:*"
+      strcontains(
+        var.kinesis_arn,
+        "arn:aws:kinesis"
+      ) ? "kinesis:PutRecord" : "firehose:*"
     ]
     resources = [
-      var.firehose_arn
+      var.kinesis_arn
     ]
   }
 }
 
 data "aws_iam_policy_document" "subscription_access" {
   statement {
-    sid     = "SubscriptionFilterAccess"
+    sid = "SubscriptionFilterAccess"
     actions = [
       "logs:PutSubscriptionFilter",
       "logs:PutAccountPolicy"
@@ -47,11 +50,11 @@ data "aws_iam_policy_document" "subscription_access" {
 
     principals {
       type        = "AWS"
-      identifiers = [var.source_account_id]
+      identifiers = var.source_account_ids
     }
 
     resources = [
-      aws_cloudwatch_log_destination.firehose.arn
+      aws_cloudwatch_log_destination.kinesis.arn
     ]
   }
 }
@@ -63,19 +66,19 @@ resource "aws_iam_role" "cloudwatch_to_kinesis" {
   assume_role_policy = data.aws_iam_policy_document.cloudwatch_assume.json
 }
 
-resource "aws_iam_role_policy" "cloudwatch_firehose_access" {
+resource "aws_iam_role_policy" "cloudwatch_kinesis_access" {
   name   = "${local.identifier_name}-access"
   role   = aws_iam_role.cloudwatch_to_kinesis.id
-  policy = data.aws_iam_policy_document.cloudwatch_firehose_access.json
+  policy = data.aws_iam_policy_document.cloudwatch_kinesis_access.json
 }
 
-resource "aws_cloudwatch_log_destination" "firehose" {
+resource "aws_cloudwatch_log_destination" "kinesis" {
   name       = local.identifier_name
   role_arn   = aws_iam_role.cloudwatch_to_kinesis.arn
-  target_arn = var.firehose_arn
+  target_arn = var.kinesis_arn
 }
 
 resource "aws_cloudwatch_log_destination_policy" "subscription_access" {
-  destination_name = aws_cloudwatch_log_destination.firehose.name
+  destination_name = aws_cloudwatch_log_destination.kinesis.name
   access_policy    = data.aws_iam_policy_document.subscription_access.json
 }
