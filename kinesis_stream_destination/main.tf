@@ -16,10 +16,10 @@ data "aws_iam_policy_document" "cloudwatch_assume" {
 
     condition {
       test = "StringLike"
-      values = [
-        "arn:aws:logs:${local.region}:${var.source_account_id}:*",
+      values = distinct(flatten([
+        formatlist("arn:aws:logs:${local.region}:%s:*", var.source_account_ids),
         "arn:aws:logs:${local.region}:${local.dest_acct_id}:*",
-      ]
+      ]))
       variable = "aws:SourceArn"
     }
   }
@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "subscription_access" {
 
     principals {
       type        = "AWS"
-      identifiers = [var.source_account_id]
+      identifiers = [var.source_account_ids]
     }
 
     resources = [

@@ -24,9 +24,9 @@ EOM
   default     = ""
 }
 
-variable "source_account_id" {
-  type        = string
-  description = "ID of the AWS Account where log data will be sent FROM."
+variable "source_account_ids" {
+  type        = list(string)
+  description = "ID(s) of the AWS Account(s) where log data will be sent FROM."
 }
 
 variable "role_name" {
