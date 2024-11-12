@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "subscription_access" {
 
     principals {
       type        = "AWS"
-      identifiers = [var.source_account_ids]
+      identifiers = var.source_account_ids
     }
 
     resources = [
