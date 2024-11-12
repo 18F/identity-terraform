@@ -57,13 +57,29 @@ resource "aws_lambda_function" "lambda" {
 }
 
 module "lambda_alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=4aeddc5892df73f6b162ee7fdd010b32864f6ba9"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=a4dfd80b0e40a96d2a0c7c09262f84d2ea3d9104"
   #source = "../../../../identity-terraform/lambda_alerts"
 
-  function_name      = aws_lambda_function.lambda.function_name
-  alarm_actions      = var.alarm_actions
-  ok_actions         = var.ok_actions
-  insights_enabled   = var.insights_enabled
-  duration_setting   = aws_lambda_function.lambda.timeout
-  treat_missing_data = var.treat_missing_data
+  enabled                          = var.enabled
+  function_name                    = aws_lambda_function.lambda.function_name
+  env_name                         = var.env_name
+  alarm_actions                    = var.alarm_actions
+  ok_actions                       = var.ok_actions
+  runbook                          = var.runbook
+  error_rate_operator              = var.error_rate_operator
+  error_rate_threshold             = var.error_rate_threshold
+  memory_usage_threshold           = var.memory_usage_threshold
+  duration_setting                 = aws_lambda_function.lambda.timeout
+  duration_threshold               = var.duration_setting
+  datapoints_to_alarm              = var.datapoints_to_alarm
+  evaluation_periods               = var.evaluation_periods
+  period                           = var.period
+  treat_missing_data               = var.treat_missing_data
+  insights_enabled                 = var.insights_enabled
+  error_rate_alarm_name_override   = var.error_rate_alarm_name_override
+  memory_usage_alarm_name_override = var.memory_usage_alarm_name_override
+  duration_alarm_name_override     = var.duration_alarm_name_override
+  error_rate_alarm_description     = var.error_rate_alarm_description
+  memory_usage_alarm_description   = var.memory_usage_alarm_description
+  duration_alarm_description       = var.duration_alarm_description
 }
