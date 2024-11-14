@@ -1,10 +1,11 @@
 # Locals
 
 locals {
-  region = var.kinesis_region == "" ? data.aws_region.current.name : var.kinesis_region
+  region       = data.aws_region.current.name
+  dest_acct_id = data.aws_caller_identity.current.account_id
+
   identifier_name = var.role_name == "" ? (
   "cloudwatch-to-kinesis-${local.region}") : var.role_name
-  dest_acct_id = data.aws_caller_identity.current.account_id
 }
 
 # Variables

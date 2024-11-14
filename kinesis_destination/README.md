@@ -28,7 +28,6 @@ module "kinesis_firehose_destination_ue1" {
   }
 
   kinesis_arn        = aws_kinesis_firehose_delivery_stream.logarchive.arn
-  kinesis_region     = "us-west-2"
   source_account_ids = ["111111111111"]
 }
 ```
@@ -38,7 +37,6 @@ module "kinesis_firehose_destination_ue1" {
 | Name                 | Type         | Description                                                                                                                                      | Required | Default |
 | ---------------      | ------       | -------------------------------------------------------------------------------------------                                                      | -------- | ------- |
 | `kinesis_arn`        | string       | ARN of the Kinesis resource (Firehose/Data Stream) that the Destination points to.                                                               | YES      | N/A     |
-| `kinesis_region`     | string       | Region where the Kinesis resource (Firehose/Data Stream) is located (uses `data.aws_region.current.name` if not set)                             | NO       | `""`    |
 | `source_account_ids` | list(string) | ID(s) of the AWS Account(s) where log data will be sent FROM.                                                                                    | YES      | N/A     |
 | `role_name`          | string       | Identifier string used to name the IAM role/policies and the CloudWatch Destination itself (uses `"cloudwatch-to-kinesis-${REGION}"` if not set) | NO       | `""`    |
 
