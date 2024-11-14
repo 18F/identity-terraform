@@ -17,15 +17,6 @@ ARN of the Kinesis resource (Firehose/Data Stream) that the Destination points t
 EOM
 }
 
-variable "kinesis_region" {
-  type        = string
-  description = <<EOM
-Region where the Kinesis resource (Firehose/Data Stream) is located.
-If not specified, defaults to data.aws_region.current.name instead.
-EOM
-  default     = ""
-}
-
 variable "source_account_ids" {
   type        = list(string)
   description = "ID(s) of the AWS Account(s) where log data will be sent FROM."
