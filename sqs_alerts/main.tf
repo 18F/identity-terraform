@@ -6,7 +6,7 @@ locals {
 resource "aws_cloudwatch_metric_alarm" "inflight_messages" {
   count = var.enabled ? 1 : 0
 
-  alarm_name        = "SQSInflightMessages_${var.queue_name}"
+  alarm_name        = "${var.queue_name}-SQSInflightMessages"
   alarm_description = "SQS Inflight Messages has exceeded ${var.inflight_threshold}%"
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -32,7 +32,7 @@ resource "aws_cloudwatch_metric_alarm" "inflight_messages" {
 resource "aws_cloudwatch_metric_alarm" "age_of_oldest_message" {
   count = var.enabled ? 1 : 0
 
-  alarm_name        = "SQSAgeOfOldestMessage_${var.queue_name}"
+  alarm_name        = "${var.queue_name}-SQSAgeOfOldestMessage"
   alarm_description = "SQS Age of Messages in the queue"
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -58,7 +58,7 @@ resource "aws_cloudwatch_metric_alarm" "age_of_oldest_message" {
 resource "aws_cloudwatch_metric_alarm" "message_size" {
   count = var.enabled ? 1 : 0
 
-  alarm_name        = "SQSMessageSize_${var.queue_name}"
+  alarm_name        = "${var.queue_name}-SQSMessageSize"
   alarm_description = "SQS Messages sizes have exceeded ${var.message_size_threshold}%"
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
