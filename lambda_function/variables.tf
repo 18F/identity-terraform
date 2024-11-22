@@ -104,11 +104,6 @@ variable "enabled" {
   default     = 1
 }
 
-variable "function_name" {
-  type        = string
-  description = "Name of the lambda function to monitor"
-}
-
 variable "env_name" {
   type        = string
   description = "Name of the environment in which the lambda function lives"
