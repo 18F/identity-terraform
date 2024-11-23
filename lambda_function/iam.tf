@@ -45,5 +45,5 @@ resource "aws_iam_role_policy" "lambda" {
 resource "aws_iam_role_policy_attachment" "lambda_insights" {
   count      = var.insights_enabled ? 1 : 0
   role       = aws_iam_role.lambda.id
-  policy_arn = module.lambda_insights.iam_policy_arn
+  policy_arn = module.lambda_insights[0].iam_policy_arn
 }
