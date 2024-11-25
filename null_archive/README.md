@@ -33,7 +33,7 @@ resource "aws_lambda_function" "sample_lambda" {
   description      = "Sample AWS Lambda Function"
   filename         = module.smart_archive_file.zip_output_path
   source_code_hash = module.smart_archive_file.zip_output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.12"
   handler          = "main.lambda_handler"
   timeout          = 90
   memory_size      = 128
