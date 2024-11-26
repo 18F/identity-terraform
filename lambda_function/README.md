@@ -75,26 +75,23 @@ module "sample_function" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_alarm_actions"></a> [alarm\_actions](#input\_alarm\_actions) | ARNs for Cloudwatch Alarm actions | `list(any)` | n/a | yes |
-| <a name="input_description"></a> [description](#input\_description) | Description of the Lambda function | `string` | n/a | yes |
-| <a name="input_duration_setting"></a> [duration\_setting](#input\_duration\_setting) | The duration setting of the lambda to monitor (in seconds) | `number` | n/a | yes |
-| <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the Lambda function. Individual variables must be<br/>  of a type that terraform can convert to strings. Lists and maps must be<br/>  `jsonencode`ed. | `map(any)` | n/a | yes |
-| <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of the lambda function to monitor | `string` | n/a | yes |
-| <a name="input_runtime"></a> [runtime](#input\_runtime) | Lambda function runtime | `string` | n/a | yes |
-| <a name="input_source_code_filename"></a> [source\_code\_filename](#input\_source\_code\_filename) | Name of the file containing the Lambda source code | `string` | n/a | yes |
-| <a name="input_source_dir"></a> [source\_dir](#input\_source\_dir) | Directory containing the Lambda source code | `string` | n/a | yes |
 | <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | n/a | `number` | `2192` | no |
 | <a name="input_datapoints_to_alarm"></a> [datapoints\_to\_alarm](#input\_datapoints\_to\_alarm) | The number of datapoints that must be breaching to trigger the alarm. | `number` | `1` | no |
+| <a name="input_description"></a> [description](#input\_description) | Description of the Lambda function | `string` | n/a | yes |
 | <a name="input_duration_alarm_description"></a> [duration\_alarm\_description](#input\_duration\_alarm\_description) | Overrides the default alarm description for duration alarm | `string` | `""` | no |
 | <a name="input_duration_alarm_name_override"></a> [duration\_alarm\_name\_override](#input\_duration\_alarm\_name\_override) | Overrides the default alarm naming convention with a custom name | `string` | `""` | no |
+| <a name="input_duration_setting"></a> [duration\_setting](#input\_duration\_setting) | The duration setting of the lambda to monitor (in seconds) | `number` | n/a | yes |
 | <a name="input_duration_threshold"></a> [duration\_threshold](#input\_duration\_threshold) | The duration threshold (as a percentage) for triggering an alert | `number` | `80` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Whether or not to create the Lambda alert monitor. | `number` | `1` | no |
 | <a name="input_env_name"></a> [env\_name](#input\_env\_name) | Name of the environment in which the lambda function lives | `string` | `""` | no |
+| <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the Lambda function. Individual variables must be<br/>  of a type that terraform can convert to strings. Lists and maps must be<br/>  `jsonencode`ed. | `map(any)` | n/a | yes |
 | <a name="input_error_rate_alarm_description"></a> [error\_rate\_alarm\_description](#input\_error\_rate\_alarm\_description) | Overrides the default alarm description for error rate alarm | `string` | `""` | no |
 | <a name="input_error_rate_alarm_name_override"></a> [error\_rate\_alarm\_name\_override](#input\_error\_rate\_alarm\_name\_override) | Overrides the default alarm naming convention with a custom name | `string` | `""` | no |
 | <a name="input_error_rate_operator"></a> [error\_rate\_operator](#input\_error\_rate\_operator) | The operator used to compare a calculated error rate against a threshold | `string` | `"GreaterThanOrEqualToThreshold"` | no |
 | <a name="input_error_rate_threshold"></a> [error\_rate\_threshold](#input\_error\_rate\_threshold) | The threshold error rate (as a percentage) for triggering an alert | `number` | `1` | no |
 | <a name="input_evaluation_periods"></a> [evaluation\_periods](#input\_evaluation\_periods) | n/a | `number` | `1` | no |
 | <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | EventBridge pattern to trigger lambda | `string` | `""` | no |
+| <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of the Lambda function | `string` | n/a | yes |
 | <a name="input_handler"></a> [handler](#input\_handler) | Full Lambda handler string | `string` | `""` | no |
 | <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | Lambda handler function name | `string` | `"lambda_handler"` | no |
 | <a name="input_insights_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | Whether the lambda has Lambda Insights enabled | `bool` | `true` | no |
@@ -108,17 +105,19 @@ module "sample_function" {
 | <a name="input_ok_actions"></a> [ok\_actions](#input\_ok\_actions) | ARNs for Cloudwatch OK actions | `list(any)` | `[]` | no |
 | <a name="input_period"></a> [period](#input\_period) | The period in seconds over which the specified statistic is applied. | `number` | `60` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-west-2"` | no |
-| <a name="input_runbook"></a> [runbook](#input\_runbook) | A link to a runbook associated with any metric in this module | `string` | `""` | no |
 | <a name="input_role_name_prefix"></a> [role\_name\_prefix](#input\_role\_name\_prefix) | Name prefix for multi region lambda deploys | `string` | `null` | no |
+| <a name="input_runbook"></a> [runbook](#input\_runbook) | A link to a runbook associated with any metric in this module | `string` | `""` | no |
+| <a name="input_runtime"></a> [runtime](#input\_runtime) | Lambda function runtime | `string` | n/a | yes |
 | <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | Cron or rate expression to trigger lambda | `string` | `""` | no |
+| <a name="input_source_code_filename"></a> [source\_code\_filename](#input\_source\_code\_filename) | Name of the file containing the Lambda source code | `string` | n/a | yes |
+| <a name="input_source_dir"></a> [source\_dir](#input\_source\_dir) | Directory containing the Lambda source code | `string` | n/a | yes |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | Lambda timeout | `number` | `120` | no |
-| <a name="input_treat_missing_data"></a> [treat\_missing\_data](#input\_treat\_missing\_data) | n/a | `string` | `"notBreaching"` | no |
+| <a name="input_treat_missing_data"></a> [treat\_missing\_data](#input\_treat\_missing\_data) | n/a | `string` | `"nonBreaching"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | n/a |
 | <a name="output_function_name"></a> [function\_name](#output\_function\_name) | n/a |
 | <a name="output_lambda_arn"></a> [lambda\_arn](#output\_lambda\_arn) | The ARN of the Lambda Function |
 | <a name="output_lambda_role_name"></a> [lambda\_role\_name](#output\_lambda\_role\_name) | The name of the IAM Role associated with the lambda |
