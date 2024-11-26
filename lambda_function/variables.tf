@@ -68,7 +68,12 @@ variable "reserved_concurrent_executions" {
 }
 variable "role_name_prefix" {
   default     = null
-  description = "Name prefix for multi region lambda deploys"
+  description = <<EOM
+Prefix string used to specify the name of the function's IAM role.
+Required if creating the same function in multiple regions.
+Will set the role name to be 'var.function_name-lambda-role'
+if not specified.
+EOM
   type        = string
 }
 
