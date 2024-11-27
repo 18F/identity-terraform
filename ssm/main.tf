@@ -199,7 +199,6 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
       "ec2messages:GetMessages",
       "ec2messages:AcknowledgeMessage",
       "ec2messages:SendReply",
-      "ssm:ListAssociations",
       "ssm:ListInstanceAssociations"
     ]
     resources = [
@@ -209,9 +208,6 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
   statement {
     sid = "CloudWatchLogsAccessForSSM"
     actions = [
-      "logs:CreateLogGroup",
-      "logs:DescribeLogGroups",
-      "logs:DescribeLogStreams",
       "logs:PutLogEvents",
     ]
     resources = [
@@ -219,15 +215,6 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
     ]
   }
   # S3
-  statement {
-    sid = "S3ConfigAccessForSSM"
-    actions = [
-      "s3:GetEncryptionConfiguration"
-    ]
-    resources = [
-      "*",
-    ]
-  }
   statement {
     sid = "S3LoggingAccessForSSM"
     actions = [
