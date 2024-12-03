@@ -32,10 +32,11 @@ resource "aws_lambda_function" "lambda" {
     "${replace(var.source_code_filename, "/\\..*/", "")}.${var.handler_function_name}"
   )
 
-  source_code_hash = module.lambda_code.zip_output_base64sha256
-  memory_size      = var.memory_size
-  runtime          = var.runtime
-  timeout          = var.timeout
+  source_code_hash               = module.lambda_code.zip_output_base64sha256
+  memory_size                    = var.memory_size
+  runtime                        = var.runtime
+  timeout                        = var.timeout
+  reserved_concurrent_executions = var.reserved_concurrent_executions
 
   layers = compact(flatten([
     var.insights_enabled ? module.lambda_insights[0].layer_arn : "",

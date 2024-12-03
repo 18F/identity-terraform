@@ -62,6 +62,11 @@ variable "environment_variables" {
   type        = map(any)
 }
 
+variable "reserved_concurrent_executions" {
+  description = "The max number concurrent invocations allowed for the Lambda"
+  default     = -1
+}
+
 variable "log_skip_destroy" {
   description = "Skip log destruction"
   type        = bool
