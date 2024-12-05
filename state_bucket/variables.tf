@@ -40,3 +40,48 @@ variable "terraform_lock_deletion_protection" {
   type        = bool
   default     = true
 }
+
+variable "tf_lock_table_read_capacity" {
+  default = {
+    minimum = 1,
+    maximum = 2,
+  }
+  description = "Defines the minimum and maximum read capactity for autoscaling policies for tf_lock_table"
+  type        = map(number)
+
+  validation {
+    condition     = contains(keys(var.tf_lock_table_read_capacity), "minimum")
+    error_message = "The map is missing the required key \"minimum\""
+  }
+  validation {
+    condition     = contains(keys(var.tf_lock_table_read_capacity), "maximum")
+    error_message = "The map is missing the required key \"maximum\""
+  }
+
+  validation {
+    condition     = var.tf_lock_table_read_capacity["minimum"] < var.tf_lock_table_read_capacity["maximum"]
+    error_message = "The minimum value is greater than the maximum. Please review the configuration."
+  }
+}
+
+variable "tf_lock_table_write_capacity" {
+  default = {
+    minimum = 1,
+    maximum = 2,
+  }
+  description = "Defines the minimum and maximum write capactity for autoscaling policies for tf_lock_table"
+  type        = map(number)
+
+  validation {
+    condition     = contains(keys(var.tf_lock_table_write_capacity), "minimum")
+    error_message = "The map is missing the required key \"minimum\""
+  }
+  validation {
+    condition     = contains(keys(var.tf_lock_table_write_capacity), "maximum")
+    error_message = "The map is missing the required key \"maximum\""
+  }
+  validation {
+    condition     = var.tf_lock_table_write_capacity["minimum"] < var.tf_lock_table_write_capacity["maximum"]
+    error_message = "The minimum value is greater than the maximum. Please review the configuration."
+  }
+}
