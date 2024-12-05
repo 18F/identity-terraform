@@ -60,6 +60,10 @@ If desiring to *remove* these resources (e.g. when doing a complete infrastructu
 
 | Name | Type |
 |------|------|
+| [aws_appautoscaling_policy.tf_lock_table_read_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_policy) | resource |
+| [aws_appautoscaling_policy.tf_lock_table_write_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_policy) | resource |
+| [aws_appautoscaling_target.tf_lock_table_read_target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_target) | resource |
+| [aws_appautoscaling_target.tf_lock_table_write_target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_target) | resource |
 | [aws_dynamodb_table.tf-lock-table](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table) | resource |
 | [aws_s3_bucket.inventory](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_s3_bucket.s3-access-logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
@@ -91,10 +95,12 @@ If desiring to *remove* these resources (e.g. when doing a complete infrastructu
 |------|-------------|------|---------|:--------:|
 | <a name="input_bucket_name_prefix"></a> [bucket\_name\_prefix](#input\_bucket\_name\_prefix) | First substring in S3 bucket name of $bucket\_name\_prefix.$bucket\_name.$account\_id-$region | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | AWS Region | `string` | n/a | yes |
-| <a name="input_remote_state_enabled"></a> [remote\_state\_enabled](#input\_remote\_state\_enabled) | Whether to manage the remote state bucket<br>and DynamoDB lock table (1 for true, 0 for false). | `number` | `1` | no |
+| <a name="input_remote_state_enabled"></a> [remote\_state\_enabled](#input\_remote\_state\_enabled) | Whether to manage the remote state bucket<br/>and DynamoDB lock table (1 for true, 0 for false). | `number` | `1` | no |
 | <a name="input_sse_algorithm"></a> [sse\_algorithm](#input\_sse\_algorithm) | SSE algorithm to use to encrypt reports in S3 Inventory bucket. | `string` | `"aws:kms"` | no |
 | <a name="input_state_lock_table"></a> [state\_lock\_table](#input\_state\_lock\_table) | Name of the DynamoDB table to use for state locking with the S3 state backend, e.g. 'terraform\_locks' | `string` | `"terraform_locks"` | no |
 | <a name="input_terraform_lock_deletion_protection"></a> [terraform\_lock\_deletion\_protection](#input\_terraform\_lock\_deletion\_protection) | Wheter to enable deletion protection for DynamoDB table. | `bool` | `true` | no |
+| <a name="input_tf_lock_table_read_capacity"></a> [tf\_lock\_table\_read\_capacity](#input\_tf\_lock\_table\_read\_capacity) | Defines the minimum and maximum read capactity for autoscaling policies for tf\_lock\_table | `map(number)` | <pre>{<br/>  "maximum": 2,<br/>  "minimum": 1<br/>}</pre> | no |
+| <a name="input_tf_lock_table_write_capacity"></a> [tf\_lock\_table\_write\_capacity](#input\_tf\_lock\_table\_write\_capacity) | Defines the minimum and maximum write capactity for autoscaling policies for tf\_lock\_table | `map(number)` | <pre>{<br/>  "maximum": 2,<br/>  "minimum": 1<br/>}</pre> | no |
 
 ## Outputs
 

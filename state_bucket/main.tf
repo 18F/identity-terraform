@@ -190,8 +190,8 @@ resource "aws_dynamodb_table" "tf-lock-table" {
   count = var.remote_state_enabled
 
   name           = var.state_lock_table
-  read_capacity  = 2
-  write_capacity = 1
+  read_capacity  = var.tf_lock_table_read_capacity["minimum"]
+  write_capacity = var.tf_lock_table_write_capacity["minimum"]
   hash_key       = "LockID"
 
   attribute {
@@ -207,5 +207,62 @@ resource "aws_dynamodb_table" "tf-lock-table" {
 
   lifecycle {
     prevent_destroy = true
+    ignore_changes  = [read_capacity, write_capacity]
+  }
+}
+
+resource "aws_appautoscaling_target" "tf_lock_table_read_target" {
+  count = var.remote_state_enabled
+
+  max_capacity       = var.tf_lock_table_read_capacity["maximum"]
+  min_capacity       = var.tf_lock_table_read_capacity["minimum"]
+  resource_id        = aws_dynamodb_table.tf-lock-table[count.index].id
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "tf_lock_table_read_policy" {
+  count = var.remote_state_enabled
+
+  name               = "DynamoDBReadCapacityUtilization:${aws_appautoscaling_target.tf_lock_table_read_target.resource_id}"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.tf_lock_table_read_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.tf_lock_table_read_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.tf_lock_table_read_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBReadCapacityUtilization"
+    }
+
+    target_value = 70
+  }
+}
+
+resource "aws_appautoscaling_target" "tf_lock_table_write_target" {
+  count = var.remote_state_enabled
+
+  max_capacity       = var.tf_lock_table_write_capacity["maximum"]
+  min_capacity       = var.tf_lock_table_write_capacity["minimum"]
+  resource_id        = aws_dynamodb_table.tf-lock-table[count.index].id
+  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "tf_lock_table_write_policy" {
+  count = var.remote_state_enabled
+
+  name               = "DynamoDBWriteCapacityUtilization:${aws_appautoscaling_target.tf_lock_table_write_target[count.index].resource_id}"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.tf_lock_table_write_target[count.index].resource_id
+  scalable_dimension = aws_appautoscaling_target.tf_lock_table_write_target[count.index].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.tf_lock_table_write_target[count.index].service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBWriteCapacityUtilization"
+    }
+
+    target_value = 70
   }
 }
