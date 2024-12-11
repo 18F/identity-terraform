@@ -150,11 +150,6 @@ variable "memory_usage_threshold" {
   default     = 90
 }
 
-variable "duration_setting" {
-  type        = number
-  description = "The duration setting of the lambda to monitor (in seconds)"
-}
-
 variable "duration_threshold" {
   type        = number
   description = "The duration threshold (as a percentage) for triggering an alert"

@@ -71,7 +71,7 @@ module "lambda_alerts" {
   error_rate_threshold             = var.error_rate_threshold
   memory_usage_threshold           = var.memory_usage_threshold
   duration_setting                 = aws_lambda_function.lambda.timeout
-  duration_threshold               = var.duration_setting
+  duration_threshold               = var.duration_threshold
   datapoints_to_alarm              = var.datapoints_to_alarm
   evaluation_periods               = var.evaluation_periods
   period                           = var.period
