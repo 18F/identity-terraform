@@ -216,7 +216,7 @@ resource "aws_appautoscaling_target" "tf_lock_table_read_target" {
 
   max_capacity       = var.tf_lock_table_read_capacity["maximum"]
   min_capacity       = var.tf_lock_table_read_capacity["minimum"]
-  resource_id        = aws_dynamodb_table.tf-lock-table[count.index].id
+  resource_id        = "table/${aws_dynamodb_table.tf-lock-table[count.index].name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
   service_namespace  = "dynamodb"
 }
@@ -244,7 +244,7 @@ resource "aws_appautoscaling_target" "tf_lock_table_write_target" {
 
   max_capacity       = var.tf_lock_table_write_capacity["maximum"]
   min_capacity       = var.tf_lock_table_write_capacity["minimum"]
-  resource_id        = aws_dynamodb_table.tf-lock-table[count.index].id
+  resource_id        = "table/${aws_dynamodb_table.tf-lock-table[count.index].name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
   service_namespace  = "dynamodb"
 }
