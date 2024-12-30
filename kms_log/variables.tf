@@ -95,9 +95,9 @@ variable "kmslog_lambda_dry_run" {
 }
 
 variable "max_skew_seconds" {
-  default = 8
+  default     = 8
   description = "Number of seconds before/after timestamp to search for matches"
-  type = number
+  type        = number
 }
 
 variable "ec2_kms_arns" {
