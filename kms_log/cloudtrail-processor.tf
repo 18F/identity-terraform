@@ -169,6 +169,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
       RETENTION_DAYS      = var.dynamodb_retention_days
       DDB_TABLE           = aws_dynamodb_table.kms_events.id
       SNS_EVENT_TOPIC_ARN = aws_sns_topic.kms_logging_events.arn
+      MAX_SKEW_SECONDS    = var.max_skew_seconds
     }
   }
 

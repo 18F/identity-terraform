@@ -94,6 +94,12 @@ variable "kmslog_lambda_dry_run" {
   type        = bool
 }
 
+variable "max_skew_seconds" {
+  default = 8
+  description = "Number of seconds before/after timestamp to search for matches"
+  type = number
+}
+
 variable "ec2_kms_arns" {
   default     = []
   description = "ARN(s) of EC2 roles permitted access to KMS"
