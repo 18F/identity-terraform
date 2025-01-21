@@ -88,6 +88,7 @@ data "aws_iam_policy_document" "guardduty_kms" {
 resource "aws_kms_key" "guardduty" {
   description             = "KMS Key for GuardDuty publishing"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.guardduty_kms.json
 }
 
