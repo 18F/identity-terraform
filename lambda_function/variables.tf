@@ -66,6 +66,16 @@ variable "reserved_concurrent_executions" {
   description = "The max number concurrent invocations allowed for the Lambda"
   default     = -1
 }
+variable "role_name_prefix" {
+  default     = null
+  description = <<EOM
+Prefix string used to specify the name of the function's IAM role.
+Required if creating the same function in multiple regions.
+If not specified, will set the role name to the value of  
+var.lambda_iam_role_name or the default of '{var.function_name}-lambda-role'
+EOM
+  type        = string
+}
 
 variable "log_skip_destroy" {
   description = "Skip log destruction"
@@ -88,6 +98,16 @@ variable "lambda_iam_policy_document" {
   default     = ""
   type        = string
   description = "IAM permissions for the lambda function. Use a data.aws_iam_policy_document to construct"
+}
+
+variable "lambda_iam_role_name" {
+  default     = null
+  type        = string
+  description = <<EOM
+Role name override for resources that need underscores.
+If not specified, will set the role name to the default of '{var.function_name}-lambda-role'
+If var.role_name_prefix is set, the module will use the name prefix instead of the role name
+EOM
 }
 
 variable "schedule_expression" {
