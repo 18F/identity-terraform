@@ -71,8 +71,8 @@ variable "role_name_prefix" {
   description = <<EOM
 Prefix string used to specify the name of the function's IAM role.
 Required if creating the same function in multiple regions.
-Will set the role name to be 'var.function_name-lambda-role'
-if not specified.
+If not specified, will set the role name to the value of  
+var.lambda_iam_role_name or the default of '{var.function_name}-lambda-role'
 EOM
   type        = string
 }
@@ -103,7 +103,11 @@ variable "lambda_iam_policy_document" {
 variable "lambda_iam_role_name" {
   default     = null
   type        = string
-  description = "Role name override for resources that need underscores"
+  description = <<EOM
+Role name override for resources that need underscores.
+If not specified, will set the role name to the default of '{var.function_name}-lambda-role'
+If var.role_name_prefix is set, the module will use the name prefix instead of the role name
+EOM
 }
 
 variable "schedule_expression" {
