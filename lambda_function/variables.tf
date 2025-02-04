@@ -83,22 +83,6 @@ variable "log_skip_destroy" {
   default     = false
 }
 
-variable "alarm_actions" {
-  description = "ARNs for Cloudwatch Alarm actions"
-  type        = list(any)
-}
-
-variable "insights_enabled" {
-  description = "Whether the lambda has Lambda Insights enabled"
-  default     = true
-  type        = bool
-}
-
-variable "treat_missing_data" {
-  default = "notBreaching"
-  type    = string
-}
-
 variable "cloudwatch_retention_days" {
   default = 2192
   type    = number
