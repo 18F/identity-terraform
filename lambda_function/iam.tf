@@ -1,7 +1,8 @@
 locals {
-  lambda_role_name = var.role_name_prefix == null ? "${var.function_name}-lambda-role" : null
+  lambda_role_name = var.role_name_prefix == null ? (
+    var.lambda_iam_role_name != null ? var.lambda_iam_role_name : var.function_name
+    ) : null
   role_name_prefix = var.role_name_prefix != null ? substr(var.role_name_prefix, 0, 38) : null
-
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {

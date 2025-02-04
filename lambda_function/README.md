@@ -80,7 +80,6 @@ module "sample_function" {
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda function | `string` | n/a | yes |
 | <a name="input_duration_alarm_description"></a> [duration\_alarm\_description](#input\_duration\_alarm\_description) | Overrides the default alarm description for duration alarm | `string` | `""` | no |
 | <a name="input_duration_alarm_name_override"></a> [duration\_alarm\_name\_override](#input\_duration\_alarm\_name\_override) | Overrides the default alarm naming convention with a custom name | `string` | `""` | no |
-| <a name="input_duration_setting"></a> [duration\_setting](#input\_duration\_setting) | The duration setting of the lambda to monitor (in seconds) | `number` | n/a | yes |
 | <a name="input_duration_threshold"></a> [duration\_threshold](#input\_duration\_threshold) | The duration threshold (as a percentage) for triggering an alert | `number` | `80` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Whether or not to create the Lambda alert monitor. | `number` | `1` | no |
 | <a name="input_env_name"></a> [env\_name](#input\_env\_name) | Name of the environment in which the lambda function lives | `string` | `""` | no |
@@ -105,7 +104,8 @@ module "sample_function" {
 | <a name="input_ok_actions"></a> [ok\_actions](#input\_ok\_actions) | ARNs for Cloudwatch OK actions | `list(any)` | `[]` | no |
 | <a name="input_period"></a> [period](#input\_period) | The period in seconds over which the specified statistic is applied. | `number` | `60` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-west-2"` | no |
-| <a name="input_role_name_prefix"></a> [role\_name\_prefix](#input\_role\_name\_prefix) | Name prefix for multi region lambda deploys | `string` | `null` | no |
+| <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The max number concurrent invocations allowed for the Lambda | `number` | `-1` | no |
+| <a name="input_role_name_prefix"></a> [role\_name\_prefix](#input\_role\_name\_prefix) | Prefix string used to specify the name of the function's IAM role.<br/>Required if creating the same function in multiple regions.<br/>Will set the role name to be 'var.function\_name-lambda-role'<br/>if not specified. | `string` | `null` | no |
 | <a name="input_runbook"></a> [runbook](#input\_runbook) | A link to a runbook associated with any metric in this module | `string` | `""` | no |
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | Lambda function runtime | `string` | n/a | yes |
 | <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | Cron or rate expression to trigger lambda | `string` | `""` | no |

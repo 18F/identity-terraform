@@ -116,6 +116,12 @@ variable "lambda_iam_policy_document" {
   description = "IAM permissions for the lambda function. Use a data.aws_iam_policy_document to construct"
 }
 
+variable "lambda_iam_role_name" {
+  default     = null
+  type        = string
+  description = "Role name override for resources that need underscores"
+}
+
 variable "schedule_expression" {
   default     = ""
   description = "Cron or rate expression to trigger lambda"
