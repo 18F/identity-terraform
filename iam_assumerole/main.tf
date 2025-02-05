@@ -116,6 +116,16 @@ resource "aws_iam_policy" "iam_role_policy" {
   name        = var.iam_policies[count.index].policy_name
   description = var.iam_policies[count.index].policy_description
   policy      = data.aws_iam_policy_document.iam_policy_doc[count.index].json
+
+  lifecycle {
+    precondition {
+      # This precondition check validates IAM policies meet maximum length requirements and fails fast (in terraform plan operations)
+      # aws_iam_policy_document.json returns non-minified json structures but aws_iam_policy consumes the input as a minified json structure.
+      # The jsondecode and jsonencode operations result in the minified json strucutre.
+      condition     = length(jsonencode(jsondecode(data.aws_iam_policy_document.iam_policy_doc[count.index].json))) <= 6144
+      error_message = "The IAM policy exceeds the maximum allowed length (6144 characters.) Current Length: ${length(jsonencode(jsondecode(data.aws_iam_policy_document.iam_policy_doc[count.index].json)))}"
+    }
+  }
 }
 
 resource "aws_iam_role" "iam_assumable_role" {
