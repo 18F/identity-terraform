@@ -137,8 +137,10 @@ class SlackNotificationFormatter:
 
         blocks = [self.blocks_section(f'{alertState} *{data["name"]}*')]
         blocks.append(self.blocks_section(data["description"]))
+        detail_list = []
         for key, value in details.items():
-            blocks.append(self.blocks_section(f"*{key}:* {value}"))
+            detail_list.append(f"*{key}:* {value}")
+        blocks.append(self.blocks_section("\n".join(detail_list)))
 
         msgtext = "\n".join(
             [
