@@ -55,13 +55,13 @@ variable "slack_alarm_emoji" {
 }
 
 variable "slack_warn_emoji" {
-  description = "Emoji used by Slack for a CloudWatch ALARM message."
+  description = "Emoji used by Slack for a Lambda WARN message."
   type        = string
   default     = ":large_orange_square:"
 }
 
 variable "slack_notice_emoji" {
-  description = "Emoji used by Slack for a CloudWatch ALARM message."
+  description = "Emoji used by Slack for a Lambda NOTICE message."
   type        = string
   default     = ":large_yellow_square:"
 }
