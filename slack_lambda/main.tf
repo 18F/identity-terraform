@@ -51,12 +51,6 @@ module "slack_lambda" {
   lambda_iam_policy_document = data.aws_iam_policy_document.lambda_policy.json
 }
 
-resource "aws_iam_role" "slack_lambda" {
-  name_prefix        = substr(var.lambda_name, 0, 38)
-  description        = "Allows the associated Lambda function to write to AWS CloudWatch."
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
-}
-
 moved {
   from = aws_lambda_function.slack_lambda
   to   = module.slack_lambda.aws_lambda_function.lambda
