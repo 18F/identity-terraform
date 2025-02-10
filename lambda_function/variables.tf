@@ -194,7 +194,7 @@ variable "period" {
 }
 
 variable "treat_missing_data" {
-  default = "nonBreaching"
+  default = "notBreaching"
   type    = string
 }
 
