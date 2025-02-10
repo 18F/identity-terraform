@@ -324,7 +324,7 @@ def get_slack_message_payload(event):
             "detail-type" in data
             and data["detail-type"] == "Lambda Monitor Notification"
         ):
-            logger.info("health")
+            logger.info("lambda")
             return formatter.format_lambda_monitor_notification(
                 data,
                 slack_username="Lambda Monitor Notification",
