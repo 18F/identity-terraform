@@ -113,6 +113,50 @@ class SlackNotificationFormatter:
             text=msgtext, slack_username=slack_username, slack_icon=slack_icon
         )
 
+    def format_lambda_monitor_notification(
+        self, data={}, slack_username="", slack_icon=""
+    ):
+        details = data["detail"]
+
+        slackAlarmEmoji = os.environ["slack_alarm_emoji"]
+        slackWarnEmoji = os.environ["slack_warn_emoji"]
+        slackNoticeEmoji = os.environ["slack_notice_emoji"]
+        slackOkEmoji = os.environ["slack_ok_emoji"]
+
+        match data["state"]:
+            case "ALARM":
+                alertState = f"{slackAlarmEmoji} *ALARM:* "
+            case "WARN":
+                alertState = f"{slackWarnEmoji} *WARN:* "
+            case "NOTICE":
+                alertState = f"{slackNoticeEmoji} *NOTICE:* "
+            case "OK":
+                alertState = f"{slackOkEmoji} *OK:* "
+            case _:
+                alertState = f"{slackNoticeEmoji} *NOTICE:* "
+
+        blocks = [self.blocks_section(f'{alertState} *{data["name"]}*')]
+        blocks.append(self.blocks_section(data["description"]))
+        detail_list = []
+        for key, value in details.items():
+            detail_list.append(f"*{key}:* {value}")
+        blocks.append(self.blocks_section("\n".join(detail_list)))
+
+        msgtext = "\n".join(
+            [
+                f'{alertState} *{data["name"]}*',
+                data["description"],
+                data["state"],
+            ]
+        )
+
+        return self.compose_payload(
+            text=msgtext,
+            blocks=blocks,
+            slack_username=slack_username,
+            slack_icon=slack_icon,
+        )
+
     def format_cloudwatch_alarm_message(
         self, data={}, slack_username="", slack_icon=""
     ):
@@ -276,6 +320,16 @@ def get_slack_message_payload(event):
             return formatter.format_aws_health_event(
                 data,
                 slack_username="AWS Health Event",
+                slack_icon=":aws:",
+            )
+        elif (
+            "detail-type" in data
+            and data["detail-type"] == "Lambda Monitor Notification"
+        ):
+            logger.info("lambda")
+            return formatter.format_lambda_monitor_notification(
+                data,
+                slack_username="Lambda Monitor Notification",
                 slack_icon=":aws:",
             )
         elif "IncidentManagerEvent" in data:

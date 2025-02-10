@@ -113,7 +113,7 @@ module "sample_function" {
 | <a name="input_source_code_filename"></a> [source\_code\_filename](#input\_source\_code\_filename) | Name of the file containing the Lambda source code | `string` | n/a | yes |
 | <a name="input_source_dir"></a> [source\_dir](#input\_source\_dir) | Directory containing the Lambda source code | `string` | n/a | yes |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | Lambda timeout | `number` | `120` | no |
-| <a name="input_treat_missing_data"></a> [treat\_missing\_data](#input\_treat\_missing\_data) | n/a | `string` | `"nonBreaching"` | no |
+| <a name="input_treat_missing_data"></a> [treat\_missing\_data](#input\_treat\_missing\_data) | n/a | `string` | `"notBreaching"` | no |
 
 ## Outputs
 
