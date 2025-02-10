@@ -18,8 +18,8 @@ data "aws_iam_policy_document" "lambda_policy" {
 }
 
 module "slack_lambda" {
-  #source = "github.com/18F/identity-terraform//lambda_function?ref=1e2916dad10a2a35af77b51683a9d56e13c4bd7b"
-  source = "../lambda_function"
+  source = "github.com/18F/identity-terraform//lambda_function?ref=026f69d0a5e2b8af458888a5f21a72d557bbe1fe"
+  #source = "../lambda_function"
 
   // region               = var.region
   function_name        = var.lambda_name
