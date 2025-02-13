@@ -104,6 +104,33 @@ resource "aws_s3_bucket_versioning" "tf-state" {
   }
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "tf-state" {
+  count  = var.remote_state_enabled
+  bucket = data.aws_s3_bucket.tf-state[count.index].id
+
+  rule {
+    id     = "TierAndExpire"
+    status = "Enabled"
+
+    filter {}
+
+    transition {
+      days          = 90
+      storage_class = "INTELLIGENT_TIERING"
+    }
+    noncurrent_version_transition {
+      noncurrent_days = 90
+      storage_class   = "INTELLIGENT_TIERING"
+    }
+    expiration {
+      days = 2557 # 7 years
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 2557 # 7 years
+    }
+  }
+}
+
 resource "aws_s3_bucket_ownership_controls" "tf-state" {
   count  = var.remote_state_enabled
   bucket = data.aws_s3_bucket.tf-state[count.index].id
@@ -150,6 +177,31 @@ resource "aws_s3_bucket_versioning" "inventory" {
 
   versioning_configuration {
     status = "Enabled"
+  }
+}
+resource "aws_s3_bucket_lifecycle_configuration" "inventory" {
+  bucket = aws_s3_bucket.inventory.id
+
+  rule {
+    id     = "TierAndExpire"
+    status = "Enabled"
+
+    filter {}
+
+    transition {
+      days          = 90
+      storage_class = "INTELLIGENT_TIERING"
+    }
+    noncurrent_version_transition {
+      noncurrent_days = 90
+      storage_class   = "INTELLIGENT_TIERING"
+    }
+    expiration {
+      days = 2557 # 7 years
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 2557 # 7 years
+    }
   }
 }
 
