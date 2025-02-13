@@ -79,8 +79,9 @@ data "aws_iam_policy" "custom" {
 resource "aws_iam_policy" "iam_role_policy" {
   count = var.enabled ? 1 * length(var.iam_policies) : 0
 
-  name   = "${var.role_name}${count.index}"
-  policy = data.aws_iam_policy_document.iam_policy_doc[count.index].json
+  name        = "${var.role_name}${count.index + 1}"
+  description = "Policy ${count.index + 1} for ${var.role_name} role"
+  policy      = data.aws_iam_policy_document.iam_policy_doc[count.index].json
 
   lifecycle {
     precondition {
