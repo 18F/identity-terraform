@@ -3,6 +3,7 @@ locals {
     var.lambda_iam_role_name != null ? var.lambda_iam_role_name : var.function_name
   ) : null
   role_name_prefix = var.role_name_prefix != null ? substr(var.role_name_prefix, 0, 38) : null
+  role_description = var.lambda_iam_role_description != null ? var.lambda_iam_role_description : "IAM role for Lambda function ${var.function_name}"
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {

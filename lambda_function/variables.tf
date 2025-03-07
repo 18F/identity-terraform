@@ -77,6 +77,12 @@ EOM
   type        = string
 }
 
+variable "lambda_iam_role_description" {
+  default     = ""
+  description = "Description of the IAM role for the lambda function"
+  type        = string
+}
+
 variable "log_skip_destroy" {
   description = "Skip log destruction"
   type        = bool
