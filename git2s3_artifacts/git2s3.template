@@ -485,7 +485,9 @@
                                 "kms:Get*",
                                 "kms:Delete*",
                                 "kms:ScheduleKeyDeletion",
-                                "kms:CancelKeyDeletion"
+                                "kms:CancelKeyDeletion",
+                                "kms:TagResource",
+                                "kms:UntagResource"
                             ],
                             "Resource": "*"
                         },
