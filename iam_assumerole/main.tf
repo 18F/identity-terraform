@@ -89,7 +89,7 @@ resource "aws_iam_policy" "iam_role_policy" {
       # aws_iam_policy_document.json returns non-minified json structures but aws_iam_policy consumes the input as a minified json structure.
       # The jsondecode and jsonencode operations result in the minified json strucutre.
       condition     = length(jsonencode(jsondecode(data.aws_iam_policy_document.iam_policy_doc[count.index].json))) <= 6144
-      error_message = "The IAM policy exceeds the maximum allowed length (6144 characters.) Current Length: ${length(jsonencode(jsondecode(data.aws_iam_policy_document.iam_policy_doc[count.index].json)))}"
+      error_message = "The IAM policy ${var.role_name}${count.index + 1} exceeds the maximum allowed length (6144 characters.) Current Length: ${length(jsonencode(jsondecode(data.aws_iam_policy_document.iam_policy_doc[count.index].json)))}"
     }
   }
 }
