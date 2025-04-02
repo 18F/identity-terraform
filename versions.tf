@@ -24,6 +24,9 @@ terraform {
     newrelic = {
       source = "newrelic/newrelic"
     }
+    ephemeraltls = {
+      source = "lonegunmanb/ephemeraltls"
+    }
   }
   required_version = ">= 1.3.5"
 }

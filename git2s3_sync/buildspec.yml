@@ -1,0 +1,39 @@
+version: 0.2
+env:
+  exported-variables:
+    - GIT_COMMIT_ID
+    - GIT_COMMIT_MSG
+phases:
+  build:
+      commands:
+      - echo "=======================Start-Deployment============================="
+      - echo "Getting the SSH Private Key"
+      - aws secretsmanager get-secret-value --secret-id $SecretId --query SecretString --output text | jq -r '.PRIVATE_KEY' > ~/.ssh/id_rsa
+      - ls ~/.ssh/
+      - echo "Setting SSH config profile"
+      - |
+        cat > ~/.ssh/config <<EOF
+        Host *
+          AddKeysToAgent yes
+          StrictHostKeyChecking no
+          IdentityFile ~/.ssh/id_rsa
+        EOF
+      - chmod 600 ~/.ssh/id_rsa
+      - echo "Cloning the repository $GitUrl on branch $Branch"
+      - git clone --single-branch --depth=1 --branch $Branch $GitUrl .
+      - ls
+      - echo "Zipping the checked out contents"
+      - |
+        if [ "$exclude_git" = "True" ]; then
+          zip -r $outputbucketkey ./ -x '*.git*'
+        else 
+          zip -r $outputbucketkey ./
+        fi
+      - ls -alh
+      - echo "Put the zipped Object to Output Bucket"
+      - aws s3 cp $outputbucketkey s3://$outputbucket/$outputbucketpath
+      - export GIT_COMMIT_ID=$(git rev-parse --short HEAD)
+      - echo $GIT_COMMIT_ID
+      - export GIT_COMMIT_MSG="$(git log -1 --pretty=%B)"
+      - echo $GIT_COMMIT_MSG
+      - echo "=======================End-Deployment============================="

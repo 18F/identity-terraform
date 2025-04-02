@@ -17,6 +17,16 @@ EOM
   default     = ""
 }
 
+variable "create_artifact_bucket" {
+  description = <<EOM
+(OPTIONAL) Whether or not to create the public-artifacts bucket,
+and related resources, within this module. Set to 'false' if managing
+said bucket in a separate/parent module.
+EOM
+  type        = bool
+  default     = true
+}
+
 variable "region" {
   description = "AWS Region"
   type        = string
