@@ -1,0 +1,78 @@
+data "aws_iam_policy_document" "lambda_git2s3_access" {
+  source_policy_documents = [
+    data.aws_iam_policy_document.codebuild_endpoint.json
+  ]
+
+  statement {
+    sid    = "S3GetKey"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject"
+    ]
+    resources = formatlist(
+      "arn:aws:s3:::${var.secrets_bucket}/${local.ssh_key_path}/%s",
+      ["enc_key", "enc_pub"]
+    )
+  }
+
+  statement {
+    sid    = "KMSDecryptSSHKey"
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt"
+    ]
+    resources = [
+      aws_kms_key.lambda_sshkey.arn
+    ]
+  }
+
+  statement {
+    sid    = "S3OutputBucketAccess"
+    effect = "Allow"
+    actions = [
+      "s3:PutObject"
+    ]
+    resources = [
+      aws_s3_bucket.codebuild_output.arn,
+      "${aws_s3_bucket.codebuild_output.arn}/*"
+    ]
+  }
+
+  statement {
+    sid    = "CodeBuildAccess"
+    effect = "Allow"
+    actions = [
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild"
+    ]
+    resources = [
+      aws_codebuild_project.git2s3.arn
+    ]
+  }
+
+}
+
+module "lambda_git2s3" {
+  source = "github.com/18F/identity-terraform//lambda_function?ref=026f69d0a5e2b8af458888a5f21a72d557bbe1fe"
+  #source = "../lambda_function"
+
+  aws_region           = data.aws_region.current.name
+  function_name        = var.git2s3_project_name
+  description          = "Run ${var.git2s3_project_name} CodeBuild project when code is pushed to GitHub"
+  source_code_filename = "lambda_function.py"
+  source_dir           = "${path.module}/lambda_git2s3/"
+  runtime              = "python3.9"
+  timeout              = 900
+  memory_size          = 128
+
+  environment_variables = {
+    ExcludeGit       = var.exclude_git
+    GitPullCodeBuild = aws_codebuild_project.git_pull.name
+  }
+
+  cloudwatch_retention_days = var.cloudwatch_retention_days
+  insights_enabled          = false
+  alarm_actions             = []
+
+  lambda_iam_policy_document = data.aws_iam_policy_document.lambda_git2s3_access.json
+}
