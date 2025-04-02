@@ -25,6 +25,7 @@ data "aws_iam_policy_document" "git2s3_output_bucket" {
 }
 
 data "aws_iam_policy_document" "artifact_bucket" {
+  count = var.create_artifact_bucket ? 1 : 0
   statement {
     effect = "Allow"
     principals {
@@ -36,8 +37,8 @@ data "aws_iam_policy_document" "artifact_bucket" {
       "s3:List*"
     ]
     resources = [
-      aws_s3_bucket.artifact_bucket.arn,
-      "${aws_s3_bucket.artifact_bucket.arn}/*"
+      aws_s3_bucket.artifact_bucket[count.index].arn,
+      "${aws_s3_bucket.artifact_bucket[count.index].arn}/*"
     ]
   }
 
@@ -52,7 +53,7 @@ data "aws_iam_policy_document" "artifact_bucket" {
       "s3:Delete*",
     ]
     resources = [
-      "${aws_s3_bucket.artifact_bucket.arn}/packer_config/*"
+      "${aws_s3_bucket.artifact_bucket[count.index].arn}/packer_config/*"
     ]
   }
 }
@@ -83,6 +84,7 @@ resource "aws_cloudformation_stack" "git2s3" {
 }
 
 resource "aws_s3_bucket" "artifact_bucket" {
+  count         = var.create_artifact_bucket ? 1 : 0
   bucket        = "${var.bucket_name_prefix}-public-artifacts-${var.region}"
   force_destroy = true
 
@@ -92,7 +94,8 @@ resource "aws_s3_bucket" "artifact_bucket" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "artifact_bucket" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.create_artifact_bucket ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[count.index].id
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -100,7 +103,8 @@ resource "aws_s3_bucket_ownership_controls" "artifact_bucket" {
 }
 
 resource "aws_s3_bucket_acl" "artifact_bucket" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.create_artifact_bucket ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[count.index].id
   acl    = "private"
 
   depends_on = [aws_s3_bucket_ownership_controls.artifact_bucket]
@@ -108,7 +112,8 @@ resource "aws_s3_bucket_acl" "artifact_bucket" {
 
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.create_artifact_bucket ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[count.index].id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -118,7 +123,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket" 
 }
 
 resource "aws_s3_bucket_versioning" "artifact_bucket" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.create_artifact_bucket ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[count.index].id
 
   versioning_configuration {
     status = "Enabled"
@@ -126,17 +132,19 @@ resource "aws_s3_bucket_versioning" "artifact_bucket" {
 }
 
 resource "aws_s3_bucket_logging" "artifact_bucket" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.create_artifact_bucket ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[count.index].id
 
   target_bucket = local.log_bucket
   target_prefix = "${var.bucket_name_prefix}-public-artifacts-${var.region}/"
 }
 
 module "s3_config" {
+  count  = var.create_artifact_bucket ? 1 : 0
   source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
   #source = "../s3_config"
 
-  bucket_name_override = aws_s3_bucket.artifact_bucket.id
+  bucket_name_override = aws_s3_bucket.artifact_bucket[count.index].id
   region               = var.region
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
 }
@@ -147,12 +155,14 @@ resource "aws_s3_bucket_policy" "git2s3_output_bucket" {
 }
 
 resource "aws_s3_bucket_policy" "artifact_bucket" {
-  bucket = aws_s3_bucket.artifact_bucket.id
-  policy = data.aws_iam_policy_document.artifact_bucket.json
+  count  = var.create_artifact_bucket ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[count.index].id
+  policy = data.aws_iam_policy_document.artifact_bucket[count.index].json
 }
 
 resource "aws_s3_object" "git2s3_output_bucket_name" {
-  bucket       = aws_s3_bucket.artifact_bucket.id
+  count        = var.create_artifact_bucket ? 1 : 0
+  bucket       = aws_s3_bucket.artifact_bucket[count.index].id
   key          = "git2s3/OutputBucketName"
   content      = local.git2s3_output_bucket
   content_type = "text/plain"
