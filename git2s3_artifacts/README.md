@@ -1,3 +1,5 @@
+## PLEASE NOTE: The original `git2s3` Quick Start templates/repos/etc. have been deprecated, so new deployments of this module may no longer work as of December 2024. We recommend migrating from this module to [the `git2s3_sync` module](https://github.com/18F/identity-terraform/tree/main/git2s3_sync), also found within this repo, which builds all resources within via Terraform (instead of CloudFormation) and no longer relies on the now-deprecated Quick Start code/sources.
+
 # `git2s3_artifacts`
 
 This Terraform module is a wrapper around the ["Git webhooks on the AWS Cloud" Quick Start Deployment](https://aws-quickstart.github.io/quickstart-git2s3/), a CloudFormation stack, here used as the resource `aws_cloudformation_stack.git2s3`. The Stack builds the necessary architecture -- an API gateway, Lambda function, S3 buckets, etc. -- for `git push` operations to trigger a retrieval, zip, and S3 upload of a given third-party repository.
@@ -62,6 +64,7 @@ module "main" {
 
 - `bucket_name_prefix` - **string**: REQUIRED. First substring in names for log_bucket, inventory_bucket, and the public-artifacts bucket.
 - `log_bucket_name` - **string**: (OPTIONAL) Specific name of the bucket used for S3 logging. Will default to `$bucket_name_prefix.s3-access-logs.$account_id-$region` if not explicitly declared.
+- `create_artifact_bucket` - **bool**: (OPTIONAL) Whether or not to create the public-artifacts bucket, and related resources, within this module. Set to 'false' if managing said bucket in a separate/parent module.
 - `region` - **string**: AWS Region. Defaults to `us-west-2`.
 - `inventory_bucket_name` - **string**: (OPTIONAL) Specific name of the S3 bucket used for collecting the S3 Inventory reports. Will default to `$bucket_name_prefix.s3-inventory.$account_id-$region` if not explicitly declared.
 - `sse_algorithm` - **string**: SSE algorithm to use to encrypt reports in S3 Inventory bucket. Defaults to `aws:kms`.
