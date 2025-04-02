@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "codebuild_base" {
       "kms:DescribeKey"
     ]
     resources = [
-      aws_kms_key.ssh_encryption.arn
+      aws_kms_key.lambda_sshkey.arn
     ]
   }
 }

@@ -96,10 +96,16 @@ variable "git2s3_project_name" {
   description = <<EOM
 REQUIRED. Main identifier used as the name for the CodeBuild project,
 for the git-pull Lambda function, and for numerous other resources
-within this module.
+within this module. MUST be lowercase, and only contain alphanumeric
+characterts and hyphens, as it is used to name the S3 bucket
+that ZIP files of the repository/branches are uploaded to.
 EOM
   type        = string
   default     = "git2s3"
+  validation {
+    condition     = can(regex("^[0-9a-z-]+$", var.git2s3_project_name))
+    error_message = "Can only be lowercase alphanumeric characters and hyphens."
+  }
 }
 
 variable "secrets_bucket" {
@@ -125,15 +131,15 @@ EOM
 
 variable "allowed_ip_ranges" {
   description = <<EOM
-(OPTIONAL) List of IP CIDR blocks allowed for communication between
-the API Gateway + git-pull Lambda function and the repo they connect
-to. If not specified, will instead use the GitHub CIDR ranges pulled
-in by data.github_ip_ranges.ips.git as long as var.use_allowed_ips
-is 'true'; otherwise, will default to IP ranges from BitBucket Cloud
-IP as specified in the original CloudFormation template.
+(OPTIONAL) Comma-separated list, as a string, of IP CIDR blocks allowed
+for communication between the API Gateway + git-pull Lambda function and
+the repo they connect to. If not specified, will instead use the GitHub
+CIDR ranges pulled in by data.github_ip_ranges.ips.git as long as
+var.use_allowed_ips is 'true'; otherwise, will default to IP ranges from
+BitBucket Cloud IP as specified in the original CloudFormation template.
 EOM
-  type        = list(string)
-  default     = []
+  type        = string
+  default     = ""
 }
 
 variable "api_secret" {

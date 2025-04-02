@@ -4,6 +4,7 @@ locals {
       var.bucket_name_prefix,
       var.git2s3_project_name,
       "output",
+      data.aws_caller_identity.current.account_id,
       data.aws_region.current.name
     ]
   ) : var.output_bucket_name
@@ -32,7 +33,7 @@ resource "aws_s3_bucket" "codebuild_output" {
   force_destroy = true
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
@@ -70,7 +71,7 @@ resource "aws_s3_bucket_versioning" "codebuild_output" {
 }
 
 module "s3_config_codebuild_output" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "github.com/18F/identity-terraform//s3_config?ref=cea57dfeaa2e437852ffa488606bf37f954dce12"
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.codebuild_output.id

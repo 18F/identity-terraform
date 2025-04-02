@@ -1,12 +1,11 @@
 locals {
-  ip_regex  = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\/(?:[0-2][0-9]|[3][0-2])"
-  ip_ranges = var.allowed_ip_ranges == [] ? data.github_ip_ranges.ips.git : var.allowed_ip_ranges
+  ip_regex = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\/(?:[0-2][0-9]|[3][0-2])"
 
-  allowed_ips = regex("^[0-9.,\\/]+\\/32", substr(
-    join(",", compact([
-      for ip in local.ip_ranges : try(regex(local.ip_regex, ip), "")
-      ])
-  ), 0, 512))
+  allowed_ips = var.allowed_ip_ranges == "" ? (
+    regex("^[0-9.,\\/]+\\/32", substr(join(",", compact([
+      for ip in data.github_ip_ranges.ips.git : try(regex(local.ip_regex, ip), "")
+    ])), 0, 512))
+  ) : var.allowed_ip_ranges
 }
 
 data "aws_iam_policy_document" "api_webhook_lambda" {
@@ -41,7 +40,6 @@ resource "aws_iam_role" "api_webhook" {
 }
 
 resource "aws_iam_role_policy_attachment" "api_webhook_push" {
-  name       = "${var.git2s3_project_name}-api-webhook-push"
   role       = aws_iam_role.api_webhook.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
@@ -137,7 +135,7 @@ resource "aws_api_gateway_stage" "webhook_prod" {
   rest_api_id   = aws_api_gateway_rest_api.webhook.id
   stage_name    = "Prod"
 
-  variables {
+  variables = {
     keybucket    = var.secrets_bucket
     bucketpath   = local.ssh_key_path
     outputbucket = aws_s3_bucket.codebuild_output.id

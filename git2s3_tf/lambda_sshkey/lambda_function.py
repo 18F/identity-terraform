@@ -19,7 +19,7 @@ from cryptography.hazmat.backends import default_backend as \
 
 def lambda_handler(event,context):
     try:
-        if event['RequestType'] == 'Create':
+        if event['tf']['action'] == 'create':
             # Generate keys
             new_key = rsa.generate_private_key(
                 backend=crypto_default_backend(), public_exponent=65537,
@@ -37,17 +37,17 @@ def lambda_handler(event,context):
             print(pub_key)
 
             kms = boto3.client(
-                'kms', region_name=event["ResourceProperties"]["Region"])
+                'kms', region_name=event["Region"])
             # Encrypt private key
             enc_key = kms.encrypt(
-                KeyId=event["ResourceProperties"]["KMSKey"],
+                KeyId=event["KMSKey"],
                 Plaintext=priv_key)['CiphertextBlob']
             priv_file = open('/tmp/enc_key', 'wb')
             priv_file.write(enc_key)
             priv_file.close()
             # Encrypt public key
             enc_pub = kms.encrypt(
-                KeyId=event["ResourceProperties"]["KMSKey"],
+                KeyId=event["KMSKey"],
                 Plaintext=pub_key)['CiphertextBlob']
             pub_file = open('/tmp/enc_pub', 'wb')
             pub_file.write(enc_pub)
@@ -55,14 +55,12 @@ def lambda_handler(event,context):
 
             # Upload keys to S3
             s3 = boto3.client('s3')
-            enc_key_path = event["ResourceProperties"]["BucketPath"] + '/enc_key'
-            enc_pub_path = event["ResourceProperties"]["BucketPath"] + '/enc_pub'
+            enc_key_path = event["BucketPath"] + '/enc_key'
+            enc_pub_path = event["BucketPath"] + '/enc_pub'
             s3.upload_file('/tmp/enc_key',
-                           event["ResourceProperties"]["KeyBucket"], enc_key_path)
+                           event["KeyBucket"], enc_key_path)
             s3.upload_file('/tmp/enc_pub',
-                           event["ResourceProperties"]["KeyBucket"], enc_pub_path)
-        else:
-            pub_key = event['PhysicalResourceId']
+                           event["KeyBucket"], enc_pub_path)
         return {
             "pub_key": pub_key
         }

@@ -56,7 +56,7 @@ module "lambda_git2s3" {
   source = "github.com/18F/identity-terraform//lambda_function?ref=026f69d0a5e2b8af458888a5f21a72d557bbe1fe"
   #source = "../lambda_function"
 
-  aws_region           = data.aws_region.current.name
+  region               = data.aws_region.current.name
   function_name        = var.git2s3_project_name
   description          = "Run ${var.git2s3_project_name} CodeBuild project when code is pushed to GitHub"
   source_code_filename = "lambda_function.py"
@@ -67,7 +67,7 @@ module "lambda_git2s3" {
 
   environment_variables = {
     ExcludeGit       = var.exclude_git
-    GitPullCodeBuild = aws_codebuild_project.git_pull.name
+    GitPullCodeBuild = aws_codebuild_project.git2s3.name
   }
 
   cloudwatch_retention_days = var.cloudwatch_retention_days

@@ -55,4 +55,6 @@ resource "aws_lambda_invocation" "lambda_sshkey" {
     Region     = data.aws_region.current.name
     KMSKey     = aws_kms_key.lambda_sshkey.id
   })
+
+  lifecycle_scope = "CRUD"
 }
