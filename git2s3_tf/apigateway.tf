@@ -136,11 +136,9 @@ resource "aws_api_gateway_stage" "webhook_prod" {
   stage_name    = "Prod"
 
   variables = {
-    keybucket    = var.secrets_bucket
-    bucketpath   = local.ssh_key_path
     outputbucket = aws_s3_bucket.codebuild_output.id
     apisecrets   = var.api_secret
-    publickey    = jsondecode(aws_lambda_invocation.lambda_sshkey.result)["pub_key"]
+    secretid     = aws_secretsmanager_secret.ssh_key_pair.id
     allowedips = var.use_allowed_ips ? local.allowed_ips : join(",", [
       # default: BitBucket Cloud IP ranges
       "18.205.93.0/25",
@@ -150,7 +148,6 @@ resource "aws_api_gateway_stage" "webhook_prod" {
   }
 
   depends_on = [
-    aws_lambda_invocation.lambda_sshkey,
     aws_s3_bucket.codebuild_output
   ]
 }

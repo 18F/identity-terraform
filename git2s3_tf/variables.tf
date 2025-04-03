@@ -108,15 +108,6 @@ EOM
   }
 }
 
-variable "secrets_bucket" {
-  description = <<EOM
-REQUIRED. Full name of an externally-built S3 bucket which will store
-the SSH key (used for repo access by the git-pull Lambda function)
-after it has been created by the lambda_sshkey function.
-EOM
-  type        = string
-}
-
 variable "use_allowed_ips" {
   description = <<EOM
 Whether or not to use a list of allowed IP ranges, either via
@@ -162,4 +153,15 @@ created by the git-pull Lambda function.
 EOM
   type        = bool
   default     = true
+}
+
+variable "ssh_key_secret_version" {
+  description = <<EOM
+Version number (integer) of the Secrets Manager secret which contains
+the text of the SSH keypair (public and private keys) that is created
+via ephemeraltls_private_key.git2s3. ONLY update if rotating/replacing
+the key.
+EOM
+  type = number
+  default = 1
 }

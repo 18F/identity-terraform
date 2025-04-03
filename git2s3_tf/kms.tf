@@ -1,4 +1,4 @@
-data "aws_iam_policy_document" "kms_lambda_sshkey" {
+data "aws_iam_policy_document" "kms_ssh_key_pair" {
   statement {
     sid    = "KMSKeyAccess"
     effect = "Allow"
@@ -60,14 +60,14 @@ data "aws_iam_policy_document" "kms_lambda_sshkey" {
   }
 }
 
-resource "aws_kms_key" "lambda_sshkey" {
+resource "aws_kms_key" "ssh_key_pair" {
   description             = "Encrypts SSH key for ${var.git2s3_project_name} to access GitHub"
   deletion_window_in_days = 7
   enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.kms_lambda_sshkey.json
+  policy                  = data.aws_iam_policy_document.kms_ssh_key_pair.json
 }
 
-resource "aws_kms_alias" "lambda_sshkey" {
+resource "aws_kms_alias" "ssh_key_pair" {
   name          = "alias/${local.ssh_key_path}-encrypt"
-  target_key_id = aws_kms_key.lambda_sshkey.key_id
+  target_key_id = aws_kms_key.ssh_key_pair.key_id
 }

@@ -40,10 +40,8 @@
     "resource-path" : "$context.resourcePath",
     "allowed-ips" : "$stageVariables.allowedips",
     "api-secrets" : "$stageVariables.apisecrets",
-    "key-bucket" : "$stageVariables.keybucket",
-    "bucket-path" : "$stageVariables.bucketpath",
+    "secret-id" : "$stageVariables.secretid",
     "output-bucket" : "$stageVariables.outputbucket",
-    "public-key" : "$stageVariables.publickey",
     "raw-body" : "$util.escapeJavaScript($input.body).replace("\'","'")"
     }
 }

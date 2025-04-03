@@ -16,22 +16,18 @@ data "aws_iam_policy_document" "codebuild_base" {
   }
 
   statement {
-    sid    = "S3KeyBucketAccess"
+    sid    = "CodeBuildSecretsManagerAccess"
     effect = "Allow"
     actions = [
-      "s3:GetObject",
-      "s3:GetObjectVersion",
-      "s3:GetBucketAcl",
-      "s3:GetBucketLocation"
+      "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:s3:::${var.secrets_bucket}",
-      "arn:aws:s3:::${var.secrets_bucket}/*"
+      aws_secretsmanager_secret.ssh_key_pair.arn
     ]
   }
 
   statement {
-    sid    = "S3OutputBucketAccess"
+    sid    = "CodeBuildS3OutputBucketAccess"
     effect = "Allow"
     actions = [
       "s3:PutObject"
@@ -43,7 +39,7 @@ data "aws_iam_policy_document" "codebuild_base" {
   }
 
   statement {
-    sid    = "KMSKeyForSSHAccess"
+    sid    = "CodeBuildKMSKeyForSSHAccess"
     effect = "Allow"
     actions = [
       "kms:Encrypt",
@@ -53,7 +49,7 @@ data "aws_iam_policy_document" "codebuild_base" {
       "kms:DescribeKey"
     ]
     resources = [
-      aws_kms_key.lambda_sshkey.arn
+      aws_kms_key.ssh_key_pair.arn
     ]
   }
 }
@@ -146,7 +142,7 @@ resource "aws_codebuild_project" "git2s3" {
   source {
     type            = "NO_SOURCE"
     git_clone_depth = 0
-    buildspec       = "${path.module}/buildspec-git2s3.yml"
+    buildspec       = "${path.module}/buildspec.yml"
   }
 
   logs_config {
