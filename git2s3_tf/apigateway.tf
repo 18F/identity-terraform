@@ -137,9 +137,9 @@ resource "aws_api_gateway_stage" "webhook_prod" {
 
   variables = {
     outputbucket = aws_s3_bucket.codebuild_output.id
-    apisecrets   = var.api_secret
+    apisecrets   = var.api_secret == "" ? null : var.api_secret
     secretid     = aws_secretsmanager_secret.ssh_key_pair.id
-    allowedips = var.use_allowed_ips ? local.allowed_ips : join(",", [
+    allowedips   = var.use_allowed_ips ? local.allowed_ips : join(",", [
       # default: BitBucket Cloud IP ranges
       "18.205.93.0/25",
       "18.234.32.128/25",

@@ -41,7 +41,6 @@ logging.getLogger('botocore').setLevel(logging.ERROR)
 def lambda_handler(event, context):
     print(event)
     secret_id = event['context']['secret-id']
-    bucket_path = event['context']['bucket-path']
     output_bucket = event['context']['output-bucket']
     # Source IP ranges to allow requests from, if the IP is in one of these the request will not be checked for an api key
     ipranges = []

@@ -142,7 +142,7 @@ resource "aws_codebuild_project" "git2s3" {
   source {
     type            = "NO_SOURCE"
     git_clone_depth = 0
-    buildspec       = "${path.module}/buildspec.yml"
+    buildspec       = file("${path.module}/buildspec.yml")
   }
 
   logs_config {
