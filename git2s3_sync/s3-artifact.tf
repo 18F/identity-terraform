@@ -70,7 +70,7 @@ resource "aws_s3_bucket_versioning" "artifact_bucket" {
   }
 }
 
-module "s3_config" {
+module "s3_config_artifact" {
   source = "github.com/18F/identity-terraform//s3_config?ref=cea57dfeaa2e437852ffa488606bf37f954dce12"
   #source = "../s3_config"
 
