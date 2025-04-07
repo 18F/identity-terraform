@@ -112,7 +112,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf-state" {
     id     = "TierAndExpire"
     status = "Enabled"
 
-    filter {}
+    filter {
+      prefix = ""
+    }
 
     transition {
       days          = 90
@@ -186,7 +188,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "inventory" {
     id     = "TierAndExpire"
     status = "Enabled"
 
-    filter {}
+    filter {
+      prefix = ""
+    }
 
     transition {
       days          = 90
