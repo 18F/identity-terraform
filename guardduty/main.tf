@@ -268,6 +268,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "guardduty" {
     }
     noncurrent_version_transition {
       storage_class = "INTELLIGENT_TIERING"
+      noncurrent_days = 0
     }
     expiration {
       days = 2190
