@@ -111,7 +111,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf-state" {
   count  = var.remote_state_enabled
   bucket = data.aws_s3_bucket.tf-state[count.index].id
 
-  transition_default_minimum_object_size = "varies_by_storage_class"
+  transition_default_minimum_object_size = "all_storage_classes_128K"
 
   rule {
     id     = "TierAndExpire"
@@ -190,7 +190,7 @@ resource "aws_s3_bucket_versioning" "inventory" {
 resource "aws_s3_bucket_lifecycle_configuration" "inventory" {
   bucket = aws_s3_bucket.inventory.id
 
-  transition_default_minimum_object_size = "varies_by_storage_class"
+  transition_default_minimum_object_size = "all_storage_classes_128K"
 
   rule {
     id     = "TierAndExpire"
