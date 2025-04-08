@@ -60,16 +60,20 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
     }
 
     transition {
+      days          = 0
       storage_class = "INTELLIGENT_TIERING"
     }
+
     noncurrent_version_transition {
-      storage_class   = "INTELLIGENT_TIERING"
       noncurrent_days = 0
+      storage_class   = "INTELLIGENT_TIERING"
     }
+
     expiration {
       # 5 years
       days = 1825
     }
+
     noncurrent_version_expiration {
       noncurrent_days = 1825
     }
@@ -125,13 +129,16 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf-state" {
       days          = 90
       storage_class = "INTELLIGENT_TIERING"
     }
+
     noncurrent_version_transition {
       noncurrent_days = 90
       storage_class   = "INTELLIGENT_TIERING"
     }
+
     expiration {
       days = 2557 # 7 years
     }
+
     noncurrent_version_expiration {
       noncurrent_days = 2557 # 7 years
     }
@@ -204,13 +211,16 @@ resource "aws_s3_bucket_lifecycle_configuration" "inventory" {
       days          = 90
       storage_class = "INTELLIGENT_TIERING"
     }
+
     noncurrent_version_transition {
       noncurrent_days = 90
       storage_class   = "INTELLIGENT_TIERING"
     }
+
     expiration {
       days = 2557 # 7 years
     }
+
     noncurrent_version_expiration {
       noncurrent_days = 2557 # 7 years
     }
