@@ -49,6 +49,8 @@ resource "aws_s3_bucket_acl" "s3-access-logs" {
 resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
   bucket = aws_s3_bucket.s3-access-logs.id
 
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
   rule {
     id     = "expirelogs"
     status = "Enabled"
@@ -61,7 +63,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
       storage_class = "INTELLIGENT_TIERING"
     }
     noncurrent_version_transition {
-      storage_class = "INTELLIGENT_TIERING"
+      storage_class   = "INTELLIGENT_TIERING"
       noncurrent_days = 0
     }
     expiration {
@@ -108,6 +110,8 @@ resource "aws_s3_bucket_versioning" "tf-state" {
 resource "aws_s3_bucket_lifecycle_configuration" "tf-state" {
   count  = var.remote_state_enabled
   bucket = data.aws_s3_bucket.tf-state[count.index].id
+
+  transition_default_minimum_object_size = "varies_by_storage_class"
 
   rule {
     id     = "TierAndExpire"
@@ -182,8 +186,11 @@ resource "aws_s3_bucket_versioning" "inventory" {
     status = "Enabled"
   }
 }
+
 resource "aws_s3_bucket_lifecycle_configuration" "inventory" {
   bucket = aws_s3_bucket.inventory.id
+
+  transition_default_minimum_object_size = "varies_by_storage_class"
 
   rule {
     id     = "TierAndExpire"

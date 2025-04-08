@@ -99,6 +99,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
   for_each = var.bucket_data
   bucket   = aws_s3_bucket.bucket[each.key]
 
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
   dynamic "rule" {
     for_each = can(each.value.lifecycle_rules) ? each.value.lifecycle_rules : []
     content {

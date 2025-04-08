@@ -138,6 +138,8 @@ resource "aws_s3_bucket_versioning" "logs" {
 resource "aws_s3_bucket_lifecycle_configuration" "logs" {
   bucket = aws_s3_bucket.logs.id
 
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
   # Lifecycle rules: configure a sliding window for moving logs from standard
   # storage to standard Infrequent Access, then to glacier, then deleting them.
   # The rules will only be enabled if the lifecycle day threshold is set to a

@@ -147,6 +147,8 @@ resource "aws_s3_bucket_acl" "ssm_logs" {
 resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {
   bucket = aws_s3_bucket.ssm_logs.id
 
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
   rule {
     id     = "expire"
     status = "Enabled"
