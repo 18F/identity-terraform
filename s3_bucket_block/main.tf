@@ -99,14 +99,18 @@ resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
   for_each = var.bucket_data
   bucket   = aws_s3_bucket.bucket[each.key]
 
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
   dynamic "rule" {
     for_each = can(each.value.lifecycle_rules) ? each.value.lifecycle_rules : []
     content {
       id     = lifecycle_rule.value["id"]
       status = lifecycle_rule.value["status"]
+
       filter {
         prefix = lifecycle_rule.value["prefix"]
       }
+
       dynamic "transition" {
         for_each = lifecycle_rule.value["transitions"]
         content {
@@ -114,6 +118,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
           storage_class = transition.value["storage_class"]
         }
       }
+
       dynamic "expiration" {
         for_each = can(lifecycle_rule.value["expiration_days"]) ? [lifecycle_rule.value["expiration_days"]] : []
         content {

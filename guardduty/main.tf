@@ -256,22 +256,30 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "guardduty" {
 resource "aws_s3_bucket_lifecycle_configuration" "guardduty" {
   bucket = aws_s3_bucket.guardduty.id
 
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
   rule {
     id     = "expire"
     status = "Enabled"
+
     filter {
       prefix = "/"
     }
 
     transition {
+      days          = 0
       storage_class = "INTELLIGENT_TIERING"
     }
+
     noncurrent_version_transition {
-      storage_class = "INTELLIGENT_TIERING"
+      noncurrent_days = 0
+      storage_class   = "INTELLIGENT_TIERING"
     }
+
     expiration {
       days = 2190
     }
+
     noncurrent_version_expiration {
       noncurrent_days = 2190
     }

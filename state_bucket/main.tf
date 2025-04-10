@@ -49,6 +49,8 @@ resource "aws_s3_bucket_acl" "s3-access-logs" {
 resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
   bucket = aws_s3_bucket.s3-access-logs.id
 
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
   rule {
     id     = "expirelogs"
     status = "Enabled"
@@ -58,15 +60,20 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3-access-logs" {
     }
 
     transition {
+      days          = 0
       storage_class = "INTELLIGENT_TIERING"
     }
+
     noncurrent_version_transition {
-      storage_class = "INTELLIGENT_TIERING"
+      noncurrent_days = 0
+      storage_class   = "INTELLIGENT_TIERING"
     }
+
     expiration {
       # 5 years
       days = 1825
     }
+
     noncurrent_version_expiration {
       noncurrent_days = 1825
     }
@@ -108,23 +115,30 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf-state" {
   count  = var.remote_state_enabled
   bucket = data.aws_s3_bucket.tf-state[count.index].id
 
+  transition_default_minimum_object_size = "all_storage_classes_128K"
+
   rule {
     id     = "TierAndExpire"
     status = "Enabled"
 
-    filter {}
+    filter {
+      prefix = ""
+    }
 
     transition {
       days          = 90
       storage_class = "INTELLIGENT_TIERING"
     }
+
     noncurrent_version_transition {
       noncurrent_days = 90
       storage_class   = "INTELLIGENT_TIERING"
     }
+
     expiration {
       days = 2557 # 7 years
     }
+
     noncurrent_version_expiration {
       noncurrent_days = 2557 # 7 years
     }
@@ -179,26 +193,34 @@ resource "aws_s3_bucket_versioning" "inventory" {
     status = "Enabled"
   }
 }
+
 resource "aws_s3_bucket_lifecycle_configuration" "inventory" {
   bucket = aws_s3_bucket.inventory.id
+
+  transition_default_minimum_object_size = "all_storage_classes_128K"
 
   rule {
     id     = "TierAndExpire"
     status = "Enabled"
 
-    filter {}
+    filter {
+      prefix = ""
+    }
 
     transition {
       days          = 90
       storage_class = "INTELLIGENT_TIERING"
     }
+
     noncurrent_version_transition {
       noncurrent_days = 90
       storage_class   = "INTELLIGENT_TIERING"
     }
+
     expiration {
       days = 2557 # 7 years
     }
+
     noncurrent_version_expiration {
       noncurrent_days = 2557 # 7 years
     }
