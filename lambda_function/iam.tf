@@ -21,6 +21,7 @@ resource "aws_iam_role" "lambda" {
   name_prefix        = local.role_name_prefix
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  description        = var.iam_role_description
 
   lifecycle {
     create_before_destroy = true

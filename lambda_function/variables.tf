@@ -110,6 +110,12 @@ If var.role_name_prefix is set, the module will use the name prefix instead of t
 EOM
 }
 
+variable "iam_role_description" {
+  default     = ""
+  description = "Description of the iam role associated with the lambda function"
+  type        = string
+}
+
 variable "schedule_expression" {
   default     = ""
   description = "Cron or rate expression to trigger lambda"
