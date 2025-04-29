@@ -8,3 +8,4 @@ htmlcov
 .coverage
 coverage.xml
 tmp
+.DS_Store
