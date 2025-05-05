@@ -1,0 +1,11 @@
+{
+  "Records": [
+    {
+      "Sns": {
+      "Message": "{ \"account\": \"100000000001\", \"detailType\": \"CodePipeline Pipeline Execution State Change\", \"region\": \"us-west-2\", \"source\": \"aws.codepipeline\", \"time\": \"2025-05-05T20:24:48Z\", \"notificationRuleArn\": \"arn:aws:codestar-notifications:us-west-2:100000000001:notificationrule/8554765b869f2601f2a73c4819abfc8e53b18e11\", \"detail\": { \"pipeline\": \"imagebuild-alpha-main-rails\", \"execution-id\": \"56bd28bc-37af-4c7b-bc69-6ef89a2d59f4\", \"start-time\": \"2025-05-05T20:05:08.896Z\", \"state\": \"FAILED\", \"version\": 4.0, \"pipeline-execution-attempt\": 1.0 }, \"resources\": [ \"arn:aws:codepipeline:us-west-2:100000000001:imagebuild-alpha-main-rails\" ], \"additionalAttributes\": { \"failedActionCount\": 1, \"failedActions\": [ { \"action\": \"Build\", \"additionalInformation\": \"Build terminated with state: FAILED. Phase: PRE_BUILD, Code: COMMAND_EXECUTION_ERROR, Message: Error while executing command: ./packer validate src/login-image-terraform.pkr.hcl. Reason: exit status 1\" } ], \"failedStage\": \"CodeBuild\" }}"
+      }
+    }
+  ]
+}
+
+

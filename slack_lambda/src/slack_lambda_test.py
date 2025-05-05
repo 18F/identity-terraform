@@ -43,21 +43,21 @@ class SlackNotificationsTest(unittest.TestCase):
         self.assertEqual(payload["blocks"], ["a", "b", "c"])
         self.assertEqual(payload["icon_emoji"], os.environ["slack_icon"])
 
-    def test_format_codebuild_message(self):
-        event = self.load_file("codebuild_message")
+    def test_format_codepipeline_message(self):
+        event = self.load_file("codepipeline_message")
         payload = SlackNotificationFormatter(
             event=event,
             default_slack_username=os.environ["slack_username"],
             default_slack_icon=os.environ["slack_icon"],
             slack_channel=os.environ["slack_channel"],
-        ).format_codebuild_message(
+        ).format_codepipeline_message(
             json.loads(event["Records"][0]["Sns"]["Message"]),
             slack_username="AWS CodePipeline",
         )
         self.assertEqual(payload["channel"], os.environ["slack_channel"])
         self.assertEqual(payload["username"], "AWS CodePipeline")
-        self.assertIn("with execution ID", payload["text"])
-        self.assertIn("b83a8ad1-f05c-4876-bb7a-485890298729", payload["text"])
+        self.assertIn("Execution ID", payload["text"])
+        self.assertIn("56bd28bc-37af-4c7b-bc69-6ef89a2d59f4", payload["text"])
         self.assertEqual(payload["icon_emoji"], os.environ["slack_icon"])
 
     def test_format_cloudwatch_alarm_message(self):

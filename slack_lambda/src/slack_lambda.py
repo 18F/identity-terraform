@@ -106,11 +106,35 @@ class SlackNotificationFormatter:
             slack_icon=slack_icon,
         )
 
-    def format_codebuild_message(self, data={}, slack_username="", slack_icon=""):
-        msgtext = f'auto-terraform: {data["detail"]["pipeline"]} pipeline {data["detail"]["state"]} with execution ID {data["detail"]["execution-id"]}'
+    # NOTE: CodePipeline updates MUST come from CodeStar Notifications as those are 'processed' events
+    def format_codepipeline_message(self, data={}, slack_username="", slack_icon=""):
+        details = data["additionalAttributes"]
+
+        slackAlarmEmoji = os.environ["slack_alarm_emoji"]
+        alertState = f"{slackAlarmEmoji} *FAILED:* "
+
+        blocks = [self.blocks_section(f'{alertState} *{data["detail"]["pipeline"]}*')]
+        detail_list = []
+        detail_list.append(f'Execution ID: `{data["detail"]["execution-id"]}`')
+        detail_list.append(f'*Stage:* {details["failedStage"]}')
+        detail_list.append(f'*Action:* {details["failedActions"][0]["action"]}')
+        detail_list.append(
+            f'*Details:* ```{details["failedActions"][0]["additionalInformation"]}```'
+        )
+        blocks.append(self.blocks_section("\n".join(detail_list)))
+
+        msgtext = "\n".join(
+            [
+                f'{alertState} *{data["detail"]["pipeline"]}*',
+                "\n".join(detail_list),
+            ]
+        )
 
         return self.compose_payload(
-            text=msgtext, slack_username=slack_username, slack_icon=slack_icon
+            text=msgtext,
+            blocks=blocks,
+            slack_username=slack_username,
+            slack_icon=slack_icon,
         )
 
     def format_lambda_monitor_notification(
@@ -301,10 +325,11 @@ def get_slack_message_payload(event):
         data = json.loads(eventmsg)
 
         if (
-            "detail-type" in data
-            and data["detail-type"] == "CodePipeline Pipeline Execution State Change"
+            "detailType" in data
+            and data["detailType"] == "CodePipeline Pipeline Execution State Change"
+            and data["detail"]["state"] == "FAILED"
         ):
-            return formatter.format_codebuild_message(
+            return formatter.format_codepipeline_message(
                 data,
                 slack_username="AWS CodePipeline",
             )
