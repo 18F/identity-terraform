@@ -12,6 +12,11 @@ output "lambda_role_name" {
   description = "The name of the IAM Role associated with the lambda"
 }
 
+output "lambda_role_arn" {
+  value       = aws_iam_role.lambda.arn
+  description = "The arn of the IAM Role associated with the lambda"
+}
+
 output "log_group_name" {
   value       = aws_cloudwatch_log_group.lambda.name
   description = "The name of the cloudwatch log group associated with the lambda"
