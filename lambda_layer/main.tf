@@ -12,6 +12,6 @@ resource "aws_lambda_layer_version" "lambda_layer" {
   layer_name = var.layer_name
 
   compatible_runtimes = var.compatible_runtimes
-  source_code_hash = module.layer_archive.zip_output_base64sha256
+  source_code_hash    = module.layer_archive.zip_output_base64sha256
 
 }
