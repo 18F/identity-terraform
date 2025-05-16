@@ -1,35 +1,3 @@
-variable "env_name" {
-  description = "Environment name, for prefixing the generated metric names"
-}
-
-variable "log_group_name_override" {
-  default     = ""
-  description = "The name of the log group, overriding the default <env_name>_/var/log/squid/access.log"
-}
-
-variable "metric_namespace" {
-  description = "Namespace to use for created cloudwatch metrics"
-  default     = "LogMetrics/squid"
-}
-
-variable "treat_missing_data" {
-  description = "How to treat missing metric data in the denials alarm."
-  default     = "notBreaching"
-}
-
-variable "alarm_actions" {
-  type        = list(string)
-  description = "A list of ARNs to notify when the squid denied alarm fires"
-}
-
-variable "runbook_url" {
-  type        = string
-  description = "A URL to a runbook to help triage alerts"
-}
-
-locals {
-  log_group_name = var.log_group_name_override == "" ? "${var.env_name}_/var/log/squid/access.log" : var.log_group_name_override
-}
 
 resource "aws_cloudwatch_log_metric_filter" "squid_requests_total" {
   name           = "${var.env_name}-squid-requests-total"
@@ -56,7 +24,7 @@ resource "aws_cloudwatch_log_metric_filter" "squid_requests_denied" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "squid_denied_alarm" {
-  alarm_name        = "${var.env_name}-squid-denials"
+  alarm_name        = "${local.alarm_environment}-squid-denials"
   alarm_description = <<EOM
 The outbound proxy has denied too many outbound requests.
 
@@ -80,7 +48,7 @@ EOM
 }
 
 resource "aws_cloudwatch_metric_alarm" "squid_total_requests" {
-  alarm_name        = "${var.env_name}-squid-total-requests"
+  alarm_name        = "${local.alarm_environment}-squid-total-requests"
   alarm_description = <<EOM
 The outbound proxy throughput is below the expected volume.
 
