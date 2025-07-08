@@ -139,11 +139,11 @@ variable "encrypt_in_transit" {
 variable "general_notification_arn" {
   type        = string
   description = "(OPTIONAL) ARN of an SNS topic to send ElastiCache notifications to."
-  default     = ""
+  default     = null
 
   validation {
     condition = anytrue([
-      var.general_notification_arn == "",
+      var.general_notification_arn == null,
       can(regex(
         "^arn:aws:sns:\\w+(?:-\\w+)+:\\d{12}:[A-Za-z0-9]+(?:[-_\\/\\.+=,@][A-Za-z0-9]+)+$",
         var.general_notification_arn
