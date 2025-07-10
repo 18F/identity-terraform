@@ -167,18 +167,13 @@ variable "general_notification_arn" {
   }
 }
 
-variable "log_group_override" {
+variable "external_cloudwatch_log_group" {
   type        = string
   description = <<EOM
-Specific name of the CloudWatch Log Group used by the Redis cluster/replication group.
-Will use elasticache-var.env_name-redis if no value is specified for this var.
+Externally-created CloudWatch Log Group, to be used by the Redis cluster/replication group, if desired.
+Set/specify only if wanting to NOT create/manage the aws_cloudwatch_log_group.redis resource within THIS module.
 EOM
   default     = ""
-
-  validation {
-    condition     = var.log_group_override == "" ? length(var.env_name) > 0 : true
-    error_message = "Must specify var.env_name if not using var.log_group_override"
-  }
 }
 
 variable "cloudwatch_retention_days" {
