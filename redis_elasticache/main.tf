@@ -17,9 +17,12 @@ resource "aws_elasticache_parameter_group" "redis" {
   name   = "${local.cluster_id}-params-${var.family_name}"
   family = var.family_name
 
-  parameter {
-    name  = "maxmemory-policy"
-    value = "noeviction"
+  dynamic "parameter" {
+    for_each = var.group_parameters
+    content {
+      name  = parameter.value["name"]
+      value = parameter.value["value"]
+    }
   }
 }
 

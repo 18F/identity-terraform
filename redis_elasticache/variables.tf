@@ -90,6 +90,20 @@ variable "family_name" {
   }
 }
 
+variable "group_parameters" {
+  type        = list(map(string))
+  description = <<EOM
+List of ElastiCache parameters to provide override/customized values for, within the aws_elasticache_parameter_group
+resource. Parameter group will be created with default values if nothing is specified for this variable.
+EOM
+  default = [
+    #{
+    #  "name" = "maxmemory-policy",
+    #  "value" = "noeviction"
+    #},
+  ]
+}
+
 variable "num_cache_clusters" {
   type        = number
   description = "Number of cache clusters to create in the replication group."
