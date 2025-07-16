@@ -13,3 +13,8 @@ output "log_group" {
   value = var.external_cloudwatch_log_group == "" ? (
   aws_cloudwatch_log_group.redis[0].name) : var.external_cloudwatch_log_group
 }
+
+output "endpoint_address" {
+  description = "Primary endpoint address of the replication group"
+  value       = aws_elasticache_replication_group.redis.primary_endpoint_address
+}
