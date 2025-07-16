@@ -90,6 +90,20 @@ variable "family_name" {
   }
 }
 
+variable "group_parameters" {
+  type        = list(map(string))
+  description = <<EOM
+List of ElastiCache parameters to provide override/customized values for, within the aws_elasticache_parameter_group
+resource. Parameter group will be created with default values if nothing is specified for this variable.
+EOM
+  default = [
+    #{
+    #  "name" = "maxmemory-policy",
+    #  "value" = "noeviction"
+    #},
+  ]
+}
+
 variable "num_cache_clusters" {
   type        = number
   description = "Number of cache clusters to create in the replication group."
@@ -153,18 +167,13 @@ variable "general_notification_arn" {
   }
 }
 
-variable "log_group_override" {
+variable "external_cloudwatch_log_group" {
   type        = string
   description = <<EOM
-Specific name of the CloudWatch Log Group used by the Redis cluster/replication group.
-Will use elasticache-var.env_name-redis if no value is specified for this var.
+Externally-created CloudWatch Log Group, to be used by the Redis cluster/replication group, if desired.
+Set/specify only if wanting to NOT create/manage the aws_cloudwatch_log_group.redis resource within THIS module.
 EOM
   default     = ""
-
-  validation {
-    condition     = var.log_group_override == "" ? length(var.env_name) > 0 : true
-    error_message = "Must specify var.env_name if not using var.log_group_override"
-  }
 }
 
 variable "cloudwatch_retention_days" {

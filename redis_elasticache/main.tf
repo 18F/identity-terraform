@@ -4,7 +4,9 @@ locals {
 }
 
 resource "aws_cloudwatch_log_group" "redis" {
-  name              = var.log_group_override == "" ? "elasticache-${local.cluster_id}-redis" : var.log_group_override
+  count = var.external_cloudwatch_log_group == "" ? 1 : 0
+
+  name              = "elasticache-${local.cluster_id}-redis"
   retention_in_days = var.cloudwatch_retention_days
   skip_destroy      = var.prevent_tf_log_deletion
 
@@ -17,9 +19,12 @@ resource "aws_elasticache_parameter_group" "redis" {
   name   = "${local.cluster_id}-params-${var.family_name}"
   family = var.family_name
 
-  parameter {
-    name  = "maxmemory-policy"
-    value = "noeviction"
+  dynamic "parameter" {
+    for_each = var.group_parameters
+    content {
+      name  = parameter.value["name"]
+      value = parameter.value["value"]
+    }
   }
 }
 
@@ -45,7 +50,8 @@ resource "aws_elasticache_replication_group" "redis" {
   data_tiering_enabled = strcontains(var.node_type, local.data_tier_node_type)
 
   log_delivery_configuration {
-    destination      = aws_cloudwatch_log_group.redis.name
+    destination = var.external_cloudwatch_log_group == "" ? (
+    aws_cloudwatch_log_group.redis[0].name) : var.external_cloudwatch_log_group
     destination_type = "cloudwatch-logs"
     log_format       = "text"
     log_type         = "engine-log"
