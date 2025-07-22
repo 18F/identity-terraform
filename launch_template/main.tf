@@ -1,3 +1,5 @@
+data "aws_default_tags" "current" {}
+
 resource "aws_launch_template" "template" {
   name_prefix = "${var.env}-${var.role}"
 
@@ -47,17 +49,20 @@ resource "aws_launch_template" "template" {
         domain = "${var.env}.${var.root_domain}"
       },
       var.instance_tags,
+      data.aws_default_tags.current.tags
     )
   }
 
   tag_specifications {
     resource_type = "volume"
-    tags = {
+    tags = merge({
       Name        = "asg-${var.env}-${var.role}"
       prefix      = var.role
       domain      = "${var.env}.${var.root_domain}"
       environment = var.env
-    }
+      },
+      data.aws_default_tags.current.tags
+    )
   }
 
   tags = merge(
@@ -66,6 +71,7 @@ resource "aws_launch_template" "template" {
       "domain" = "${var.env}.${var.root_domain}"
     },
     var.template_tags,
+    data.aws_default_tags.current.tags
   )
 
   # TF12 syntax requires using a dynamic block in order to set var.block_device_mappings
