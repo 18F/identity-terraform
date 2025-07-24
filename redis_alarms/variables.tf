@@ -66,7 +66,7 @@ EOM
   validation {
     condition = alltrue([
       for arn in var.high_alarm_action_arns : can(regex(
-        "^arn:aws:[a-z0-9]+:\\w+(?:-\\w+)+:\\d{12}:[A-Za-z0-9]+(?:[-_\\/\\.+=,@][A-Za-z0-9]+)+$", arn
+        "^arn:aws:[a-z0-9]+:\\w+(?:-\\w+)+:\\d{12}:[A-Za-z0-9]+(?:[-_\\:\\/\\.+=,@][A-Za-z0-9]+)+$", arn
       ))
     ])
     error_message = "All strings in list must be valid AWS ARNs."
@@ -83,7 +83,7 @@ EOM
   validation {
     condition = alltrue([
       for arn in var.critical_alarm_action_arns : can(regex(
-        "^arn:aws:[a-z0-9]+:\\w+(?:-\\w+)+:\\d{12}:[A-Za-z0-9]+(?:[-_\\/\\.+=,@][A-Za-z0-9]+)+$", arn
+        "^arn:aws:[a-z0-9]+:\\w+(?:-\\w+)+:\\d{12}:[A-Za-z0-9]+(?:[-_\\:\\/\\.+=,@][A-Za-z0-9]+)+$", arn
       ))
     ])
     error_message = "All strings in var.critical_alarm_action_arns must be valid AWS ARNs"
