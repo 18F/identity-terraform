@@ -67,7 +67,7 @@ module "alarms" {
     for i in range(1, (var.num_cache_clusters + 1)) : format("%s-%03d", local.cluster_id, i)
   ])
 
-  source = "github.com/18F/identity-terraform//redis_alarms?ref=027f6768be52cb1b9ea52c09dc091b08ca104b13"
+  source = "github.com/18F/identity-terraform//redis_alarms?ref=28994c76cf074bbc45b88e9f038ce96a4e492198"
   #source = "../redis_alarms"
 
   cluster_id                 = each.key
