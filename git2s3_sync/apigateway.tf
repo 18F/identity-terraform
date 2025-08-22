@@ -92,7 +92,7 @@ resource "aws_api_gateway_rest_api" "webhook" {
             httpMethod          = "POST"
             uri = join("", [
               "arn:aws:apigateway:",
-              data.aws_region.current.name,
+              data.aws_region.current.region,
               ":lambda:path//2015-03-31/functions/",
               module.lambda_git2s3.lambda_arn,
               "/invocations"

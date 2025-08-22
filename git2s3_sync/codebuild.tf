@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "codebuild_base" {
     ]
     resources = [join(":", [
       "arn:aws:logs",
-      data.aws_region.current.name,
+      data.aws_region.current.region,
       data.aws_caller_identity.current.account_id,
       "log-group:/aws/codebuild/*"
     ])]
@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "codebuild_endpoint" {
     ]
     resources = [join(":", [
       "arn:aws:ec2",
-      data.aws_region.current.name,
+      data.aws_region.current.region,
       data.aws_caller_identity.current.account_id,
       "network-interface/*"
     ])]

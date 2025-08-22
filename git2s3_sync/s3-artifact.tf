@@ -4,7 +4,7 @@ locals {
       var.bucket_name_prefix,
       "public-artifacts",
       data.aws_caller_identity.current.account_id,
-      data.aws_region.current.name
+      data.aws_region.current.region
     ]
   ) : var.artifact_bucket_name
 }
@@ -75,7 +75,7 @@ module "s3_config_artifact" {
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.artifact_bucket.id
-  region               = data.aws_region.current.name
+  region               = data.aws_region.current.region
   inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
   logging_bucket_id    = local.log_bucket
 }

@@ -1,7 +1,7 @@
 # Locals
 
 locals {
-  region       = data.aws_region.current.name
+  region       = data.aws_region.current.region
   dest_acct_id = data.aws_caller_identity.current.account_id
 
   identifier_name = var.role_name == "" ? (

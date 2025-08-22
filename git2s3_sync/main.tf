@@ -12,7 +12,7 @@ locals {
     [
       var.bucket_name_prefix,
       "s3-access-logs",
-      "${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}"
+      "${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}"
     ]
   )
 
@@ -20,7 +20,7 @@ locals {
     [
       var.bucket_name_prefix,
       "s3-inventory",
-      "${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}"
+      "${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}"
     ]
   )
 

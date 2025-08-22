@@ -29,7 +29,7 @@ module "smart_archive_file" {
 }
 
 resource "aws_lambda_function" "sample_lambda" {
-  function_name    = "${var.env}-sample-lambda-${data.aws_region.current.name}"
+  function_name    = "${var.env}-sample-lambda-${data.aws_region.current.region}"
   description      = "Sample AWS Lambda Function"
   filename         = module.smart_archive_file.zip_output_path
   source_code_hash = module.smart_archive_file.zip_output_base64sha256
@@ -43,7 +43,7 @@ resource "aws_lambda_function" "sample_lambda" {
       env             = "${var.env}"
       log_group_name  = aws_cloudwatch_log_group.example_log_group.name
       log_stream_name = aws_cloudwatch_log_stream.example_log_stream.name
-      region          = data.aws_region.current.name
+      region          = data.aws_region.current.region
     }
   }
 

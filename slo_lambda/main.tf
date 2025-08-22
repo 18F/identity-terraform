@@ -139,7 +139,7 @@ resource "aws_cloudwatch_dashboard" "sli" {
           "metrics" : [
             [local.namespace, "${var.sli_prefix}-${k}"]
           ]
-          "region" : data.aws_region.current.name
+          "region" : data.aws_region.current.region
           "title" : "${v.description != null ? v.description : k} over last ${var.window_days} days"
           "stat" : "Average"
           "period" : 24 * 60 * 60
