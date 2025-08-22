@@ -6,22 +6,31 @@ resource "aws_guardduty_detector" "main" {
   enable = true
 
   finding_publishing_frequency = var.finding_freq
+}
 
-  datasources {
-    s3_logs {
-      enable = var.s3_enable
-    }
-    kubernetes {
-      audit_logs {
-        enable = var.k8s_audit_enable
-      }
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          enable = var.ec2_ebs_enable
-        }
-      }
+resource "aws_guardduty_detector_feature" "main" {
+  for_each = setsubtract(
+    var.enabled_features,
+    distinct(flatten([keys(local.features_additional), values(local.features_additional)]))
+  )
+
+  detector_id = aws_guardduty_detector.main.id
+  name        = each.key
+  status      = "ENABLED"
+}
+
+resource "aws_guardduty_detector_feature" "additional" {
+  for_each = setintersection(var.enabled_features, keys(local.features_additional))
+
+  detector_id = aws_guardduty_detector.main.id
+  name        = each.key
+  status      = "ENABLED"
+
+  dynamic "additional_configuration" {
+    for_each = setintersection(var.enabled_features, local.features_additional[each.key])
+    content {
+      name   = additional_configuration.value
+      status = "ENABLED"
     }
   }
 }

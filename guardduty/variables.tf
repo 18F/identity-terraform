@@ -20,6 +20,17 @@ locals {
     var.inventory_bucket_arn) : join(".",
     ["arn:aws:s3:::${var.bucket_name_prefix}", "s3-inventory", local.bucket_name_suffix]
   )
+
+  features_additional = {
+    "EKS_RUNTIME_MONITORING" = [
+      "EKS_ADDON_MANAGEMENT"
+    ],
+    "RUNTIME_MONITORING" = [
+      "EKS_ADDON_MANAGEMENT",
+      "ECS_FARGATE_AGENT_MANAGEMENT",
+      "EC2_AGENT_MANAGEMENT"
+    ]
+  }
 }
 
 # Variables
@@ -28,6 +39,46 @@ variable "region" {
   type        = string
   description = "AWS Region for the module."
   default     = "us-west-2"
+}
+
+variable "enabled_features" {
+  type        = list(string)
+  description = "List of GuardDuty Features to set to ENABLED for the aws_guardduty_detector.main resource."
+  default     = []
+
+  validation {
+    condition = anytrue([
+      length(var.enabled_features) == 0,
+      alltrue([for feature in var.enabled_features : contains([
+        "S3_DATA_EVENTS",
+        "EKS_AUDIT_LOGS",
+        "EBS_MALWARE_PROTECTION",
+        "RDS_LOGIN_EVENTS",
+        "EKS_RUNTIME_MONITORING",
+        "LAMBDA_NETWORK_LOGS",
+        "RUNTIME_MONITORING",
+        "EKS_ADDON_MANAGEMENT",
+        "ECS_FARGATE_AGENT_MANAGEMENT",
+        "EC2_AGENT_MANAGEMENT"
+      ], feature)])
+    ])
+    error_message = <<EOM
+Invalid Feature name(s) detected in list. Must be empty (no features enabled), or contain one or more of the following:
+
+"S3_DATA_EVENTS", "EKS_AUDIT_LOGS", "EBS_MALWARE_PROTECTION", "RDS_LOGIN_EVENTS",
+"EKS_RUNTIME_MONITORING", "LAMBDA_NETWORK_LOGS", "RUNTIME_MONITORING", "EKS_ADDON_MANAGEMENT",
+"ECS_FARGATE_AGENT_MANAGEMENT", and/or "EC2_AGENT_MANAGEMENT".
+EOM
+  }
+
+  validation {
+    condition = length([
+      for feature in var.enabled_features : true if contains(
+        ["RUNTIME_MONITORING", "EKS_RUNTIME_MONITORING"], feature
+      )
+    ]) < 2
+    error_message = "Cannot enable both RUNTIME_MONITORING and EKS_RUNTIME_MONITORING; select one or the other."
+  }
 }
 
 variable "bucket_name" {
@@ -77,30 +128,6 @@ variable "finding_freq" {
   type        = string
   description = "Frequency of notifications for GuardDuty findings."
   default     = "SIX_HOURS"
-}
-
-variable "s3_enable" {
-  type        = bool
-  description = "Whether or not to enable S3 protection in GuardDuty."
-  default     = false
-}
-
-variable "k8s_audit_enable" {
-  type        = bool
-  description = <<EOM
-Whether or not to enable Kubernetes audit logs as a data source
-for Kubernetes protection (via GuardDuty).
-EOM
-  default     = false
-}
-
-variable "ec2_ebs_enable" {
-  type        = bool
-  description = <<EOM
-Whether or not to enable Malware Protection (via scanning EBS volumes)
-as a data source for EC2 instances (via GuardDuty).
-EOM
-  default     = false
 }
 
 variable "cloudwatch_name" {
