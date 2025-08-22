@@ -66,7 +66,7 @@ resource "aws_iam_role_policy_attachment" "windowed_slo_lambda_execution_role" {
 }
 
 module "lambda_zip" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "github.com/18F/identity-terraform//null_archive?ref=185bba6064e480379fb4f4e58c9489c9085b3a65"
   #source = "../null_archive"
 
   source_code_filename = "windowed_slo.py"

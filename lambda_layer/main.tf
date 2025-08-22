@@ -1,5 +1,5 @@
 module "layer_archive" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=6cdd1037f2d1b14315cc8c59b889f4be557b9c17"
+  source = "github.com/18F/identity-terraform//null_archive?ref=185bba6064e480379fb4f4e58c9489c9085b3a65"
   #source = "../null_archive"
 
   source_code_filename = var.source_code_filename

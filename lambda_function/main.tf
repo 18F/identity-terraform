@@ -13,7 +13,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
 }
 
 module "lambda_code" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=2d05076e1d089d9e9ab251fa0f11a2e2ceb132a3"
+  source = "github.com/18F/identity-terraform//null_archive?ref=185bba6064e480379fb4f4e58c9489c9085b3a65"
   #source = "../../../../identity-terraform/null_archive"
 
   source_code_filename = var.source_code_filename
