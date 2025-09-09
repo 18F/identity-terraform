@@ -29,7 +29,7 @@ resource "aws_kms_replica_key" "cloudtrail" {
 resource "aws_kms_alias" "cloudtrail_replica" {
   for_each = var.is_multi_region_trail ? setsubtract(var.kms_regions, [data.aws_region.current.region]) : []
 
-  name          = "alias/sns-kms"
+  name          = "alias/${var.trail_name}"
   region        = each.key
   target_key_id = aws_kms_replica_key.cloudtrail[each.key].key_id
 }
