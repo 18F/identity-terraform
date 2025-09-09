@@ -55,6 +55,17 @@ resource "aws_iam_role_policy" "lambda" {
   }
 }
 
+data "aws_iam_policy" "lambda_vpc_access" {
+  count = length(var.subnet_ids) > 0 ? 1 : 0
+  name  = "AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_vpc" {
+  count      = length(var.subnet_ids) > 0 ? 1 : 0
+  role       = aws_iam_role.lambda.id
+  policy_arn = data.aws_iam_policy.lambda_vpc_access[count.index].arn
+}
+
 resource "aws_iam_role_policy_attachment" "lambda_insights" {
   count      = var.insights_enabled ? 1 : 0
   role       = aws_iam_role.lambda.id

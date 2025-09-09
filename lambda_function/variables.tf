@@ -63,6 +63,7 @@ variable "environment_variables" {
 }
 
 variable "reserved_concurrent_executions" {
+  type        = number
   description = "The max number concurrent invocations allowed for the Lambda"
   default     = -1
 }
@@ -243,3 +244,22 @@ variable "duration_alarm_description" {
   description = "Overrides the default alarm description for duration alarm"
   default     = ""
 }
+
+variable "subnet_ids" {
+  type        = list(string)
+  default     = []
+  description = "A list of subnet IDs for the lambda function to operate in."
+
+  validation {
+    condition     = length(var.subnet_ids) == 0 || length(var.security_group_ids) > 0
+    error_message = "If 'subnet_ids' is provided, 'security_group_ids' must also be provided."
+  }
+}
+
+variable "security_group_ids" {
+  type        = list(string)
+  default     = []
+  description = "A list of security group IDs to attach to the lambda."
+
+}
+
