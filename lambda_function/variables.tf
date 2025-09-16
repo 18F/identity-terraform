@@ -9,7 +9,7 @@ variable "function_name" {
   type        = string
 
   validation {
-    condition = length(var.function_name) > 0 && length(var.function_name) <= 64
+    condition     = length(var.function_name) > 0 && length(var.function_name) <= 64
     error_message = "function_name must be a non-empty string with max length 64."
   }
 }
@@ -67,7 +67,7 @@ variable "runtime" {
   type        = string
 
   validation {
-    condition = length(trimspace(var.runtime)) > 0
+    condition     = length(trimspace(var.runtime)) > 0
     error_message = "runtime must be a non-empty string."
   }
 }
