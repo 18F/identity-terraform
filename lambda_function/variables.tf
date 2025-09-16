@@ -7,11 +7,21 @@ variable "region" {
 variable "function_name" {
   description = "Name of the Lambda function"
   type        = string
+
+  validation {
+    condition = length(var.function_name) > 0 && length(var.function_name) <= 64
+    error_message = "function_name must be a non-empty string with max length 64."
+  }
 }
 
 variable "description" {
   description = "Description of the Lambda function"
   type        = string
+
+  validation {
+    condition     = length(var.description) > 0 && length(var.description) <= 256
+    error_message = "description must be a non-empty string with max length 256 characters."
+  }
 }
 
 variable "handler" {
@@ -29,11 +39,21 @@ variable "handler_function_name" {
 variable "source_code_filename" {
   description = "Name of the file containing the Lambda source code"
   type        = string
+
+  validation {
+    condition     = length(var.source_code_filename) > 0
+    error_message = "source_code_filename must be a non-empty string."
+  }
 }
 
 variable "source_dir" {
   description = "Directory containing the Lambda source code"
   type        = string
+
+  validation {
+    condition     = length(var.source_dir) > 0
+    error_message = "source_dir must be a non-empty string."
+  }
 }
 
 variable "memory_size" {
@@ -45,6 +65,11 @@ variable "memory_size" {
 variable "runtime" {
   description = "Lambda function runtime"
   type        = string
+
+  validation {
+    condition = length(trimspace(var.runtime)) > 0
+    error_message = "runtime must be a non-empty string."
+  }
 }
 
 variable "timeout" {
@@ -60,6 +85,11 @@ variable "environment_variables" {
   `jsonencode`ed.
   EOM
   type        = map(any)
+
+  validation {
+    condition     = alltrue([for k, v in var.environment_variables : length(k) > 0 && can(tostring(v))])
+    error_message = "Each environment variable must have a non-empty key and a value convertible to string."
+  }
 }
 
 variable "reserved_concurrent_executions" {
@@ -144,6 +174,11 @@ variable "env_name" {
 variable "alarm_actions" {
   description = "ARNs for Cloudwatch Alarm actions"
   type        = list(any)
+
+  validation {
+    condition     = alltrue([for action in var.alarm_actions : length(trimspace(action)) > 0])
+    error_message = "Each alarm action must be a non-empty string."
+  }
 }
 
 variable "ok_actions" {
