@@ -3,6 +3,11 @@ output "member_clusters" {
   value       = aws_elasticache_replication_group.redis.member_clusters
 }
 
+output "port" {
+  description = "Port number of the Redis replication group"
+  value       = aws_elasticache_replication_group.redis.port
+}
+
 output "group_id" {
   description = "IDs of cache clusters in Redis replication group"
   value       = aws_elasticache_replication_group.redis.id
