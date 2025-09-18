@@ -12,9 +12,10 @@
     detect-secrets
     git
     glab
-    shfmt
-    tflint
     nixfmt-rfc-style
+    shfmt
+    terraform-docs
+    tflint
   ];
 
   languages = {
@@ -34,6 +35,16 @@
         "--baseline"
         ".secrets.baseline"
       ];
+    };
+    terraform-format.enable = true;
+    terraform-docs = {
+      enable = true;
+      name = "terraform-docs";
+      description = "Generate documentation for Terraform modules (via locally-installed CLI)";
+      language = "system";
+      entry = "terraform-docs";
+      pass_filenames = false;
+      types = [ "terraform" ];
     };
   };
 }
