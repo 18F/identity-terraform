@@ -6,7 +6,6 @@ locals {
     "LambdaInsightsExtension:${var.lambda_insights_version}"
   ])
 
-  kinesis_stream_name         = "${var.env_name}-kms-app-events"
   ct_processor_lambda_name    = "${var.env_name}-cloudtrail-kms"
   ct_requeue_lambda_name      = "${var.env_name}-kms-cloudtrail-requeue"
   cw_processor_lambda_name    = "${var.env_name}-cloudwatch-kms"
