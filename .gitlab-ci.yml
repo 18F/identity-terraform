@@ -103,3 +103,4 @@ lambda-lint:
         - "**/src/*"
 variables:
   ECR_REGISTRY: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
+  SECURE_ANALYZERS_PREFIX: "$ECR_REGISTRY/gitlab/security-products"
