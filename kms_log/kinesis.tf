@@ -1,6 +1,6 @@
 # create kinesis data stream for application kms events
 resource "aws_kinesis_stream" "datastream" {
-  name        = local.kinesis_stream_name
+  name        = "${var.env_name}-kms-app-events"
   shard_count = var.kinesis_shard_count
 
   retention_period = var.kinesis_retention_hours
@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "cloudwatch_access" {
 
 # kinesis role
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
-  name               = local.kinesis_stream_name
+  name               = "${var.env_name}-kms-app-events"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role_kinesis.json
 }
@@ -65,11 +65,13 @@ resource "aws_iam_role_policy" "cloudwatch_access" {
 
 # set cloudwatch destination
 resource "aws_cloudwatch_log_destination" "datastream" {
-  name       = local.kinesis_stream_name
+  name       = "${var.env_name}-kms-app-events"
   role_arn   = aws_iam_role.cloudwatch_to_kinesis.arn
   target_arn = aws_kinesis_stream.datastream.arn
 
   depends_on = [
+    aws_iam_role.cloudwatch_to_kinesis,
+    aws_iam_role_policy.cloudwatch_access,
     aws_kinesis_stream.datastream
   ]
 }
