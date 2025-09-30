@@ -348,3 +348,9 @@ variable "duration_alarm_description" {
   description = "Overrides the default alarm description for duration alarm"
   default     = ""
 }
+
+variable "dead_letter_config" {
+  type        = map(string)
+  default     = {}
+  description = "Optional dead-letter configuration for the Lambda. Example: { target_arn = \"arn:aws:sqs:...\" }"
+}
