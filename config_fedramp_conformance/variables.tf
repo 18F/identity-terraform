@@ -1,3 +1,9 @@
+variable "region" {
+  type        = string
+  description = "AWS Region"
+  default     = "us-west-2"
+}
+
 variable "s3_account_level_public_access_blocks_block_public_acls" {
   description = "S3 Public access block set to block public acls"
   type        = string
