@@ -1,7 +1,7 @@
 module "lambda_insights" {
-  count  = var.insights_enabled ? 1 : 0
-  source = "github.com/18F/identity-terraform//lambda_insights?ref=5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9"
-  #source = "../../../../identity-terraform/lambda_insights"
+  count = var.insights_enabled ? 1 : 0
+  #source = "github.com/18F/identity-terraform//lambda_insights?ref=5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9"
+  source = "../../identity-terraform/lambda_insights"
 
   region = var.region
 }

@@ -9,11 +9,15 @@
 
 locals {
   layer_arn = join(":", [
-    "arn:aws:lambda:${var.region}:${var.lambda_insights_account}:layer",
+    "arn:${local.partition}:lambda:${var.region}:${var.lambda_insights_account}:layer",
     "LambdaInsightsExtension:${var.lambda_insights_version}"
   ])
+
+  partition = contains(["us-gov-west-1"], data.aws_region.current.region) ? "aws-us-gov" : "aws"
 }
 
+data "aws_region" "current" {}
+
 data "aws_iam_policy" "insights" {
-  arn = "arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy"
+  arn = "arn:${local.partition}:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy"
 }

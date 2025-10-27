@@ -8,10 +8,14 @@ locals {
       aws_s3_bucket.s3-access-logs.arn,
     ], local.tf-state_bucket_arn
   )
+
+  partition = contains(["us-gov-west-1", "us-gov-east-1"], data.aws_region.current.region) ? "aws-us-gov" : "aws"
 }
 
 data "aws_caller_identity" "current" {
 }
+
+data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "inventory_bucket_policy" {
   source_policy_documents = [
@@ -27,7 +31,7 @@ data "aws_iam_policy_document" "inventory_bucket_policy" {
       identifiers = ["s3.amazonaws.com"]
     }
     resources = [
-      "arn:aws:s3:::${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/*"
+      "arn:${local.partition}:s3:::${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}/*"
     ]
     condition {
       test     = "StringEquals"

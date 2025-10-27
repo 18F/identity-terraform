@@ -1,5 +1,11 @@
 data "aws_caller_identity" "current" {}
 
+data "aws_region" "current" {}
+
+
+locals {
+  partition = contains(["us-gov-east-1", "us-gov-west-1"], data.aws_region.current.region) ? "aws-us-gov" : "aws"
+}
 # GuardDuty
 
 resource "aws_guardduty_detector" "main" {
@@ -58,7 +64,7 @@ data "aws_iam_policy_document" "guardduty_kms" {
     ]
 
     resources = [
-      "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:${local.partition}:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
@@ -82,7 +88,7 @@ data "aws_iam_policy_document" "guardduty_kms" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "arn:${local.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       ]
     }
     actions = [
@@ -349,7 +355,7 @@ data "aws_iam_policy_document" "delivery_events_logs" {
     ]
 
     resources = [
-      "arn:aws:logs:*:*:*"
+      "arn:${local.partition}:logs:*:*:*"
     ]
     principals {
       identifiers = [
