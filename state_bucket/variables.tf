@@ -1,9 +1,3 @@
-locals {
-  log_bucket       = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
-  state_bucket     = "${var.bucket_name_prefix}.tf-state.${data.aws_caller_identity.current.account_id}-${var.region}"
-  inventory_bucket = "${var.bucket_name_prefix}.s3-inventory.${data.aws_caller_identity.current.account_id}-${var.region}"
-}
-
 variable "bucket_name_prefix" {
   description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
   type        = string

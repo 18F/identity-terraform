@@ -1,5 +1,5 @@
 output "s3_access_log_bucket" {
-  value       = aws_s3_bucket.s3-access-logs.id
+  value       = aws_s3_bucket.s3_access_logs.id
   description = "ID/Name of the S3 Access Logging Bucket"
 }
 
