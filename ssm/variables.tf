@@ -106,6 +106,12 @@ EOM
   default     = ""
 }
 
+variable "force_destroy" {
+  description = "(OPTIONAL) Allow destruction of the ssm_logs S3 bucket, even if it contains objects."
+  type        = bool
+  default     = false
+}
+
 locals {
   bucket_name_suffix = "${data.aws_caller_identity.current.account_id}-${var.region}"
   s3_bucket_name     = "${var.bucket_name_prefix}.${var.env_name}-ssm-logs.${local.bucket_name_suffix}"

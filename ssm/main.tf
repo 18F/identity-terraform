@@ -91,8 +91,8 @@ resource "aws_kms_alias" "kms_ssm" {
 
 # S3 bucket w/KMS key encryption for SSM access logs
 resource "aws_s3_bucket" "ssm_logs" {
-  bucket = local.s3_bucket_name
-
+  bucket        = local.s3_bucket_name
+  force_destroy = var.force_destroy
   tags = {
     environment = var.env_name
   }
