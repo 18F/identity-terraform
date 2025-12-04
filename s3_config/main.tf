@@ -73,7 +73,9 @@ data "aws_caller_identity" "current" {
 
 # -- Resources --
 resource "aws_s3_bucket_public_access_block" "public_block" {
-  bucket                  = local.bucket_fullname
+  bucket = local.bucket_fullname
+  region = var.region
+
   block_public_acls       = var.block_public_access
   block_public_policy     = var.block_public_access
   ignore_public_acls      = var.block_public_access
@@ -81,8 +83,9 @@ resource "aws_s3_bucket_public_access_block" "public_block" {
 }
 
 resource "aws_s3_bucket_inventory" "daily" {
-  depends_on               = [aws_s3_bucket_public_access_block.public_block]
-  bucket                   = local.bucket_fullname
+  bucket = local.bucket_fullname
+  region = var.region
+
   name                     = "FullBucketDailyInventory"
   included_object_versions = "All"
 
@@ -98,10 +101,15 @@ resource "aws_s3_bucket_inventory" "daily" {
   }
 
   optional_fields = var.optional_fields
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.public_block
+  ]
 }
 
 resource "aws_s3_bucket_logging" "access_logging" {
   bucket = local.bucket_fullname
+  region = var.region
 
   target_bucket = var.logging_bucket_id
   target_prefix = "${local.bucket_fullname}/"
