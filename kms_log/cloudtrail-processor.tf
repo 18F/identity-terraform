@@ -153,7 +153,7 @@ resource "aws_lambda_function" "cloudtrail_processor" {
   description   = "KMS CT Log Processor"
   role          = aws_iam_role.cloudtrail_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
-  runtime       = "ruby3.2"
+  runtime       = "ruby3.4"
   timeout       = 120 # seconds
 
   layers = [

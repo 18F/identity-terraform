@@ -99,7 +99,7 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   description   = "KMS CW Log Processor"
   role          = aws_iam_role.cloudwatch_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
-  runtime       = "ruby3.2"
+  runtime       = "ruby3.4"
   timeout       = 120 # seconds
 
   dead_letter_config {
