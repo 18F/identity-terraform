@@ -136,7 +136,7 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
   description   = "KMS CT Requeue Service"
   role          = aws_iam_role.cloudtrail_requeue.arn
   handler       = "main.IdentityKMSMonitor::CloudTrailRequeue.process"
-  runtime       = "ruby3.2"
+  runtime       = "ruby3.4"
   timeout       = 900 # 15 minutes
 
   layers = [

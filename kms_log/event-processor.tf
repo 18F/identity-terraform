@@ -151,7 +151,7 @@ resource "aws_lambda_function" "event_processor" {
   description   = "KMS Log Event Processor"
   role          = aws_iam_role.event_processor.arn
   handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
-  runtime       = "ruby3.2"
+  runtime       = "ruby3.4"
   timeout       = 120 # seconds
 
   layers = [
