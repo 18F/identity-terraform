@@ -151,8 +151,8 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
   starting_position      = "LATEST"
   parallelization_factor = 10
 
-  maximum_retry_attempts        = 3
-  maximum_record_age_in_seconds = 3600
+  maximum_retry_attempts         = 3
+  maximum_record_age_in_seconds  = 3600
   bisect_batch_on_function_error = true
 
   destination_config {
@@ -163,5 +163,5 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
 }
 
 resource "aws_sqs_queue" "kms_cloudwatch_dlq" {
-    name = "${local.cw_processor_lambda_name}-dlq"
+  name = "${local.cw_processor_lambda_name}-dlq"
 }
