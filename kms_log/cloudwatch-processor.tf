@@ -162,6 +162,6 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
   }
 }
 
-resource "aws_sqs_queue" "kms_cloudwatch_dlq" {
+resource "aws_sqs_queue" "cloudwatch_processor_dlq" {
   name = "${local.cw_processor_lambda_name}-dlq"
 }

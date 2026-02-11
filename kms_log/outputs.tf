@@ -33,3 +33,7 @@ output "unmatched-log-group" {
   description = "Name of the CloudWatch Log Group for unmatched events."
   value       = aws_cloudwatch_log_group.unmatched.name
 }
+
+output "cloudwatch_processor_dlq" {
+  value       = aws_sqs_queue.cloudwatch_processor_dlq.arn
+}
