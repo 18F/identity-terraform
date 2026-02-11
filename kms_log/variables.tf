@@ -206,6 +206,6 @@ variable "sqs_ok_actions" {
 
 variable "cloudwatch_processor_dlq" {
   type        = string
-  default    = null
+  default     = null
   description = "dead letter queue for cloudwatch processor lambda"
 }

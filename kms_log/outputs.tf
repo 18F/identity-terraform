@@ -35,5 +35,5 @@ output "unmatched-log-group" {
 }
 
 output "cloudwatch_processor_dlq" {
-  value       = aws_sqs_queue.cloudwatch_processor_dlq.arn
+  value = aws_sqs_queue.cloudwatch_processor_dlq.arn
 }
