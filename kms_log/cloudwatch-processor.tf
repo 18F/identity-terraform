@@ -102,6 +102,10 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
 
+  dead_letter_config {
+    target_arn = aws_sqs_queue.cloudwatch_processor_dlq.arn
+  }
+
   layers = [
     local.lambda_insights_arn
   ]
@@ -164,4 +168,42 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
 
 resource "aws_sqs_queue" "cloudwatch_processor_dlq" {
   name = "${local.cw_processor_lambda_name}-dlq"
+}
+
+resource "aws_cloudwatch_metric_alarm" "cloudwatch_processor_dlq_alarm" {
+  alarm_name          = "${local.cw_processor_lambda_name}-dlq-not-empty"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "DLQ has messages. Likely invalid JSON being sent to kms_cloudwatch_processor."
+
+  dimensions = {
+    QueueName = aws_sqs_queue.cloudwatch_processor_dlq.name
+  }
+
+  alarm_actions = var.alarm_sns_topic_arns
+  ok_actions    = var.alarm_sns_topic_arns
+}
+
+resource "aws_cloudwatch_metric_alarm" "cloudwatch_processor_lambda_errors" {
+  alarm_name          = "${local.cw_processor_lambda_name}-errors"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "Lambda is failing. Possible invalid JSON payload."
+
+  dimensions = {
+    FunctionName = aws_lambda_function.cloudwatch_processor.function_name
+  }
+
+  alarm_actions = var.alarm_sns_topic_arns
+  ok_actions    = var.alarm_sns_topic_arns
 }
