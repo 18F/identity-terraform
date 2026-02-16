@@ -167,7 +167,9 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
 }
 
 resource "aws_sqs_queue" "cloudwatch_processor_dlq" {
-  name = "${local.cw_processor_lambda_name}-dlq"
+  name                       = "${local.cw_processor_lambda_name}-dlq"
+  visibility_timeout_seconds = 300
+  message_retention_seconds  = 1209600 # 14 days
 }
 
 resource "aws_cloudwatch_metric_alarm" "cloudwatch_processor_dlq_alarm" {
