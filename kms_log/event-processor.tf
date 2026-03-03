@@ -146,13 +146,14 @@ resource "aws_cloudwatch_log_group" "event_processor" {
 }
 
 resource "aws_lambda_function" "event_processor" {
-  filename      = var.lambda_kms_event_processor_zip
-  function_name = local.event_processor_lambda_name
-  description   = "KMS Log Event Processor"
-  role          = aws_iam_role.event_processor.arn
-  handler       = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
-  runtime       = "ruby3.4"
-  timeout       = 120 # seconds
+  filename         = var.lambda_kms_event_processor_zip
+  function_name    = local.event_processor_lambda_name
+  description      = "KMS Log Event Processor"
+  source_code_hash = filebase64sha256(var.lambda_kms_event_processor_zip)
+  role             = aws_iam_role.event_processor.arn
+  handler          = "main.IdentityKMSMonitor::CloudWatchEventGenerator.process"
+  runtime          = "ruby3.4"
+  timeout          = 120 # seconds
 
   layers = [
     local.lambda_insights_arn

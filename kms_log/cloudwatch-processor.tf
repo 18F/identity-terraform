@@ -94,13 +94,14 @@ resource "aws_cloudwatch_log_group" "cloudwatch_processor" {
 }
 
 resource "aws_lambda_function" "cloudwatch_processor" {
-  filename      = var.lambda_kms_cw_processor_zip
-  function_name = local.cw_processor_lambda_name
-  description   = "KMS CW Log Processor"
-  role          = aws_iam_role.cloudwatch_processor.arn
-  handler       = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
-  runtime       = "ruby3.4"
-  timeout       = 120 # seconds
+  filename         = var.lambda_kms_cw_processor_zip
+  function_name    = local.cw_processor_lambda_name
+  description      = "KMS CW Log Processor"
+  source_code_hash = filebase64sha256(var.lambda_kms_cw_processor_zip)
+  role             = aws_iam_role.cloudwatch_processor.arn
+  handler          = "main.IdentityKMSMonitor::CloudWatchKMSHandler.process"
+  runtime          = "ruby3.4"
+  timeout          = 120 # seconds
 
   dead_letter_config {
     target_arn = aws_sqs_queue.cloudwatch_processor_dead_letter.arn
