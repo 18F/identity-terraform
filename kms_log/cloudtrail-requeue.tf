@@ -131,13 +131,14 @@ resource "aws_cloudwatch_log_group" "cloudtrail_requeue" {
 }
 
 resource "aws_lambda_function" "cloudtrail_requeue" {
-  filename      = var.lambda_kms_ct_requeue_zip
-  function_name = local.ct_requeue_lambda_name
-  description   = "KMS CT Requeue Service"
-  role          = aws_iam_role.cloudtrail_requeue.arn
-  handler       = "main.IdentityKMSMonitor::CloudTrailRequeue.process"
-  runtime       = "ruby3.4"
-  timeout       = 900 # 15 minutes
+  filename         = var.lambda_kms_ct_requeue_zip
+  function_name    = local.ct_requeue_lambda_name
+  description      = "KMS CT Requeue Service"
+  source_code_hash = filebase64sha256(var.lambda_kms_ct_requeue_zip)
+  role             = aws_iam_role.cloudtrail_requeue.arn
+  handler          = "main.IdentityKMSMonitor::CloudTrailRequeue.process"
+  runtime          = "ruby3.4"
+  timeout          = 900 # 15 minutes
 
   layers = [
     local.lambda_insights_arn

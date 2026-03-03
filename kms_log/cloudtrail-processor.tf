@@ -148,13 +148,14 @@ resource "aws_cloudwatch_log_group" "cloudtrail_processor" {
 }
 
 resource "aws_lambda_function" "cloudtrail_processor" {
-  filename      = var.lambda_kms_ct_processor_zip
-  function_name = local.ct_processor_lambda_name
-  description   = "KMS CT Log Processor"
-  role          = aws_iam_role.cloudtrail_processor.arn
-  handler       = "main.IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
-  runtime       = "ruby3.4"
-  timeout       = 120 # seconds
+  filename         = var.lambda_kms_ct_processor_zip
+  function_name    = local.ct_processor_lambda_name
+  description      = "KMS CT Log Processor"
+  source_code_hash = filebase64sha256(var.lambda_kms_ct_processor_zip)
+  role             = aws_iam_role.cloudtrail_processor.arn
+  handler          = "main.IdentityKMSMonitor::CloudTrailToDynamoHandler.process"
+  runtime          = "ruby3.4"
+  timeout          = 120 # seconds
 
   layers = [
     local.lambda_insights_arn
