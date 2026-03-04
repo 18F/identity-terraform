@@ -202,13 +202,14 @@ resource "aws_cloudwatch_log_group" "slack_processor" {
 }
 
 resource "aws_lambda_function" "slack_processor" {
-  filename      = var.lambda_slack_batch_processor_zip
-  function_name = local.slack_processor_lambda_name
-  description   = "KMS Slack Batch Processor"
-  role          = aws_iam_role.slack_processor.arn
-  handler       = "kms_slack_batch_processor.lambda_handler"
-  runtime       = "python3.12"
-  timeout       = 120 # seconds
+  filename         = var.lambda_slack_batch_processor_zip
+  function_name    = local.slack_processor_lambda_name
+  description      = "KMS Slack Batch Processor"
+  source_code_hash = var.lambda_slack_batch_processor_zip_base64sha256
+  role             = aws_iam_role.slack_processor.arn
+  handler          = "kms_slack_batch_processor.lambda_handler"
+  runtime          = "python3.12"
+  timeout          = 120 # seconds
 
   layers = [
     local.lambda_insights_arn

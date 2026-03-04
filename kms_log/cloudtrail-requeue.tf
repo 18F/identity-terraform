@@ -134,7 +134,7 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
   filename         = var.lambda_kms_ct_requeue_zip
   function_name    = local.ct_requeue_lambda_name
   description      = "KMS CT Requeue Service"
-  source_code_hash = filebase64sha256("${path.root}/${var.lambda_kms_ct_requeue_zip}")
+  source_code_hash = var.lambda_kms_ct_requeue_zip_base64sha256
   role             = aws_iam_role.cloudtrail_requeue.arn
   handler          = "main.IdentityKMSMonitor::CloudTrailRequeue.process"
   runtime          = "ruby3.4"
