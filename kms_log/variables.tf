@@ -142,6 +142,11 @@ variable "lambda_kms_cw_processor_zip" {
   description = "Lambda zip file providing source code for kms cloudwatch processor"
 }
 
+variable "lambda_kms_cw_processor_zip_base64sha256" {
+  description = "base64-encoded SHA256 checksum of lambda_kms_cw_processor_zip file"
+  type        = string
+}
+
 variable "cw_processor_memory_size" {
   type        = number
   description = "Defines the amount of memory in MB the CloudWatch Processor can use at runtime"
@@ -169,11 +174,21 @@ variable "lambda_kms_ct_processor_zip" {
   description = "Lambda zip file providing source code for kms cloudtrail processor"
 }
 
+variable "lambda_kms_ct_processor_zip_base64sha256" {
+  description = "base64-encoded SHA256 checksum of lambda_kms_ct_processor_zip file"
+  type        = string
+}
+
 ## Lambda KMS Cloudtrail Requeue Configuration
 
 variable "lambda_kms_ct_requeue_zip" {
   type        = string
   description = "Lambda zip file providing source code for kms cloudtrail requeue service"
+}
+
+variable "lambda_kms_ct_requeue_zip_base64sha256" {
+  description = "base64-encoded SHA256 checksum of lambda_kms_ct_requeue_zip file"
+  type        = string
 }
 
 variable "ct_requeue_concurrency" {
@@ -189,11 +204,21 @@ variable "lambda_kms_event_processor_zip" {
   description = "Lambda zip file providing source code for kms event processor"
 }
 
+variable "lambda_kms_event_processor_zip_base64sha256" {
+  description = "base64-encoded SHA256 checksum of lambda_kms_event_processor_zip file"
+  type        = string
+}
+
 ## Lambda KMS Slack Batch Processor Configuration
 
 variable "lambda_slack_batch_processor_zip" {
   type        = string
   description = "Lambda source code that batches KMS events for notification"
+}
+
+variable "lambda_slack_batch_processor_zip_base64sha256" {
+  description = "base64-encoded SHA256 checksum of lambda_slack_batch_processor_zip file"
+  type        = string
 }
 
 variable "sqs_alarm_actions" {
