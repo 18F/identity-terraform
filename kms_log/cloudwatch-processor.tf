@@ -37,6 +37,18 @@ data "aws_iam_policy_document" "cwprocessor" {
       aws_kinesis_stream.datastream.arn,
     ]
   }
+  statement {
+    sid    = "AllowSendMessageToDLQ"
+    effect = "Allow"
+
+    actions = [
+      "sqs:SendMessage"
+    ]
+
+    resources = [
+      aws_sqs_queue.cloudwatch_processor_dead_letter.arn
+    ]
+  }
 }
 
 resource "aws_iam_role" "cloudwatch_processor" {
@@ -90,6 +102,10 @@ resource "aws_lambda_function" "cloudwatch_processor" {
   runtime       = "ruby3.2"
   timeout       = 120 # seconds
 
+  dead_letter_config {
+    target_arn = aws_sqs_queue.cloudwatch_processor_dead_letter.arn
+  }
+
   layers = [
     local.lambda_insights_arn
   ]
@@ -138,4 +154,20 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
   function_name          = aws_lambda_function.cloudwatch_processor.arn
   starting_position      = "LATEST"
   parallelization_factor = 10
+
+  maximum_retry_attempts         = 3
+  maximum_record_age_in_seconds  = 3600
+  bisect_batch_on_function_error = true
+
+  destination_config {
+    on_failure {
+      destination_arn = aws_sqs_queue.cloudwatch_processor_dead_letter.arn
+    }
+  }
+}
+
+resource "aws_sqs_queue" "cloudwatch_processor_dead_letter" {
+  name                       = "${local.cw_processor_lambda_name}-dead-letter"
+  visibility_timeout_seconds = 300
+  message_retention_seconds  = 1209600 # 14 days
 }

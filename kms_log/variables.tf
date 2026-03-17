@@ -203,4 +203,3 @@ variable "sqs_ok_actions" {
   type        = list(string)
   description = "A list of ARNs to notify when the sqs alarms return to an OK state"
 }
-
