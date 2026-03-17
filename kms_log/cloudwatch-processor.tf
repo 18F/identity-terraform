@@ -167,7 +167,7 @@ resource "aws_lambda_event_source_mapping" "cloudwatch_processor" {
 }
 
 resource "aws_sqs_queue" "cloudwatch_processor_dead_letter" {
-  name                       = "${local.cw_processor_lambda_name}-dead_letter"
+  name                       = "${local.cw_processor_lambda_name}-dead-letter"
   visibility_timeout_seconds = 300
   message_retention_seconds  = 1209600 # 14 days
 }
