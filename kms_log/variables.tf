@@ -203,9 +203,3 @@ variable "sqs_ok_actions" {
   type        = list(string)
   description = "A list of ARNs to notify when the sqs alarms return to an OK state"
 }
-
-variable "cloudwatch_processor_dlq" {
-  type        = string
-  default     = null
-  description = "dead letter queue for cloudwatch processor lambda"
-}

@@ -133,6 +133,7 @@ resource "aws_cloudwatch_metric_alarm" "dead_letter" {
     aws_sqs_queue.dead_letter.name,
     aws_sqs_queue.unmatched_slack_dead_letter.name,
     aws_sqs_queue.cloudtrail_requeue_dead_letter.name,
+    aws_sqs_queue.cloudwatch_processor_dead_letter.name
   ])
 
   alarm_name          = each.key
