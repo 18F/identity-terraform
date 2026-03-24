@@ -89,6 +89,7 @@
 | [aws_sns_topic_subscription.kms_events_sqs_cw_target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
 | [aws_sqs_queue.cloudtrail_requeue](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
 | [aws_sqs_queue.cloudtrail_requeue_dead_letter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
+| [aws_sqs_queue.cloudwatch_processor_dead_letter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
 | [aws_sqs_queue.dead_letter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
 | [aws_sqs_queue.kms_cloudwatch_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
 | [aws_sqs_queue.kms_ct_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
@@ -121,19 +122,10 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_env_name"></a> [env\_name](#input\_env\_name) | Environment name | `any` | n/a | yes |
-| <a name="input_kinesis_source_log_group"></a> [kinesis\_source\_log\_group](#input\_kinesis\_source\_log\_group) | The source log group the kinesis stream will consume events from | `string` | n/a | yes |
-| <a name="input_lambda_kms_ct_processor_zip"></a> [lambda\_kms\_ct\_processor\_zip](#input\_lambda\_kms\_ct\_processor\_zip) | Lambda zip file providing source code for kms cloudtrail processor | `string` | n/a | yes |
-| <a name="input_lambda_kms_ct_requeue_zip"></a> [lambda\_kms\_ct\_requeue\_zip](#input\_lambda\_kms\_ct\_requeue\_zip) | Lambda zip file providing source code for kms cloudtrail requeue service | `string` | n/a | yes |
-| <a name="input_lambda_kms_cw_processor_zip"></a> [lambda\_kms\_cw\_processor\_zip](#input\_lambda\_kms\_cw\_processor\_zip) | Lambda zip file providing source code for kms cloudwatch processor | `string` | n/a | yes |
-| <a name="input_lambda_kms_event_processor_zip"></a> [lambda\_kms\_event\_processor\_zip](#input\_lambda\_kms\_event\_processor\_zip) | Lambda zip file providing source code for kms event processor | `string` | n/a | yes |
-| <a name="input_lambda_slack_batch_processor_zip"></a> [lambda\_slack\_batch\_processor\_zip](#input\_lambda\_slack\_batch\_processor\_zip) | Lambda source code that batches KMS events for notification | `string` | n/a | yes |
-| <a name="input_sns_topic_dead_letter_arn"></a> [sns\_topic\_dead\_letter\_arn](#input\_sns\_topic\_dead\_letter\_arn) | SNS topic ARN for dead letter queue | `any` | n/a | yes |
-| <a name="input_sqs_alarm_actions"></a> [sqs\_alarm\_actions](#input\_sqs\_alarm\_actions) | A list of ARNs to notify when the sqs alarms fire | `list(string)` | n/a | yes |
-| <a name="input_sqs_ok_actions"></a> [sqs\_ok\_actions](#input\_sqs\_ok\_actions) | A list of ARNs to notify when the sqs alarms return to an OK state | `list(string)` | n/a | yes |
 | <a name="input_alarm_sns_topic_arns"></a> [alarm\_sns\_topic\_arns](#input\_alarm\_sns\_topic\_arns) | List of SNS Topic ARN for alarms | `list(string)` | `[]` | no |
 | <a name="input_cloudwatch_filter_pattern"></a> [cloudwatch\_filter\_pattern](#input\_cloudwatch\_filter\_pattern) | Filter pattern for CloudWatch kms.log file | `string` | `"{ ($.kms.action = \"decrypt\" && $.kms.encryption_context.context = %password-digest+|pii-encryption+% ) }"` | no |
 | <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | Number of days to retain CloudWatch Logs for Lambda functions | `number` | `90` | no |
+| <a name="input_ct_processor_max_skew_seconds"></a> [ct\_processor\_max\_skew\_seconds](#input\_ct\_processor\_max\_skew\_seconds) | Number of seconds before/after timestamp to search for matches | `number` | `8` | no |
 | <a name="input_ct_queue_delay_seconds"></a> [ct\_queue\_delay\_seconds](#input\_ct\_queue\_delay\_seconds) | Number of seconds after the message is placed on the queue before it is able to be received | `number` | `60` | no |
 | <a name="input_ct_queue_max_message_size"></a> [ct\_queue\_max\_message\_size](#input\_ct\_queue\_max\_message\_size) | Max message size in bytes | `number` | `4096` | no |
 | <a name="input_ct_queue_maxreceivecount"></a> [ct\_queue\_maxreceivecount](#input\_ct\_queue\_maxreceivecount) | Number of times a message will be received before going to the deadletter queue | `number` | `10` | no |
@@ -143,15 +135,23 @@
 | <a name="input_cw_processor_memory_size"></a> [cw\_processor\_memory\_size](#input\_cw\_processor\_memory\_size) | Defines the amount of memory in MB the CloudWatch Processor can use at runtime | `number` | `128` | no |
 | <a name="input_cw_processor_storage_size"></a> [cw\_processor\_storage\_size](#input\_cw\_processor\_storage\_size) | Defines the amount of ephemeral storage (/tmp) in MB available to the CloudWatch Processor | `number` | `512` | no |
 | <a name="input_dynamodb_retention_days"></a> [dynamodb\_retention\_days](#input\_dynamodb\_retention\_days) | Number of days to retain kms log records in dynamodb | `number` | `365` | no |
-| <a name="input_ec2_kms_arns"></a> [ec2\_kms\_arns](#input\_ec2\_kms\_arns) | ARN(s) of EC2 roles permitted access to KMS | `list` | `[]` | no |
+| <a name="input_ec2_kms_arns"></a> [ec2\_kms\_arns](#input\_ec2\_kms\_arns) | ARN(s) of EC2 roles permitted access to KMS | `list(string)` | `[]` | no |
+| <a name="input_env_name"></a> [env\_name](#input\_env\_name) | Environment name | `string` | n/a | yes |
 | <a name="input_kinesis_retention_hours"></a> [kinesis\_retention\_hours](#input\_kinesis\_retention\_hours) | Number of hours to retain data in Kinesis data stream.  Max = 168 | `number` | `24` | no |
 | <a name="input_kinesis_shard_count"></a> [kinesis\_shard\_count](#input\_kinesis\_shard\_count) | Number of shards to allocate to Kinesis data stream | `number` | `1` | no |
+| <a name="input_kinesis_source_log_group"></a> [kinesis\_source\_log\_group](#input\_kinesis\_source\_log\_group) | The source log group the kinesis stream will consume events from | `string` | n/a | yes |
 | <a name="input_kmslog_lambda_debug"></a> [kmslog\_lambda\_debug](#input\_kmslog\_lambda\_debug) | Whether to run the kms logging lambdas in debug mode in this account | `bool` | `false` | no |
 | <a name="input_kmslog_lambda_dry_run"></a> [kmslog\_lambda\_dry\_run](#input\_kmslog\_lambda\_dry\_run) | Whether to run the kms logging lambdas in dry run mode in this account | `bool` | `false` | no |
-| <a name="input_lambda_identity_lambda_functions_gitrev"></a> [lambda\_identity\_lambda\_functions\_gitrev](#input\_lambda\_identity\_lambda\_functions\_gitrev) | Initial gitrev of identity-lambda-functions to deploy (updated outside of terraform) | `string` | `"1815de9b0893548876138e7086391e210cc85813"` | no |
 | <a name="input_lambda_insights_account"></a> [lambda\_insights\_account](#input\_lambda\_insights\_account) | The lambda insights account provided by AWS for monitoring | `string` | `"580247275435"` | no |
 | <a name="input_lambda_insights_version"></a> [lambda\_insights\_version](#input\_lambda\_insights\_version) | The lambda insights layer version to use for monitoring | `number` | `38` | no |
+| <a name="input_lambda_kms_ct_processor_zip"></a> [lambda\_kms\_ct\_processor\_zip](#input\_lambda\_kms\_ct\_processor\_zip) | Lambda zip file providing source code for kms cloudtrail processor | `string` | n/a | yes |
+| <a name="input_lambda_kms_ct_requeue_zip"></a> [lambda\_kms\_ct\_requeue\_zip](#input\_lambda\_kms\_ct\_requeue\_zip) | Lambda zip file providing source code for kms cloudtrail requeue service | `string` | n/a | yes |
+| <a name="input_lambda_kms_cw_processor_zip"></a> [lambda\_kms\_cw\_processor\_zip](#input\_lambda\_kms\_cw\_processor\_zip) | Lambda zip file providing source code for kms cloudwatch processor | `string` | n/a | yes |
+| <a name="input_lambda_kms_event_processor_zip"></a> [lambda\_kms\_event\_processor\_zip](#input\_lambda\_kms\_event\_processor\_zip) | Lambda zip file providing source code for kms event processor | `string` | n/a | yes |
+| <a name="input_lambda_slack_batch_processor_zip"></a> [lambda\_slack\_batch\_processor\_zip](#input\_lambda\_slack\_batch\_processor\_zip) | Lambda source code that batches KMS events for notification | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | AWS Region | `string` | `"us-west-2"` | no |
+| <a name="input_sqs_alarm_actions"></a> [sqs\_alarm\_actions](#input\_sqs\_alarm\_actions) | A list of ARNs to notify when the sqs alarms fire | `list(string)` | n/a | yes |
+| <a name="input_sqs_ok_actions"></a> [sqs\_ok\_actions](#input\_sqs\_ok\_actions) | A list of ARNs to notify when the sqs alarms return to an OK state | `list(string)` | n/a | yes |
 
 ## Outputs
 
