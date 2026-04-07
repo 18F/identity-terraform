@@ -2,7 +2,9 @@
 
 data "aws_caller_identity" "current" {}
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+  region = var.region
+}
 
 data "aws_iam_policy_document" "cloudwatch_assume" {
   statement {
@@ -11,14 +13,14 @@ data "aws_iam_policy_document" "cloudwatch_assume" {
 
     principals {
       type        = "Service"
-      identifiers = ["logs.${local.region}.amazonaws.com"]
+      identifiers = ["logs.${data.aws_region.current.region}.amazonaws.com"]
     }
 
     condition {
       test = "StringLike"
       values = distinct(flatten([
-        formatlist("arn:aws:logs:${local.region}:%s:*", var.source_account_ids),
-        "arn:aws:logs:${local.region}:${local.dest_acct_id}:*",
+        formatlist("arn:aws:logs:${data.aws_region.current.region}:%s:*", var.source_account_ids),
+        "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*",
       ]))
       variable = "aws:SourceArn"
     }
@@ -62,23 +64,25 @@ data "aws_iam_policy_document" "subscription_access" {
 # Resources
 
 resource "aws_iam_role" "cloudwatch_to_kinesis" {
-  name               = local.identifier_name
+  name               = "${var.role_name}-${data.aws_region.current.region}"
   assume_role_policy = data.aws_iam_policy_document.cloudwatch_assume.json
 }
 
 resource "aws_iam_role_policy" "cloudwatch_kinesis_access" {
-  name   = "${local.identifier_name}-access"
+  name   = "${aws_iam_role.cloudwatch_to_kinesis.id}-access"
   role   = aws_iam_role.cloudwatch_to_kinesis.id
   policy = data.aws_iam_policy_document.cloudwatch_kinesis_access.json
 }
 
 resource "aws_cloudwatch_log_destination" "kinesis" {
-  name       = local.identifier_name
+  name       = aws_iam_role.cloudwatch_to_kinesis.id
+  region     = data.aws_region.current.region
   role_arn   = aws_iam_role.cloudwatch_to_kinesis.arn
   target_arn = var.kinesis_arn
 }
 
 resource "aws_cloudwatch_log_destination_policy" "subscription_access" {
   destination_name = aws_cloudwatch_log_destination.kinesis.name
+  region           = data.aws_region.current.region
   access_policy    = data.aws_iam_policy_document.subscription_access.json
 }
