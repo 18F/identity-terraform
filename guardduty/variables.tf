@@ -138,7 +138,7 @@ variable "s3_blocked_encryption_types" {
   ]
 
   validation {
-    condition     = contains(["NONE", "SSE-C"], var.s3_blocked_encryption_types)
+    condition     = contains(["NONE", "SSE-C"], var.s3_blocked_encryption_types[0])
     error_message = "var.s3_blocked_encryption_types must be set to 'NONE' or 'SSE-C'."
   }
 }
