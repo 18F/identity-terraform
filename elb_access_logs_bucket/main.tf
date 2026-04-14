@@ -26,10 +26,12 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "logs" {
   bucket = aws_s3_bucket.logs.id
 
   rule {
-    # set to AES256 to support NLB - https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-access-logs.html?icmpid=docs_elbv2_console
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
+
+    blocked_encryption_types = var.s3_blocked_encryption_types
+    bucket_key_enabled       = var.s3_bucket_key_enabled
   }
 }
 

@@ -59,6 +59,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket" 
     apply_server_side_encryption_by_default {
       sse_algorithm = var.sse_algorithm_artifact
     }
+
+    blocked_encryption_types = var.s3_blocked_encryption_types
+    bucket_key_enabled       = var.s3_bucket_key_enabled
   }
 }
 

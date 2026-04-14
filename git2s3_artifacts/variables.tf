@@ -49,6 +49,25 @@ variable "sse_algorithm" {
   default     = "aws:kms"
 }
 
+variable "s3_bucket_key_enabled" {
+  type        = bool
+  description = "Whether or not to use a Bucket Key for the S3 bucket in this module."
+  default     = false
+}
+
+variable "s3_blocked_encryption_types" {
+  type        = list(string)
+  description = "Single-item list of SSE types to block for object uploads to the S3 bucket in this module."
+  default = [
+    "NONE"
+  ]
+
+  validation {
+    condition     = contains(["NONE", "SSE-C"], var.s3_blocked_encryption_types[0])
+    error_message = "var.s3_blocked_encryption_types must be set to 'NONE' or 'SSE-C'."
+  }
+}
+
 variable "git2s3_stack_name" {
   description = "REQUIRED. Name for the Git2S3 CloudFormation Stack"
   type        = string

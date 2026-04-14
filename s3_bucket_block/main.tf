@@ -32,6 +32,25 @@ variable "sse_algorithm" {
   default     = "aws:kms"
 }
 
+variable "s3_bucket_key_enabled" {
+  type        = bool
+  description = "Whether or not to use a Bucket Key for the S3 bucket(s) in this module."
+  default     = false
+}
+
+variable "s3_blocked_encryption_types" {
+  type        = list(string)
+  description = "Single-item list of SSE types to block for object uploads to the S3 bucket(s) in this module."
+  default = [
+    "NONE"
+  ]
+
+  validation {
+    condition     = contains(["NONE", "SSE-C"], var.s3_blocked_encryption_types[0])
+    error_message = "var.s3_blocked_encryption_types must be set to 'NONE' or 'SSE-C'."
+  }
+}
+
 # -- Data Sources --
 data "aws_caller_identity" "current" {
 }
@@ -75,6 +94,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "bucket" {
     apply_server_side_encryption_by_default {
       sse_algorithm = var.sse_algorithm
     }
+
+    blocked_encryption_types = var.s3_blocked_encryption_types
+    bucket_key_enabled       = var.s3_bucket_key_enabled
   }
 }
 
