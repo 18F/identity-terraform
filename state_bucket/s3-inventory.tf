@@ -11,6 +11,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "inventory" {
     apply_server_side_encryption_by_default {
       sse_algorithm = var.sse_algorithm
     }
+
+    blocked_encryption_types = var.s3_blocked_encryption_types
+    bucket_key_enabled       = var.s3_bucket_key_enabled
   }
 }
 

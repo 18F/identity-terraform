@@ -15,6 +15,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_access_logs" {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
+
+    blocked_encryption_types = var.s3_blocked_encryption_types
+    bucket_key_enabled       = var.s3_bucket_key_enabled
   }
 }
 

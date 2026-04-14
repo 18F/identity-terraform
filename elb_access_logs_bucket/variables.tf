@@ -57,6 +57,25 @@ variable "logging_bucket_id" {
   type        = string
 }
 
+variable "s3_bucket_key_enabled" {
+  type        = bool
+  description = "Whether or not to use a Bucket Key for the S3 bucket in this module."
+  default     = false
+}
+
+variable "s3_blocked_encryption_types" {
+  type        = list(string)
+  description = "Single-item list of SSE types to block for object uploads to the S3 bucket in this module."
+  default = [
+    "NONE"
+  ]
+
+  validation {
+    condition     = contains(["NONE", "SSE-C"], var.s3_blocked_encryption_types)
+    error_message = "var.s3_blocked_encryption_types must be set to 'NONE' or 'SSE-C'."
+  }
+}
+
 # To give ELBs the ability to upload logs to an S3 bucket, we need to create a
 # policy that gives permission to a magical AWS account ID to upload logs to our
 # bucket, which differs by region.  This table contaings those mappings, and was

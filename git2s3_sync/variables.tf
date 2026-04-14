@@ -66,6 +66,25 @@ EOM
   default     = "AES256"
 }
 
+variable "s3_bucket_key_enabled" {
+  type        = bool
+  description = "Whether or not to use a Bucket Key for the S3 bucket(s) in this module."
+  default     = false
+}
+
+variable "s3_blocked_encryption_types" {
+  type        = list(string)
+  description = "Single-item list of SSE types to block for object uploads to the S3 bucket(s) in this module."
+  default = [
+    "NONE"
+  ]
+
+  validation {
+    condition     = contains(["NONE", "SSE-C"], var.s3_blocked_encryption_types)
+    error_message = "var.s3_blocked_encryption_types must be set to 'NONE' or 'SSE-C'."
+  }
+}
+
 variable "cloudwatch_retention_days" {
   description = <<EOM
 REQUIRED. Number of days to retain CloudWatch Log Groups/Streams

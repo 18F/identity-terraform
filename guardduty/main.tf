@@ -259,6 +259,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "guardduty" {
       kms_master_key_id = aws_kms_key.guardduty.arn
       sse_algorithm     = "aws:kms"
     }
+
+    blocked_encryption_types = var.s3_blocked_encryption_types
+    bucket_key_enabled       = var.s3_bucket_key_enabled
   }
 }
 
