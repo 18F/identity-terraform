@@ -34,7 +34,7 @@ variable "role_name" {
 variable "role_tags" {
   description = "Tags to apply to the IAM role"
   type        = map(string)
-  default     =  {
+  default = {
     # RedshiftDbGroups  = "lg_users"    
   }
 }
