@@ -5,8 +5,10 @@ locals {
 }
 
 resource "aws_cloudwatch_event_rule" "lambda" {
-  count               = local.enable_trigger ? 1 : 0
+  count = local.enable_trigger ? 1 : 0
+
   name                = var.function_name
+  region              = var.region
   description         = "Trigger ${var.function_name} from EventBridge"
   schedule_expression = var.schedule_expression
   event_pattern       = var.event_pattern
@@ -14,12 +16,16 @@ resource "aws_cloudwatch_event_rule" "lambda" {
 
 resource "aws_cloudwatch_event_target" "lambda" {
   count = local.enable_trigger ? 1 : 0
-  rule  = aws_cloudwatch_event_rule.lambda[0].name
-  arn   = aws_lambda_function.lambda.arn
+
+  region = var.region
+  rule   = aws_cloudwatch_event_rule.lambda[0].name
+  arn    = aws_lambda_function.lambda.arn
 }
 
 resource "aws_lambda_permission" "lambda" {
-  count         = local.enable_trigger ? 1 : 0
+  count = local.enable_trigger ? 1 : 0
+
+  region        = var.region
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.function_name

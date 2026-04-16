@@ -38,27 +38,27 @@ module "sample_function" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.5 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_lambda_alerts"></a> [lambda\_alerts](#module\_lambda\_alerts) | github.com/18F/identity-terraform//lambda_alerts | a4dfd80b0e40a96d2a0c7c09262f84d2ea3d9104 |
-| <a name="module_lambda_code"></a> [lambda\_code](#module\_lambda\_code) | github.com/18F/identity-terraform//null_archive | 2d05076e1d089d9e9ab251fa0f11a2e2ceb132a3 |
+| <a name="module_lambda_code"></a> [lambda\_code](#module\_lambda\_code) | github.com/18F/identity-terraform//null_archive | 185bba6064e480379fb4f4e58c9489c9085b3a65 |
 | <a name="module_lambda_insights"></a> [lambda\_insights](#module\_lambda\_insights) | github.com/18F/identity-terraform//lambda_insights | 5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9 |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_event_rule.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
 | [aws_cloudwatch_event_target.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
 | [aws_cloudwatch_log_group.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
@@ -73,7 +73,7 @@ module "sample_function" {
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alarm_actions"></a> [alarm\_actions](#input\_alarm\_actions) | ARNs for Cloudwatch Alarm actions | `list(any)` | n/a | yes |
 | <a name="input_cloudwatch_retention_days"></a> [cloudwatch\_retention\_days](#input\_cloudwatch\_retention\_days) | n/a | `number` | `2192` | no |
 | <a name="input_datapoints_to_alarm"></a> [datapoints\_to\_alarm](#input\_datapoints\_to\_alarm) | The number of datapoints that must be breaching to trigger the alarm. | `number` | `1` | no |
@@ -93,6 +93,7 @@ module "sample_function" {
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of the Lambda function | `string` | n/a | yes |
 | <a name="input_handler"></a> [handler](#input\_handler) | Full Lambda handler string | `string` | `""` | no |
 | <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | Lambda handler function name | `string` | `"lambda_handler"` | no |
+| <a name="input_iam_role_description"></a> [iam\_role\_description](#input\_iam\_role\_description) | Description of the iam role associated with the lambda function | `string` | `""` | no |
 | <a name="input_insights_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | Whether the lambda has Lambda Insights enabled | `bool` | `true` | no |
 | <a name="input_lambda_iam_policy_document"></a> [lambda\_iam\_policy\_document](#input\_lambda\_iam\_policy\_document) | IAM permissions for the lambda function. Use a data.aws\_iam\_policy\_document to construct | `string` | `""` | no |
 | <a name="input_lambda_iam_role_name"></a> [lambda\_iam\_role\_name](#input\_lambda\_iam\_role\_name) | Role name override for resources that need underscores.<br/>If not specified, will set the role name to the default of '{var.function\_name}-lambda-role'<br/>If var.role\_name\_prefix is set, the module will use the name prefix instead of the role name | `string` | `null` | no |
@@ -104,7 +105,7 @@ module "sample_function" {
 | <a name="input_memory_usage_threshold"></a> [memory\_usage\_threshold](#input\_memory\_usage\_threshold) | The threshold memory utilization (as a percentage) for triggering an alert | `number` | `90` | no |
 | <a name="input_ok_actions"></a> [ok\_actions](#input\_ok\_actions) | ARNs for Cloudwatch OK actions | `list(any)` | `[]` | no |
 | <a name="input_period"></a> [period](#input\_period) | The period in seconds over which the specified statistic is applied. | `number` | `60` | no |
-| <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-west-2"` | no |
+| <a name="input_region"></a> [region](#input\_region) | AWS Region for the module. | `string` | `"us-west-2"` | no |
 | <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The max number concurrent invocations allowed for the Lambda | `number` | `-1` | no |
 | <a name="input_role_name_prefix"></a> [role\_name\_prefix](#input\_role\_name\_prefix) | Prefix string used to specify the name of the function's IAM role.<br/>Required if creating the same function in multiple regions.<br/>If not specified, will set the role name to the value of<br/>var.lambda\_iam\_role\_name or the default of '{var.function\_name}-lambda-role' | `string` | `null` | no |
 | <a name="input_runbook"></a> [runbook](#input\_runbook) | A link to a runbook associated with any metric in this module | `string` | `""` | no |
@@ -118,9 +119,10 @@ module "sample_function" {
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_function_name"></a> [function\_name](#output\_function\_name) | n/a |
 | <a name="output_lambda_arn"></a> [lambda\_arn](#output\_lambda\_arn) | The ARN of the Lambda Function |
+| <a name="output_lambda_role_arn"></a> [lambda\_role\_arn](#output\_lambda\_role\_arn) | The arn of the IAM Role associated with the lambda |
 | <a name="output_lambda_role_name"></a> [lambda\_role\_name](#output\_lambda\_role\_name) | The name of the IAM Role associated with the lambda |
 | <a name="output_log_group_name"></a> [log\_group\_name](#output\_log\_group\_name) | The name of the cloudwatch log group associated with the lambda |
 <!-- END_TF_DOCS -->

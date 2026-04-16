@@ -8,6 +8,7 @@ module "lambda_insights" {
 
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/${var.function_name}"
+  region            = var.region
   retention_in_days = var.cloudwatch_retention_days
   skip_destroy      = var.log_skip_destroy
 }
@@ -22,6 +23,7 @@ module "lambda_code" {
 }
 
 resource "aws_lambda_function" "lambda" {
+  region        = var.region
   filename      = module.lambda_code.zip_output_path
   function_name = var.function_name
   role          = aws_iam_role.lambda.arn
@@ -58,9 +60,10 @@ resource "aws_lambda_function" "lambda" {
 }
 
 module "lambda_alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=a4dfd80b0e40a96d2a0c7c09262f84d2ea3d9104"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=812c086fa4f4a0a52c1b8b630a27af01f18cf357"
   #source = "../../../../identity-terraform/lambda_alerts"
 
+  region                           = var.region
   enabled                          = var.enabled
   function_name                    = aws_lambda_function.lambda.function_name
   env_name                         = var.env_name
