@@ -1,7 +1,7 @@
 variable "region" {
-  default     = "us-west-2"
-  description = ""
   type        = string
+  description = "AWS Region for the module."
+  default     = "us-west-2"
 }
 
 variable "function_name" {

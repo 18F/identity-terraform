@@ -1,6 +1,7 @@
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
   count = var.enabled
 
+  region = var.region
   alarm_name = length(var.error_rate_alarm_name_override) > 0 ? var.error_rate_alarm_name_override : join("-", compact([
     var.env_name,
     var.function_name,
@@ -58,6 +59,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
 resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
   count = var.enabled == 1 && var.insights_enabled ? 1 : 0
 
+  region = var.region
   alarm_name = length(var.memory_usage_alarm_name_override) > 0 ? var.memory_usage_alarm_name_override : join("-", compact([
     var.env_name,
     var.function_name,
@@ -91,6 +93,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
 resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   count = var.enabled
 
+  region = var.region
   alarm_name = length(var.duration_alarm_name_override) > 0 ? var.duration_alarm_name_override : join("-", compact([
     var.env_name,
     var.function_name,

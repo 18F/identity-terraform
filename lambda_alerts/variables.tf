@@ -1,3 +1,9 @@
+variable "region" {
+  type        = string
+  description = "AWS Region for the module."
+  default     = "us-west-2"
+}
+
 variable "enabled" {
   type        = number
   description = "Whether or not to create the Lambda alert monitor."
