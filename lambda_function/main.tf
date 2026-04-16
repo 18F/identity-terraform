@@ -60,7 +60,7 @@ resource "aws_lambda_function" "lambda" {
 }
 
 module "lambda_alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=8fea8c88e6c6e9d1efc702c762484c1e24957b1a"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=812c086fa4f4a0a52c1b8b630a27af01f18cf357"
   #source = "../../../../identity-terraform/lambda_alerts"
 
   region                           = var.region
