@@ -5,7 +5,6 @@
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
 
-
 terraform-fmt:
   image:
     name: hashicorp/terraform
@@ -14,7 +13,8 @@ terraform-fmt:
     - terraform fmt -recursive -diff -check .
   rules:
     - !reference [.merge_request, rules]
-
+  tags:
+    - test-pool
 
 # Scanning top level modules to avoid extreme duplication
 tfsec-check-soft:
@@ -23,6 +23,8 @@ tfsec-check-soft:
     - tfsec --no-color --soft-fail .
   rules:
     - !reference [.merge_request, rules]
+  tags:
+    - test-pool
 
 # Add folders that should be vuln free and STAY THAT WAY
 tfsec-check-enforce:
@@ -31,7 +33,8 @@ tfsec-check-enforce:
     - tfsec --no-color .
   rules:
     - !reference [.merge_request, rules]
-
+  tags:
+    - test-pool
 
 include:
  - template: Jobs/SAST-IaC.gitlab-ci.yml
@@ -75,6 +78,8 @@ secret_detection:
         echo "Skipping because this is not a PR or is not targeting main"
         exit 0
       fi
+  tags:
+    - test-pool
 
 lambda-unit-tests:
   image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.12.0-alpine3.18"
@@ -91,6 +96,8 @@ lambda-unit-tests:
         coverage_format: cobertura
         path: coverage.xml
       junit: tmp/unittest.xml
+  tags:
+    - test-pool
 
 lambda-lint:
   image: "$ECR_REGISTRY/ecr-public/docker/library/python:3.12.0-alpine3.18"
@@ -101,6 +108,8 @@ lambda-lint:
     - !reference [.merge_request, rules]
     - changes:
         - "**/src/*"
+  tags:
+    - test-pool
 variables:
   ECR_REGISTRY: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
   SECURE_ANALYZERS_PREFIX: "$ECR_REGISTRY/gitlab/security-products"
