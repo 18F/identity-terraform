@@ -48,13 +48,13 @@ variable "lifecycle_days_expire" {
 }
 
 variable "inventory_bucket_arn" {
-  description = "ARN of the S3 bucket used for collecting the S3 Inventory reports."
   type        = string
+  description = "ARN of the S3 bucket used for collecting S3 Inventory reports."
 }
 
 variable "logging_bucket_id" {
-  description = "Id of the S3 bucket used for collecting the S3 access events"
   type        = string
+  description = "ID (name) of the S3 bucket used for logging S3 access events."
 }
 
 variable "s3_bucket_key_enabled" {

@@ -27,13 +27,13 @@ module "secrets_bucket_config" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.5 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
 
 ## Modules
@@ -43,7 +43,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_s3_bucket_inventory.daily](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_inventory) | resource |
 | [aws_s3_bucket_logging.access_logging](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_logging) | resource |
 | [aws_s3_bucket_public_access_block.public_block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
@@ -52,14 +52,16 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_inventory_bucket_arn"></a> [inventory\_bucket\_arn](#input\_inventory\_bucket\_arn) | ARN of the S3 bucket used for collecting the S3 Inventory reports. | `string` | n/a | yes |
-| <a name="input_logging_bucket_id"></a> [logging\_bucket\_id](#input\_logging\_bucket\_id) | ID of the S3 bucket used for collecting the S3 access events | `string` | n/a | yes |
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_block_public_access"></a> [block\_public\_access](#input\_block\_public\_access) | Whether or not to enable the public access block for this bucket. | `bool` | `true` | no |
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Main/second substring in S3 bucket name of $bucket\_name\_prefix.$bucket\_name.$account\_id-$region | `string` | `""` | no |
 | <a name="input_bucket_name_override"></a> [bucket\_name\_override](#input\_bucket\_name\_override) | Set this to override the normal bucket naming schema. | `string` | `""` | no |
 | <a name="input_bucket_name_prefix"></a> [bucket\_name\_prefix](#input\_bucket\_name\_prefix) | First substring in S3 bucket name of $bucket\_name\_prefix.$bucket\_name.$account\_id-$region | `string` | `""` | no |
-| <a name="input_optional_fields"></a> [optional\_fields](#input\_optional\_fields) | List of optional data fields to collect in S3 Inventory reports. | `list(string)` | <pre>[<br>  "Size",<br>  "LastModifiedDate",<br>  "StorageClass",<br>  "ETag",<br>  "IsMultipartUploaded",<br>  "ReplicationStatus",<br>  "EncryptionStatus",<br>  "ObjectLockRetainUntilDate",<br>  "ObjectLockMode",<br>  "ObjectLockLegalHoldStatus",<br>  "IntelligentTieringAccessTier"<br>]</pre> | no |
+| <a name="input_inventory_bucket_arn"></a> [inventory\_bucket\_arn](#input\_inventory\_bucket\_arn) | ARN of the S3 bucket used for collecting the S3 Inventory reports. | `string` | n/a | yes |
+| <a name="input_inventory_bucket_kms_key_id"></a> [inventory\_bucket\_kms\_key\_id](#input\_inventory\_bucket\_kms\_key\_id) | KMS key used by the S3 Inventory bucket if var.inventory\_bucket\_sse = 'sse\_kms' | `string` | `""` | no |
+| <a name="input_inventory_bucket_sse"></a> [inventory\_bucket\_sse](#input\_inventory\_bucket\_sse) | SSE algorithm used by the S3 Inventory bucket specified by var.inventory\_bucket\_arn | `string` | `"sse_s3"` | no |
+| <a name="input_logging_bucket_id"></a> [logging\_bucket\_id](#input\_logging\_bucket\_id) | ID of the S3 bucket used for collecting the S3 access events | `string` | n/a | yes |
+| <a name="input_optional_fields"></a> [optional\_fields](#input\_optional\_fields) | List of optional data fields to collect in S3 Inventory reports. | `list(string)` | <pre>[<br/>  "Size",<br/>  "LastModifiedDate",<br/>  "StorageClass",<br/>  "ETag",<br/>  "IsMultipartUploaded",<br/>  "ReplicationStatus",<br/>  "EncryptionStatus",<br/>  "ObjectLockRetainUntilDate",<br/>  "ObjectLockMode",<br/>  "ObjectLockLegalHoldStatus",<br/>  "IntelligentTieringAccessTier"<br/>]</pre> | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS Region | `string` | `"us-west-2"` | no |
 
 ## Outputs

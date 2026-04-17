@@ -1,5 +1,4 @@
 # Bucket used for storing S3 access logs
-# do not enable logging on this bucket
 resource "aws_s3_bucket" "s3_access_logs" {
   bucket = "${var.bucket_name_prefix}.s3-access-logs.${data.aws_caller_identity.current.account_id}-${var.region}"
 
@@ -81,4 +80,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3_access_logs" {
       noncurrent_days = 1825
     }
   }
+}
+
+module "s3_config_s3_access_logs" {
+  source = "github.com/18F/identity-terraform//s3_config?ref=5566b93f81158fd07adc4f67fb8043b6c7c85122"
+  #source = "../s3_config"
+
+  bucket_name_override = aws_s3_bucket.s3_access_logs.id
+  region               = var.region
+  inventory_bucket_arn = aws_s3_bucket.inventory.arn
+  logging_bucket_id    = aws_s3_bucket.s3_access_logs.id # cancels itself out + disables logging on this bucket!
+}
+
+moved {
+  from = module.s3_config["s3-access-logs"]
+  to   = module.s3_config_s3_access_logs
 }

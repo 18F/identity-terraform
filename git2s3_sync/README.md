@@ -55,8 +55,8 @@ module "git2s3_sync" {
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_lambda_git2s3"></a> [lambda\_git2s3](#module\_lambda\_git2s3) | github.com/18F/identity-terraform//lambda_function | 026f69d0a5e2b8af458888a5f21a72d557bbe1fe |
-| <a name="module_s3_config_artifact"></a> [s3\_config\_artifact](#module\_s3\_config\_artifact) | github.com/18F/identity-terraform//s3_config | cea57dfeaa2e437852ffa488606bf37f954dce12 |
-| <a name="module_s3_config_codebuild_output"></a> [s3\_config\_codebuild\_output](#module\_s3\_config\_codebuild\_output) | github.com/18F/identity-terraform//s3_config | cea57dfeaa2e437852ffa488606bf37f954dce12 |
+| <a name="module_s3_config_artifact"></a> [s3\_config\_artifact](#module\_s3\_config\_artifact) | github.com/18F/identity-terraform//s3_config | 5566b93f81158fd07adc4f67fb8043b6c7c85122 |
+| <a name="module_s3_config_codebuild_output"></a> [s3\_config\_codebuild\_output](#module\_s3\_config\_codebuild\_output) | github.com/18F/identity-terraform//s3_config | 5566b93f81158fd07adc4f67fb8043b6c7c85122 |
 
 ## Resources
 

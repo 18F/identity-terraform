@@ -79,31 +79,18 @@ variable "env_name" {
 }
 
 variable "bucket_name_prefix" {
-  description = <<EOM
-REQUIRED. First substring in S3 bucket name of
-$bucket_name_prefix.$env_name-ssm-logs.$account_id-$region
-EOM
   type        = string
+  description = "First substring in S3 bucket name of $bucket_name_prefix.$env_name-ssm-logs.$account_id-$region"
 }
 
-variable "log_bucket_name" {
-  description = <<EOM
-(OPTIONAL) Override name of the bucket used for S3 logging.
-Will default to $bucket_name_prefix.s3-access-logs.$account_id-$region
-if not explicitly declared.
-EOM
+variable "inventory_bucket_arn" {
   type        = string
-  default     = ""
+  description = "ARN of the S3 bucket used for collecting S3 Inventory reports."
 }
 
-variable "inventory_bucket_name" {
-  description = <<EOM
-(OPTIONAL) Override name of the S3 bucket used for S3 Inventory reports.
-Will default to $bucket_name_prefix.s3-inventory.$account_id-$region
-if not explicitly declared.
-EOM
+variable "logging_bucket_id" {
   type        = string
-  default     = ""
+  description = "ID (name) of the S3 bucket used for logging S3 access events."
 }
 
 variable "force_destroy" {
@@ -132,17 +119,6 @@ variable "s3_blocked_encryption_types" {
 }
 
 locals {
-  bucket_name_suffix = "${data.aws_caller_identity.current.account_id}-${var.region}"
-  s3_bucket_name     = "${var.bucket_name_prefix}.${var.env_name}-ssm-logs.${local.bucket_name_suffix}"
-
-  log_bucket = var.log_bucket_name != "" ? var.log_bucket_name : join(".",
-    [var.bucket_name_prefix, "s3-access-logs", local.bucket_name_suffix]
-  )
-
-  inventory_bucket = var.inventory_bucket_name != "" ? var.inventory_bucket_name : join(".",
-    [var.bucket_name_prefix, "s3-inventory", local.bucket_name_suffix]
-  )
-
   all_docs_and_cmds = toset(compact(flatten([
     keys(var.ssm_doc_map),
     keys(var.ssm_interactive_cmd_map),

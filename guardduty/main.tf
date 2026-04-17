@@ -236,13 +236,6 @@ resource "aws_s3_bucket_policy" "guardduty" {
   policy = data.aws_iam_policy_document.guardduty_s3.json
 }
 
-resource "aws_s3_bucket_logging" "guardduty" {
-  bucket = aws_s3_bucket.guardduty.id
-
-  target_bucket = local.log_bucket
-  target_prefix = "${aws_s3_bucket.guardduty.id}/"
-}
-
 resource "aws_s3_bucket_versioning" "guardduty" {
   bucket = aws_s3_bucket.guardduty.id
 
@@ -299,13 +292,18 @@ resource "aws_s3_bucket_lifecycle_configuration" "guardduty" {
 }
 
 module "guardduty_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "github.com/18F/identity-terraform//s3_config?ref=5566b93f81158fd07adc4f67fb8043b6c7c85122"
   #source = "../s3_config"
 
-  bucket_name_prefix   = var.bucket_name_prefix
-  bucket_name          = "guardduty"
+  bucket_name_override = aws_s3_bucket.guardduty.id
   region               = var.region
-  inventory_bucket_arn = local.inventory_bucket_arn
+  inventory_bucket_arn = var.inventory_bucket_arn
+  logging_bucket_id    = var.logging_bucket_id
+}
+
+moved {
+  from = aws_s3_bucket_logging.guardduty
+  to   = module.guardduty_bucket_config.aws_s3_bucket_logging.access_logging
 }
 
 # CloudWatch Event Logging
