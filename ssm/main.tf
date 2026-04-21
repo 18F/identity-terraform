@@ -189,7 +189,7 @@ module "ssm_logs_bucket_config" {
 
 moved {
   from = aws_s3_bucket_logging.ssm_logs
-  to   = module.ssm_logs_bucket_config.aws_s3_bucket_logging.access_logging
+  to   = module.ssm_logs_bucket_config.aws_s3_bucket_logging.access_logging[0]
 }
 
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {

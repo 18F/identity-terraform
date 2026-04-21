@@ -143,7 +143,7 @@ module "s3_config" {
 
 moved {
   from = aws_s3_bucket_logging.artifact_bucket[0]
-  to   = module.s3_config[0].aws_s3_bucket_logging.access_logging
+  to   = module.s3_config[0].aws_s3_bucket_logging.access_logging[0]
 }
 
 resource "aws_s3_bucket_policy" "git2s3_output_bucket" {

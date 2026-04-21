@@ -303,7 +303,7 @@ module "guardduty_bucket_config" {
 
 moved {
   from = aws_s3_bucket_logging.guardduty
-  to   = module.guardduty_bucket_config.aws_s3_bucket_logging.access_logging
+  to   = module.guardduty_bucket_config.aws_s3_bucket_logging.access_logging[0]
 }
 
 # CloudWatch Event Logging

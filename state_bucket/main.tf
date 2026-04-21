@@ -101,7 +101,7 @@ moved {
 
 moved {
   from = aws_s3_bucket_logging.tf_state[0]
-  to   = module.s3_config_tf_state[0].aws_s3_bucket_logging.access_logging
+  to   = module.s3_config_tf_state[0].aws_s3_bucket_logging.access_logging[0]
 }
 
 resource "aws_dynamodb_table" "tf_lock_table" {
