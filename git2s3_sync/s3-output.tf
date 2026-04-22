@@ -74,13 +74,13 @@ resource "aws_s3_bucket_versioning" "codebuild_output" {
 }
 
 module "s3_config_codebuild_output" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=cea57dfeaa2e437852ffa488606bf37f954dce12"
+  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.codebuild_output.id
   region               = data.aws_region.current.region
-  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
-  logging_bucket_id    = local.log_bucket
+  inventory_bucket_arn = var.inventory_bucket_arn
+  logging_bucket_id    = var.logging_bucket_id
   block_public_access  = false
 }
 

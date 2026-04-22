@@ -83,27 +83,25 @@ resource "aws_s3_bucket_acl" "tf_state" {
   depends_on = [aws_s3_bucket_ownership_controls.tf_state]
 }
 
-resource "aws_s3_bucket_logging" "tf_state" {
-  count = var.remote_state_enabled
-
-  bucket        = data.aws_s3_bucket.tf_state[count.index].id
-  target_bucket = aws_s3_bucket.s3_access_logs.id
-  target_prefix = "${data.aws_s3_bucket.tf_state[count.index].id}/"
-}
-
-module "s3_config" {
-  # hacky way to pass in bucket identifiers vs. full IDs, skips resource replacement
-  for_each = toset(compact([
-    split(".", aws_s3_bucket.s3_access_logs.id)[1],
-    var.remote_state_enabled == 1 ? split(".", data.aws_s3_bucket.tf_state[0].id)[1] : ""
-  ]))
-  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+module "s3_config_tf_state" {
+  count  = var.remote_state_enabled
+  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
   #source = "../s3_config"
 
-  bucket_name_prefix   = var.bucket_name_prefix
-  bucket_name          = each.key
+  bucket_name_override = data.aws_s3_bucket.tf_state[count.index].id
   region               = var.region
   inventory_bucket_arn = aws_s3_bucket.inventory.arn
+  logging_bucket_id    = aws_s3_bucket.s3_access_logs.id
+}
+
+moved {
+  from = module.s3_config["tf-state"]
+  to   = module.s3_config_tf_state[0]
+}
+
+moved {
+  from = aws_s3_bucket_logging.tf_state[0]
+  to   = module.s3_config_tf_state[0].aws_s3_bucket_logging.access_logging[0]
 }
 
 resource "aws_dynamodb_table" "tf_lock_table" {

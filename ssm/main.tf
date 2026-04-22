@@ -91,8 +91,12 @@ resource "aws_kms_alias" "kms_ssm" {
 
 # S3 bucket w/KMS key encryption for SSM access logs
 resource "aws_s3_bucket" "ssm_logs" {
-  bucket        = local.s3_bucket_name
+  bucket = join(".", [
+    "${var.bucket_name_prefix}.${var.env_name}-ssm-logs",
+    "${data.aws_caller_identity.current.account_id}-${var.region}"
+  ])
   force_destroy = var.force_destroy
+
   tags = {
     environment = var.env_name
   }
@@ -115,13 +119,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "ssm_logs" {
     blocked_encryption_types = var.s3_blocked_encryption_types
     bucket_key_enabled       = var.s3_bucket_key_enabled
   }
-}
-
-resource "aws_s3_bucket_logging" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.id
-
-  target_bucket = local.log_bucket
-  target_prefix = "${local.s3_bucket_name}/"
 }
 
 resource "aws_s3_bucket_versioning" "ssm_logs" {
@@ -181,12 +178,18 @@ resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {
 }
 
 module "ssm_logs_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.ssm_logs.id
-  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
-  depends_on           = [aws_s3_bucket.ssm_logs]
+  region               = var.region
+  inventory_bucket_arn = var.inventory_bucket_arn
+  logging_bucket_id    = var.logging_bucket_id
+}
+
+moved {
+  from = aws_s3_bucket_logging.ssm_logs
+  to   = module.ssm_logs_bucket_config.aws_s3_bucket_logging.access_logging[0]
 }
 
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {

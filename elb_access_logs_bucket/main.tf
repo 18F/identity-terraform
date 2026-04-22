@@ -189,10 +189,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
   }
 }
 
-
-
 module "s3_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=c1ccb75a70894f3c74beed564c0505415d1d1353"
+  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
   #source = "../s3_config"
 
   bucket_name_prefix   = var.bucket_name_prefix

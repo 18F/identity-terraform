@@ -1,27 +1,13 @@
 # -- Variables --
 variable "bucket_name_prefix" {
-  description = <<EOM
-REQUIRED. First substring in names for log_bucket,
-inventory_bucket, and the public-artifacts bucket.
-EOM
   type        = string
-}
-
-variable "log_bucket_name" {
-  description = <<EOM
-(OPTIONAL) Specific name of the bucket used for S3 logging.
-Will default to $bucket_name_prefix.s3-access-logs.$account_id-$region
-if not explicitly declared.
-EOM
-  type        = string
-  default     = ""
+  description = "First substring in name for the public-artifacts bucket."
 }
 
 variable "create_artifact_bucket" {
   description = <<EOM
-(OPTIONAL) Whether or not to create the public-artifacts bucket,
-and related resources, within this module. Set to 'false' if managing
-said bucket in a separate/parent module.
+(OPTIONAL) Whether or not to create the public-artifacts bucket, and related resources, within this module.
+Set to 'false' if managing said bucket in a separate/parent module.
 EOM
   type        = bool
   default     = true
@@ -33,19 +19,19 @@ variable "region" {
   default     = "us-west-2"
 }
 
-variable "inventory_bucket_name" {
-  description = <<EOM
-(OPTIONAL) Specific name of the S3 bucket used for collecting the S3 Inventory reports.
-Will default to $bucket_name_prefix.s3-inventory.$account_id-$region
-if not explicitly declared.
-EOM
+variable "inventory_bucket_arn" {
   type        = string
-  default     = ""
+  description = "ARN of the S3 bucket used for collecting S3 Inventory reports."
+}
+
+variable "logging_bucket_id" {
+  type        = string
+  description = "ID (name) of the S3 bucket used for logging S3 access events."
 }
 
 variable "sse_algorithm" {
-  description = "SSE algorithm to use to encrypt reports in S3 Inventory bucket."
   type        = string
+  description = "SSE algorithm to use to encrypt objects in the public-artifacts S3 bucket, if creating one."
   default     = "aws:kms"
 }
 
@@ -89,20 +75,4 @@ locals {
   ])
 
   git2s3_output_bucket = chomp(aws_cloudformation_stack.git2s3.outputs["OutputBucketName"])
-
-  log_bucket = var.log_bucket_name != "" ? var.log_bucket_name : join(".",
-    [
-      var.bucket_name_prefix,
-      "s3-access-logs",
-      "${data.aws_caller_identity.current.account_id}-${var.region}"
-    ]
-  )
-
-  inventory_bucket = var.inventory_bucket_name != "" ? var.inventory_bucket_name : join(".",
-    [
-      var.bucket_name_prefix,
-      "s3-inventory",
-      "${data.aws_caller_identity.current.account_id}-${var.region}"
-    ]
-  )
 }

@@ -11,15 +11,6 @@ locals {
       "values"   = [aws_guardduty_detector.main.arn]
     }
   ]
-  bucket_name_suffix = "${data.aws_caller_identity.current.account_id}-${var.region}"
-  log_bucket = var.log_bucket_name != "" ? (
-    var.log_bucket_name) : join(".",
-    [var.bucket_name_prefix, "s3-access-logs", local.bucket_name_suffix]
-  )
-  inventory_bucket_arn = var.inventory_bucket_arn != "" ? (
-    var.inventory_bucket_arn) : join(".",
-    ["arn:aws:s3:::${var.bucket_name_prefix}", "s3-inventory", local.bucket_name_suffix]
-  )
 
   features_additional = {
     "EKS_RUNTIME_MONITORING" = [
@@ -104,24 +95,14 @@ variable "bucket_name_override" {
   default     = ""
 }
 
-variable "log_bucket_name" {
-  type        = string
-  description = <<EOM
-Override name of the bucket used for S3 logging.
-Will default to $bucket_name_prefix.s3-access-logs.$account_id-$region
-if not explicitly declared.
-EOM
-  default     = ""
-}
-
 variable "inventory_bucket_arn" {
   type        = string
-  description = <<EOM
-Override ARN of the S3 Inventory reports bucket.
-Defaults to arn:aws:s3:::$bucket_name_prefix.s3-inventory.$account_id-$region
-if not explicitly declared.
-EOM
-  default     = ""
+  description = "ARN of the S3 bucket used for collecting S3 Inventory reports."
+}
+
+variable "logging_bucket_id" {
+  type        = string
+  description = "ID (name) of the S3 bucket used for logging S3 access events."
 }
 
 variable "s3_bucket_key_enabled" {

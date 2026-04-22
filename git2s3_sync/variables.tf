@@ -28,25 +28,14 @@ EOM
   type        = string
 }
 
-variable "log_bucket_name" {
-  description = <<EOM
-(OPTIONAL) Specific name of the bucket used for S3 logging.
-Will default to $bucket_name_prefix.s3-access-logs.$account_id-$region
-if not explicitly declared.
-EOM
+variable "inventory_bucket_arn" {
   type        = string
-  default     = ""
+  description = "ARN of the S3 bucket used for collecting S3 Inventory reports."
 }
 
-variable "inventory_bucket_name" {
-  description = <<EOM
-(OPTIONAL) Specific name of the S3 bucket used for collecting the
-S3 Inventory reports for all buckets in the module. Will default to
-$bucket_name_prefix.s3-inventory.$account_id-$region
-if not explicitly declared.
-EOM
+variable "logging_bucket_id" {
   type        = string
-  default     = ""
+  description = "ID (name) of the S3 bucket used for logging S3 access events."
 }
 
 variable "sse_algorithm_artifact" {

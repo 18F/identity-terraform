@@ -149,7 +149,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail" {
 }
 
 module "cloudtrail_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=188d82b9e9b7423f1a71988413ec5899d31807fe"
+  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.cloudtrail.id

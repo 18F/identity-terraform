@@ -1,12 +1,10 @@
 locals {
-  artifact_bucket_name = var.artifact_bucket_name == "" ? join(
-    "-", [
-      var.bucket_name_prefix,
-      "public-artifacts",
-      data.aws_caller_identity.current.account_id,
-      data.aws_region.current.region
-    ]
-  ) : var.artifact_bucket_name
+  artifact_bucket_name = var.artifact_bucket_name == "" ? join("-", [
+    var.bucket_name_prefix,
+    "public-artifacts",
+    data.aws_caller_identity.current.account_id,
+    data.aws_region.current.region
+  ]) : var.artifact_bucket_name
 }
 
 data "aws_iam_policy_document" "artifact_bucket" {
@@ -74,13 +72,13 @@ resource "aws_s3_bucket_versioning" "artifact_bucket" {
 }
 
 module "s3_config_artifact" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=cea57dfeaa2e437852ffa488606bf37f954dce12"
+  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.artifact_bucket.id
   region               = data.aws_region.current.region
-  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
-  logging_bucket_id    = local.log_bucket
+  inventory_bucket_arn = var.inventory_bucket_arn
+  logging_bucket_id    = var.logging_bucket_id
 }
 
 resource "aws_s3_bucket_policy" "artifact_bucket" {

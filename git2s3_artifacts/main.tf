@@ -1,8 +1,5 @@
 # -- Data Sources --
 
-data "aws_caller_identity" "current" {
-}
-
 data "github_ip_ranges" "ips" {
 }
 
@@ -110,7 +107,6 @@ resource "aws_s3_bucket_acl" "artifact_bucket" {
   depends_on = [aws_s3_bucket_ownership_controls.artifact_bucket]
 }
 
-
 resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket" {
   count  = var.create_artifact_bucket ? 1 : 0
   bucket = aws_s3_bucket.artifact_bucket[count.index].id
@@ -134,22 +130,20 @@ resource "aws_s3_bucket_versioning" "artifact_bucket" {
   }
 }
 
-resource "aws_s3_bucket_logging" "artifact_bucket" {
-  count  = var.create_artifact_bucket ? 1 : 0
-  bucket = aws_s3_bucket.artifact_bucket[count.index].id
-
-  target_bucket = local.log_bucket
-  target_prefix = "${var.bucket_name_prefix}-public-artifacts-${var.region}/"
-}
-
 module "s3_config" {
   count  = var.create_artifact_bucket ? 1 : 0
-  source = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
   #source = "../s3_config"
 
   bucket_name_override = aws_s3_bucket.artifact_bucket[count.index].id
   region               = var.region
-  inventory_bucket_arn = "arn:aws:s3:::${local.inventory_bucket}"
+  inventory_bucket_arn = var.inventory_bucket_arn
+  logging_bucket_id    = var.logging_bucket_id
+}
+
+moved {
+  from = aws_s3_bucket_logging.artifact_bucket[0]
+  to   = module.s3_config[0].aws_s3_bucket_logging.access_logging[0]
 }
 
 resource "aws_s3_bucket_policy" "git2s3_output_bucket" {

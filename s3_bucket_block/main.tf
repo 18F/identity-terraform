@@ -10,20 +10,20 @@ variable "bucket_data" {
   default     = {}
 }
 
-variable "log_bucket" {
-  description = "Name of the bucket used for S3 logging."
-  type        = string
-  default     = "s3-access-logs"
-}
-
 variable "region" {
-  default     = "us-west-2"
+  type        = string
   description = "AWS Region"
+  default     = "us-west-2"
 }
 
 variable "inventory_bucket_arn" {
-  description = "ARN of the S3 bucket used for collecting the S3 Inventory reports."
   type        = string
+  description = "ARN of the S3 bucket used for collecting S3 Inventory reports."
+}
+
+variable "logging_bucket_id" {
+  type        = string
+  description = "ID (name) of the S3 bucket used for logging S3 access events."
 }
 
 variable "sse_algorithm" {
@@ -109,14 +109,6 @@ resource "aws_s3_bucket_versioning" "bucket" {
   }
 }
 
-resource "aws_s3_bucket_logging" "bucket" {
-  for_each = var.bucket_data
-  bucket   = aws_s3_bucket.bucket[each.key]
-
-  target_bucket = var.log_bucket
-  target_prefix = "${var.bucket_name_prefix}.${each.key}.${data.aws_caller_identity.current.account_id}-${var.region}/"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
   for_each = var.bucket_data
   bucket   = aws_s3_bucket.bucket[each.key]
@@ -153,13 +145,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
 
 module "bucket_config" {
   for_each = var.bucket_data
-  source   = "github.com/18F/identity-terraform//s3_config?ref=91f5c8a84c664fc5116ef970a5896c2edadff2b1"
+  source   = "github.com/18F/identity-terraform//s3_config?ref=5566b93f81158fd07adc4f67fb8043b6c7c85122"
   #source = "../s3_config"
 
   bucket_name_prefix   = var.bucket_name_prefix
   bucket_name          = each.key
   region               = var.region
   inventory_bucket_arn = var.inventory_bucket_arn
+  logging_bucket_id    = var.logging_bucket_id
   block_public_access  = lookup(each.value, "public_access_block", true)
 }
 
