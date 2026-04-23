@@ -83,13 +83,13 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3_access_logs" {
 }
 
 module "s3_config_s3_access_logs" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
+  source = "github.com/18F/identity-terraform//s3_config?ref=c7a7f5fa1dfcacf9a81c26bbd4cb8795f3c9521c"
   #source = "../s3_config"
 
-  bucket_name_override = aws_s3_bucket.s3_access_logs.id
+  bucket_name          = aws_s3_bucket.s3_access_logs.id
   region               = var.region
   inventory_bucket_arn = aws_s3_bucket.inventory.arn
-  logging_bucket_id    = aws_s3_bucket.s3_access_logs.id # cancels itself out + disables logging on this bucket!
+  logging_bucket_id    = "" # disables logging on this bucket!
 }
 
 moved {

@@ -4,7 +4,7 @@ data "aws_caller_identity" "current" {
 
 # -- Resources --
 resource "aws_s3_bucket_public_access_block" "public_block" {
-  bucket = local.bucket_fullname
+  bucket = var.bucket_name
   region = var.region
 
   block_public_acls       = var.block_public_access
@@ -14,7 +14,7 @@ resource "aws_s3_bucket_public_access_block" "public_block" {
 }
 
 resource "aws_s3_bucket_inventory" "daily" {
-  bucket = local.bucket_fullname
+  bucket = var.bucket_name
   region = var.region
 
   name                     = "FullBucketDailyInventory"
@@ -53,11 +53,11 @@ resource "aws_s3_bucket_inventory" "daily" {
 }
 
 resource "aws_s3_bucket_logging" "access_logging" {
-  count = var.logging_bucket_id == local.bucket_fullname ? 0 : 1 # don't create a logging config for the logging bucket!
+  count = var.logging_bucket_id == "" ? 0 : 1
 
-  bucket = local.bucket_fullname
+  bucket = var.bucket_name
   region = var.region
 
   target_bucket = var.logging_bucket_id
-  target_prefix = "${local.bucket_fullname}/"
+  target_prefix = "${var.bucket_name}/"
 }
