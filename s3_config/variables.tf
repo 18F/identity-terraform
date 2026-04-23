@@ -1,31 +1,6 @@
-# -- Locals --
-locals {
-  bucket_fullname = var.bucket_name_override != "" ? var.bucket_name_override : join(".",
-    [
-      var.bucket_name_prefix,
-      var.bucket_name,
-      "${data.aws_caller_identity.current.account_id}-${var.region}"
-    ]
-  )
-}
-
-# -- Variables --
-variable "bucket_name_prefix" {
-  description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
-  type        = string
-  default     = ""
-}
-
 variable "bucket_name" {
-  description = "Main/second substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region"
   type        = string
-  default     = ""
-}
-
-variable "bucket_name_override" {
-  description = "Set this to override the normal bucket naming schema."
-  type        = string
-  default     = ""
+  description = "Name of the S3 bucket to add logging/inventory/public access block configs to."
 }
 
 variable "region" {
@@ -65,7 +40,16 @@ variable "inventory_bucket_kms_key_id" {
 
 variable "logging_bucket_id" {
   type        = string
-  description = "Name of the S3 bucket used for logging S3 access events."
+  description = "S3 bucket used for logging S3 access events. CANNOT be the same bucket targeted by this module!"
+  default     = ""
+
+  validation {
+    condition = anytrue([
+      var.logging_bucket_id == "",
+      var.logging_bucket_id != var.bucket_name
+    ])
+    error_message = "Logging bucket and target bucket cannot be the same!"
+  }
 }
 
 variable "optional_fields" {

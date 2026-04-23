@@ -178,10 +178,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {
 }
 
 module "ssm_logs_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
+  source = "github.com/18F/identity-terraform//s3_config?ref=7a090cdc3647c08eb511b49e328caf33deef4f24"
   #source = "../s3_config"
 
-  bucket_name_override = aws_s3_bucket.ssm_logs.id
+  bucket_name          = aws_s3_bucket.ssm_logs.id
   region               = var.region
   inventory_bucket_arn = var.inventory_bucket_arn
   logging_bucket_id    = var.logging_bucket_id

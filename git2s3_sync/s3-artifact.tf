@@ -72,10 +72,10 @@ resource "aws_s3_bucket_versioning" "artifact_bucket" {
 }
 
 module "s3_config_artifact" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=34b2514f6a21c21902c0c75cbf4a2c34d07da1fa"
+  source = "github.com/18F/identity-terraform//s3_config?ref=7a090cdc3647c08eb511b49e328caf33deef4f24"
   #source = "../s3_config"
 
-  bucket_name_override = aws_s3_bucket.artifact_bucket.id
+  bucket_name          = aws_s3_bucket.artifact_bucket.id
   region               = data.aws_region.current.region
   inventory_bucket_arn = var.inventory_bucket_arn
   logging_bucket_id    = var.logging_bucket_id

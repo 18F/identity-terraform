@@ -43,7 +43,7 @@ module "guardduty_usw2" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_guardduty_bucket_config"></a> [guardduty\_bucket\_config](#module\_guardduty\_bucket\_config) | github.com/18F/identity-terraform//s3_config | 5566b93f81158fd07adc4f67fb8043b6c7c85122 |
+| <a name="module_guardduty_bucket_config"></a> [guardduty\_bucket\_config](#module\_guardduty\_bucket\_config) | github.com/18F/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
 
 ## Resources
 
