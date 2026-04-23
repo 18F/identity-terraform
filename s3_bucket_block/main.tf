@@ -145,7 +145,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
 
 module "bucket_config" {
   for_each = var.bucket_data
-  source   = "github.com/18F/identity-terraform//s3_config?ref=c7a7f5fa1dfcacf9a81c26bbd4cb8795f3c9521c"
+  source   = "github.com/18F/identity-terraform//s3_config?ref=7a090cdc3647c08eb511b49e328caf33deef4f24"
   #source = "../s3_config"
 
   bucket_name_prefix   = var.bucket_name_prefix

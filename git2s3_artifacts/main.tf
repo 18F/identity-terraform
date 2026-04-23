@@ -132,7 +132,7 @@ resource "aws_s3_bucket_versioning" "artifact_bucket" {
 
 module "s3_config" {
   count  = var.create_artifact_bucket ? 1 : 0
-  source = "github.com/18F/identity-terraform//s3_config?ref=c7a7f5fa1dfcacf9a81c26bbd4cb8795f3c9521c"
+  source = "github.com/18F/identity-terraform//s3_config?ref=7a090cdc3647c08eb511b49e328caf33deef4f24"
   #source = "../s3_config"
 
   bucket_name          = aws_s3_bucket.artifact_bucket[count.index].id
