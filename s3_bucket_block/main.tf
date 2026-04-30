@@ -42,7 +42,7 @@ variable "s3_blocked_encryption_types" {
   type        = list(string)
   description = "Single-item list of SSE types to block for object uploads to the S3 bucket(s) in this module."
   default = [
-    "NONE"
+    "SSE-C"
   ]
 
   validation {
