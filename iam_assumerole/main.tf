@@ -31,6 +31,14 @@ variable "role_name" {
   description = "Name of the IAM role."
 }
 
+variable "role_tags" {
+  description = "Tags to apply to the IAM role"
+  type        = map(string)
+  default = {
+    # RedshiftDbGroups  = "lg_users"    
+  }
+}
+
 variable "role_description" {
   description = "A description/summary of the IAM role being created."
   default     = ""
@@ -99,6 +107,7 @@ resource "aws_iam_role" "iam_assumable_role" {
 
   name                 = var.role_name
   description          = var.role_description
+  tags                 = var.role_tags
   assume_role_policy   = var.master_assumerole_policy
   path                 = "/"
   max_session_duration = var.role_duration #seconds

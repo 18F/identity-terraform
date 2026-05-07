@@ -66,3 +66,8 @@ module "billing-assumerole" {
    - `policy_description` - **string**: Description of the IAM policy.
    - `policy_document` - **list(object)**: List of Statements included in the policy document. Each _object_ in the list should include the contents of a Statement, i.e. the `sid`, `effect`, `actions`, and `resources`.
 - `permissions_boundary_policy_arn` - **string**: ARN of an existing IAM policy (from another module/source) which will be used as the Permissions Boundary for the IAM role.
+
+### Optional variables
+
+- `role_descripton` - **string**: Optional, a description/summary of the IAM role being created.
+- `role_tags` - **map(string)**: Optional, key/value pairs to add tags to the role
