@@ -34,16 +34,16 @@ EOM
 
 variable "ssm_interactive_cmd_map" {
   description = <<EOM
-REQUIRED. Map of data for SSM InteractiveCommand Session Documents. Each must
-include the document name, description, command to run, and any parameter(s) used
-to configure said command.
+REQUIRED. Map of data for SSM InteractiveCommand Session Documents. Each must include the document name, description,
+command to run, any parameter(s) used to configure said command, and whether or not to run the command(s) as root.
 EOM
   type        = map(any)
   default = {
     "ifconfig" = {
-      description = "Check network interface configuration"
-      command     = ["ifconfig"]
-      parameters  = []
+      description  = "Check network interface configuration"
+      command      = ["ifconfig"]
+      parameters   = []
+      run_elevated = false
     },
   }
 }
