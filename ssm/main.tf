@@ -187,11 +187,6 @@ module "ssm_logs_bucket_config" {
   logging_bucket_id    = var.logging_bucket_id
 }
 
-moved {
-  from = aws_s3_bucket_logging.ssm_logs
-  to   = module.ssm_logs_bucket_config.aws_s3_bucket_logging.access_logging[0]
-}
-
 resource "aws_cloudwatch_log_group" "ssm_session_logs" {
   name              = "aws-ssm-sessions-${var.env_name}" #stream name must start with "aws-ssm-logs"
   retention_in_days = 365
@@ -261,7 +256,7 @@ resource "aws_ssm_document" "ssm_session" {
   content         = <<DOC
 ---
 schemaVersion: '1.0'
-description: ${each.value["description"]}
+description: "${each.value["description"]}"
 sessionType: Standard_Stream
 inputs:
   %{if each.value["logging"]}s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
@@ -276,7 +271,7 @@ inputs:
   runAsDefaultUser: ''
   shellProfile:
     linux: 'trap "exit 0" INT TERM; ${each.value["command"]} ; exit'
-  DOC
+DOC
 }
 
 # SSM Command Docs
@@ -291,19 +286,17 @@ resource "aws_ssm_document" "ssm_cmd" {
 ---
 schemaVersion: "2.2"
 description: "${each.value["description"]}"
-parameters:
-  %{for ssm_parameter in each.value["parameters"]}
+parameters:%{for ssm_parameter in each.value["parameters"]}
   ${ssm_parameter.name}:
     type: ${ssm_parameter.type}
-    default: ${ssm_parameter.default}
-    description: ${ssm_parameter.description}
-  %{endfor}
+    default: "${ssm_parameter.default}"
+    description: "${ssm_parameter.description}"%{endfor}
 mainSteps:
 - action: "aws:runShellScript"
   name: "block1"
   inputs:
     runCommand: ${jsonencode(each.value["command"])}
-  DOC
+DOC
 }
 
 # SSM InteractiveCommands Session Docs
@@ -317,26 +310,28 @@ resource "aws_ssm_document" "ssm_interactive_cmd" {
   content         = <<DOC
 ---
 schemaVersion: '1.0'
-description: ${each.value["description"]}
+description: "${each.value["description"]}"
 sessionType: InteractiveCommands
 inputs:
   s3EncryptionEnabled: false
   cloudWatchEncryptionEnabled: false
   kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-parameters:
-  %{for ssm_parameter in each.value["parameters"]}
+%{if length(each.value["parameters"]) >= 1}parameters:%{for ssm_parameter in each.value["parameters"]}
   ${ssm_parameter.name}:
     type: ${ssm_parameter.type}
-    default: ${ssm_parameter.default}
-    description: ${ssm_parameter.description}
-    allowedPattern: ${ssm_parameter.pattern}
-  %{endfor}
-properties:
+    default: "${ssm_parameter.default}"
+    description: "${ssm_parameter.description}"
+    allowedPattern: '${ssm_parameter.pattern}'%{endfor}
+%{endif}properties:
   linux:
-    %{for ssm_cmd in each.value["command"]}commands: "${ssm_cmd}"%{endfor}
-    runAsElevated: true
-  DOC
+    runAsElevated: ${each.value["run_elevated"]}
+    commands:%{if length(each.value["command"]) == 1} "${each.value["command"][0]}"%{else} |
+    %{for ssm_cmd in each.value["command"]~}
+    ${ssm_cmd}
+    %{endfor~}
+  %{endif~}
+DOC
 }
 
 # SSM Port Forwarding Docs
@@ -349,22 +344,19 @@ resource "aws_ssm_document" "ssm_portforward_cmd" {
   content         = <<DOC
 ---
 schemaVersion: '1.0'
-description: ${each.value["description"]}
+description: "${each.value["description"]}"
 sessionType: Port
 inputs:
   s3EncryptionEnabled: false
   cloudWatchEncryptionEnabled: false
   kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-parameters:
-  %{for ssm_parameter in each.value["parameters"]}
+parameters:%{for ssm_parameter in each.value["parameters"]}
   ${ssm_parameter.name}:
     type: ${ssm_parameter.type}
     default: "${ssm_parameter.default}"
-    description: ${ssm_parameter.description}
-  %{endfor}
-properties:
-  %{for k, v in { for param in each.value["parameters"] : param.name => param.default } }
+    description: "${ssm_parameter.description}"%{endfor}
+properties:%{for k, v in { for param in each.value["parameters"] : param.name => param.default } }
   ${k}: "${v}"%{endfor}
   type: LocalPortForwarding
 DOC
