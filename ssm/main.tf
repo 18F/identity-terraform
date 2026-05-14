@@ -317,13 +317,13 @@ inputs:
   cloudWatchEncryptionEnabled: false
   kmsKeyId: ${aws_kms_key.kms_ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-parameters:%{for ssm_parameter in each.value["parameters"]}
+%{if length(each.value["parameters"]) >= 1}parameters:%{for ssm_parameter in each.value["parameters"]}
   ${ssm_parameter.name}:
     type: ${ssm_parameter.type}
     default: "${ssm_parameter.default}"
     description: "${ssm_parameter.description}"
     allowedPattern: '${ssm_parameter.pattern}'%{endfor}
-properties:
+%{endif}properties:
   linux:
     runAsElevated: ${each.value["run_elevated"]}
     commands:%{if length(each.value["command"]) == 1} "${each.value["command"][0]}"%{else} |
