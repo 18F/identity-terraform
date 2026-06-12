@@ -3,17 +3,7 @@ output "ssm_access_role_policy" {
   value       = data.aws_iam_policy_document.ssm_access_role_policy.json
 }
 
-output "ssm_session_logs" {
-  description = "Name of the CloudWatch Log Group for SSM access logging."
-  value       = aws_cloudwatch_log_group.ssm_session_logs.name
-}
-
-output "ssm_cmd_logs" {
-  description = "Name of the CloudWatch Log Group for SSM command logging."
-  value       = aws_cloudwatch_log_group.ssm_cmd_logs.name
-}
-
 output "ssm_kms_arn" {
   description = "ARN of the KMS key used for S3/session/log encryption."
-  value       = aws_kms_key.kms_ssm.arn
+  value       = aws_kms_key.ssm.arn
 }
