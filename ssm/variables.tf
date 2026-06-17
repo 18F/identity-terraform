@@ -25,17 +25,18 @@ variable "ssm_cmd_doc_map" {
       name        = string
       type        = string
       description = string
-      timeout     = optional(number, 3600)
       pattern     = optional(string)
       values      = optional(list(string))
       default     = string
     }))
+    timeout = optional(number, 3600)
     command = list(string)
     logging = bool
   }))
   description = <<EOM
-Map of data for SSM Command Documents. Each must map the document name to a description, the list of command(s) to run,
-any parameter(s) used to configure said command(s), and whether to create a CloudWatch Log Group for logging output(s)
+Map of data for SSM Command Documents. Each must map the document name to a description, the list of command(s)
+to run, any parameter(s) used to configure said command(s), the execution timeout (in seconds) for said command(s),
+i.e. how long they can run before failure, and whether to create a CloudWatch Log Group for logging output(s)
 of said command(s) if `--cloud-watch-output-config` is passed into the `ssm send-command` operation.
 EOM
   default = {
@@ -46,13 +47,13 @@ EOM
     #      name        = "uptimeCommand"
     #      type        = "String"
     #      description = "Command to run"
-    #      timeout     = 60
     #      default     = "uptime"
     #    },
     #  ]
     #  command = [
     #    "echo $( {{ uptimeCommand }} )",
     #  ]
+    #  timeout = 60
     #  logging = true
     #},
   }
