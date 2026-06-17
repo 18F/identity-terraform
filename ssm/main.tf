@@ -1,255 +1,9 @@
-data "aws_caller_identity" "current" {
-}
-
-data "aws_iam_policy_document" "s3_require_secure_connections" {
-  statement {
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-    actions = [
-      "s3:*",
-    ]
-    effect = "Deny"
-    resources = [
-      aws_s3_bucket.ssm_logs.arn,
-      "${aws_s3_bucket.ssm_logs.arn}/*"
-    ]
-    condition {
-      test     = "Bool"
-      values   = ["false"]
-      variable = "aws:SecureTransport"
-    }
-  }
-}
-
-# KMS keys
-data "aws_iam_policy_document" "kms_ssm" {
-  statement {
-    sid    = "KMSRootAdminAndIAM"
-    effect = "Allow"
-    principals {
-      type = "AWS"
-      identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      ]
-    }
-    actions = [
-      "kms:*"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-
-  statement {
-    sid    = "KMSCloudWatchEncryption"
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["logs.${var.region}.amazonaws.com"]
-    }
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:GenerateDataKey*",
-      "kms:ReEncrypt*"
-    ]
-    resources = [
-      "*"
-    ]
-    condition {
-      test     = "ArnLike"
-      variable = "kms:EncryptionContext:aws:logs:arn"
-      values = [
-        for logname in ["sessions", "cmds"] : join(":",
-          [
-            "arn:aws:logs",
-            var.region,
-            data.aws_caller_identity.current.account_id,
-            "log-group",
-            "aws-ssm-${logname}-${var.env_name}"
-          ]
-        )
-      ]
-    }
-  }
-}
-
-resource "aws_kms_key" "kms_ssm" {
-  description             = "KMSKeyForSSMSessions"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.kms_ssm.json
-}
-
-resource "aws_kms_alias" "kms_ssm" {
-  name          = "alias/${var.env_name}-kms-ssm"
-  target_key_id = aws_kms_key.kms_ssm.key_id
-}
-
-# S3 bucket w/KMS key encryption for SSM access logs
-resource "aws_s3_bucket" "ssm_logs" {
-  bucket = join(".", [
-    "${var.bucket_name_prefix}.${var.env_name}-ssm-logs",
-    "${data.aws_caller_identity.current.account_id}-${var.region}"
-  ])
-  force_destroy = var.force_destroy
-
-  tags = {
-    environment = var.env_name
-  }
-}
-
-resource "aws_s3_bucket_policy" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.id
-  policy = data.aws_iam_policy_document.s3_require_secure_connections.json
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.kms_ssm.key_id
-      sse_algorithm     = "aws:kms"
-    }
-
-    blocked_encryption_types = var.s3_blocked_encryption_types
-    bucket_key_enabled       = var.s3_bucket_key_enabled
-  }
-}
-
-resource "aws_s3_bucket_versioning" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_ownership_controls" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.id
-
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.id
-  acl    = "private"
-
-  depends_on = [aws_s3_bucket_ownership_controls.ssm_logs]
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "ssm_logs" {
-  bucket = aws_s3_bucket.ssm_logs.id
-
-  transition_default_minimum_object_size = "varies_by_storage_class"
-
-  rule {
-    id     = "expire"
-    status = "Enabled"
-
-    filter {
-      prefix = "/"
-    }
-
-    transition {
-      days          = 0
-      storage_class = "INTELLIGENT_TIERING"
-    }
-
-    noncurrent_version_transition {
-      noncurrent_days = 0
-      storage_class   = "INTELLIGENT_TIERING"
-    }
-
-    expiration {
-      days = 2190
-    }
-
-    noncurrent_version_expiration {
-      noncurrent_days = 2190
-    }
-  }
-}
-
-module "ssm_logs_bucket_config" {
-  source = "github.com/18F/identity-terraform//s3_config?ref=7a090cdc3647c08eb511b49e328caf33deef4f24"
-  #source = "../s3_config"
-
-  bucket_name          = aws_s3_bucket.ssm_logs.id
-  region               = var.region
-  inventory_bucket_arn = var.inventory_bucket_arn
-  logging_bucket_id    = var.logging_bucket_id
-}
-
-resource "aws_cloudwatch_log_group" "ssm_session_logs" {
-  name              = "aws-ssm-sessions-${var.env_name}" #stream name must start with "aws-ssm-logs"
-  retention_in_days = 365
-  kms_key_id        = aws_kms_key.kms_ssm.arn
-}
-
-# Policy and roles to permit SSM access / actions on EC2 instances, and to allow them to send metrics and logs to CloudWatch
-data "aws_iam_policy_document" "ssm_access_role_policy" {
-  # Basic
-  statement {
-    sid = "SSMCoreAccess"
-    actions = [
-      "ssm:UpdateInstanceInformation",
-      "ssmmessages:CreateControlChannel",
-      "ssmmessages:CreateDataChannel",
-      "ssmmessages:OpenControlChannel",
-      "ssmmessages:OpenDataChannel",
-      "ec2messages:GetMessages",
-      "ec2messages:AcknowledgeMessage",
-      "ec2messages:SendReply",
-      "ssm:ListInstanceAssociations"
-    ]
-    resources = [
-      "*",
-    ]
-  }
-  statement {
-    sid = "CloudWatchLogsAccessForSSM"
-    actions = [
-      "logs:PutLogEvents",
-    ]
-    resources = [
-      "*"
-    ]
-  }
-  # S3
-  statement {
-    sid = "S3LoggingAccessForSSM"
-    actions = [
-      "s3:PutObject"
-    ]
-    resources = [
-      "${aws_s3_bucket.ssm_logs.arn}/*"
-    ]
-  }
-  # KMS
-  statement {
-    sid = "KMSDecryptionAccess"
-    actions = [
-      "kms:Decrypt",
-      "kms:GenerateDataKey",
-    ]
-    resources = [
-      aws_kms_key.kms_ssm.arn
-    ]
-  }
-}
-
 # SSM Session Docs
-resource "aws_ssm_document" "ssm_session" {
-  for_each = var.ssm_doc_map
-  lifecycle { create_before_destroy = false }
+resource "aws_ssm_document" "session" {
+  for_each = var.ssm_session_doc_map
+
   name            = "${var.env_name}-ssm-document-${each.key}"
+  region          = var.region
   document_type   = "Session"
   target_type     = "/AWS::EC2::Instance"
   document_format = "YAML"
@@ -259,13 +13,18 @@ schemaVersion: '1.0'
 description: "${each.value["description"]}"
 sessionType: Standard_Stream
 inputs:
-  %{if each.value["logging"]}s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
+%{if each.value["logging"]~}
+  s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
   s3EncryptionEnabled: true
-  cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm_session_logs.name}"
+  s3KeyPrefix: "output/session_${each.key}"
+  cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm["output/session_${each.key}"].name}"
   cloudWatchEncryptionEnabled: true
-  cloudWatchStreamingEnabled: true%{else}s3EncryptionEnabled: false
-  cloudWatchEncryptionEnabled: false%{endif}
-  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
+  cloudWatchStreamingEnabled: true
+%{else~}
+  s3EncryptionEnabled: false
+  cloudWatchEncryptionEnabled: false
+%{endif~}
+  kmsKeyId: ${aws_kms_key.ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
   runAsEnabled: true
   runAsDefaultUser: ''
@@ -275,12 +34,13 @@ DOC
 }
 
 # SSM Command Docs
-resource "aws_ssm_document" "ssm_cmd" {
+resource "aws_ssm_document" "cmd" {
   for_each = var.ssm_cmd_doc_map
-  lifecycle { create_before_destroy = false }
 
   name            = "${var.env_name}-ssm-cmd-${each.key}"
+  region          = var.region
   document_type   = "Command"
+  target_type     = "/AWS::EC2::Instance"
   document_format = "YAML"
   content         = <<DOC
 ---
@@ -293,17 +53,19 @@ parameters:%{for ssm_parameter in each.value["parameters"]}
     description: "${ssm_parameter.description}"%{endfor}
 mainSteps:
 - action: "aws:runShellScript"
-  name: "block1"
+  name: "runShellScript"
   inputs:
+    timeoutSeconds: "${each.value["timeout"]}"
     runCommand: ${jsonencode(each.value["command"])}
 DOC
 }
 
 # SSM InteractiveCommands Session Docs
-resource "aws_ssm_document" "ssm_interactive_cmd" {
+resource "aws_ssm_document" "interactive" {
   for_each = var.ssm_interactive_cmd_map
-  lifecycle { create_before_destroy = false }
+
   name            = "${var.env_name}-ssm-document-${each.key}"
+  region          = var.region
   document_type   = "Session"
   target_type     = "/AWS::EC2::Instance"
   document_format = "YAML"
@@ -313,17 +75,30 @@ schemaVersion: '1.0'
 description: "${each.value["description"]}"
 sessionType: InteractiveCommands
 inputs:
+%{if each.value["logging"]~}
+  s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
+  s3EncryptionEnabled: true
+  s3KeyPrefix: "output/interactive_${each.key}"
+  cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm["output/interactive_${each.key}"].name}"
+  cloudWatchEncryptionEnabled: true
+  cloudWatchStreamingEnabled: true
+%{else~}
   s3EncryptionEnabled: false
   cloudWatchEncryptionEnabled: false
-  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
+%{endif~}
+  kmsKeyId: ${aws_kms_key.ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-%{if length(each.value["parameters"]) >= 1}parameters:%{for ssm_parameter in each.value["parameters"]}
+%{if length(each.value["parameters"]) >= 1~}
+parameters:
+%{for ssm_parameter in each.value["parameters"]~}
   ${ssm_parameter.name}:
     type: ${ssm_parameter.type}
     default: "${ssm_parameter.default}"
     description: "${ssm_parameter.description}"
-    allowedPattern: '${ssm_parameter.pattern}'%{endfor}
-%{endif}properties:
+    allowedPattern: '${ssm_parameter.pattern}'
+%{endfor~}
+%{endif~}
+properties:
   linux:
     runAsElevated: ${each.value["run_elevated"]}
     commands:%{if length(each.value["command"]) == 1} "${each.value["command"][0]}"%{else} |
@@ -335,11 +110,13 @@ DOC
 }
 
 # SSM Port Forwarding Docs
-resource "aws_ssm_document" "ssm_portforward_cmd" {
+resource "aws_ssm_document" "portforward" {
   for_each = var.ssm_portforward_cmd_map
-  lifecycle { create_before_destroy = false }
+
   name            = "${var.env_name}-ssm-document-${each.key}"
+  region          = var.region
   document_type   = "Session"
+  target_type     = "/AWS::EC2::Instance"
   document_format = "YAML"
   content         = <<DOC
 ---
@@ -347,66 +124,30 @@ schemaVersion: '1.0'
 description: "${each.value["description"]}"
 sessionType: Port
 inputs:
+%{if each.value["logging"]~}
+  s3BucketName: "${aws_s3_bucket.ssm_logs.id}"
+  s3EncryptionEnabled: true
+  s3KeyPrefix: "output/portforward_${each.key}"
+  cloudWatchLogGroupName: "${aws_cloudwatch_log_group.ssm["output/portforward_${each.key}"].name}"
+  cloudWatchEncryptionEnabled: true
+  cloudWatchStreamingEnabled: true
+%{else~}
   s3EncryptionEnabled: false
   cloudWatchEncryptionEnabled: false
-  kmsKeyId: ${aws_kms_key.kms_ssm.arn}
+%{endif~}
+  kmsKeyId: ${aws_kms_key.ssm.arn}
   idleSessionTimeout: ${var.session_timeout}
-parameters:%{for ssm_parameter in each.value["parameters"]}
+parameters:
+%{for ssm_parameter in each.value["parameters"]~}
   ${ssm_parameter.name}:
     type: ${ssm_parameter.type}
     default: "${ssm_parameter.default}"
-    description: "${ssm_parameter.description}"%{endfor}
-properties:%{for k, v in { for param in each.value["parameters"] : param.name => param.default } }
-  ${k}: "${v}"%{endfor}
+    description: "${ssm_parameter.description}"
+%{endfor~}
+properties:
+%{for k, v in { for param in each.value["parameters"] : param.name => param.default } ~}
+  ${k}: "${v}"
+%{endfor~}
   type: LocalPortForwarding
 DOC
 }
-
-# log when SSM commands are used, even if session data is not
-resource "aws_cloudwatch_event_rule" "ssm_cmd" {
-  for_each = local.all_docs_and_cmds
-
-  name        = "${var.env_name}-ssm-cmd-${each.key}"
-  description = "Capture when SSM command '${each.key}' used in ${var.env_name}"
-
-  event_pattern = <<PATTERN
-{
-    "source": [
-        "aws.ssm"
-    ],
-    "detail-type": [
-        "AWS API Call via CloudTrail"
-    ],
-    "detail": {
-        "eventSource": [
-            "ssm.amazonaws.com"
-        ],
-        "requestParameters": {
-            "documentName": [
-              "${var.env_name}-ssm-document-${each.key}"
-            ]
-        },
-        "eventName": [
-            "StartSession",
-            "ResumeSession",
-            "TerminateSession"
-        ]
-    }
-}
-PATTERN
-}
-
-resource "aws_cloudwatch_log_group" "ssm_cmd_logs" {
-  name              = "aws-ssm-cmds-${var.env_name}" #stream name must start with "aws-ssm-cmds"
-  retention_in_days = 365
-  kms_key_id        = aws_kms_key.kms_ssm.arn
-}
-
-resource "aws_cloudwatch_event_target" "ssm_cmds" {
-  for_each = local.all_docs_and_cmds
-
-  rule      = aws_cloudwatch_event_rule.ssm_cmd[each.key].name
-  target_id = "${var.env_name}_SSMCmd_${each.key}"
-  arn       = aws_cloudwatch_log_group.ssm_cmd_logs.arn
-}
-

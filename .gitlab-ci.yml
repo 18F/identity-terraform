@@ -18,7 +18,7 @@ terraform-fmt:
 
 # Scanning top level modules to avoid extreme duplication
 tfsec-check-soft:
-  image: aquasec/tfsec-ci:v1.26.3
+  image: "$ECR_REGISTRY/docker-hub/aquasec/tfsec-ci:v1.26.3"
   script:
     - tfsec --no-color --soft-fail .
   rules:
@@ -28,7 +28,7 @@ tfsec-check-soft:
 
 # Add folders that should be vuln free and STAY THAT WAY
 tfsec-check-enforce:
-  image: aquasec/tfsec-ci:v1.26.3
+  image: "$ECR_REGISTRY/docker-hub/aquasec/tfsec-ci:v1.26.3"
   script:
     - tfsec --no-color .
   rules:
@@ -110,6 +110,7 @@ lambda-lint:
         - "**/src/*"
   tags:
     - test-pool
+
 variables:
   ECR_REGISTRY: '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
   SECURE_ANALYZERS_PREFIX: "$ECR_REGISTRY/gitlab/security-products"
