@@ -55,6 +55,7 @@ mainSteps:
 - action: "aws:runShellScript"
   name: "runShellScript"
   inputs:
+    timeoutSeconds: "${each.value["timeout"]}"
     runCommand: ${jsonencode(each.value["command"])}
 DOC
 }

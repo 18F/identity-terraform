@@ -25,6 +25,7 @@ variable "ssm_cmd_doc_map" {
       name        = string
       type        = string
       description = string
+      timeout     = optional(number, 3600)
       pattern     = optional(string)
       values      = optional(list(string))
       default     = string
@@ -45,6 +46,7 @@ EOM
     #      name        = "uptimeCommand"
     #      type        = "String"
     #      description = "Command to run"
+    #      timeout     = 60
     #      default     = "uptime"
     #    },
     #  ]
