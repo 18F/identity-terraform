@@ -42,20 +42,42 @@ resource "aws_ssm_document" "cmd" {
   document_type   = "Command"
   target_type     = "/AWS::EC2::Instance"
   document_format = "YAML"
-  content         = <<DOC
+  content = <<DOC
 ---
 schemaVersion: "2.2"
 description: "${each.value["description"]}"
-parameters:%{for ssm_parameter in each.value["parameters"]}
+parameters:
+%{for ssm_parameter in each.value["parameters"]~}
   ${ssm_parameter.name}:
     type: ${ssm_parameter.type}
     default: "${ssm_parameter.default}"
-    description: "${ssm_parameter.description}"%{endfor}
+    description: "${ssm_parameter.description}"
+%{if ssm_parameter.pattern != null~}
+    allowedPattern: '${ssm_parameter.pattern}'
+%{else~}
+%{if ssm_parameter.values != null~}
+    allowedValues:
+%{for value in ssm_parameter.values~}
+    - ${value}
+%{endfor~}
+%{endif~}
+%{endif~}
+%{endfor~}
+%{if !contains([for param in each.value["parameters"] : param.name], "executionTimeout")~}
+  executionTimeout:
+    type: String
+    default: "${each.value["timeout"]}"
+    description: "${join(" ", [
+  "(Optional) The time in seconds for a command to complete before it is considered to have failed.",
+  "Default is 3600 (1 hour). Maximum is 172800 (48 hours)."
+])}"
+    allowedPattern: '([1-9][0-9]{0,4})|(1[0-6][0-9]{4})|(17[0-1][0-9]{3})|(172[0-7][0-9]{2})|(172800)'
+%{endif~}
 mainSteps:
 - action: "aws:runShellScript"
   name: "runShellScript"
   inputs:
-    timeoutSeconds: "${each.value["timeout"]}"
+    timeoutSeconds: "{{ executionTimeout }}"
     runCommand: ${jsonencode(each.value["command"])}
 DOC
 }
@@ -95,7 +117,16 @@ parameters:
     type: ${ssm_parameter.type}
     default: "${ssm_parameter.default}"
     description: "${ssm_parameter.description}"
+%{if ssm_parameter.pattern != null~}
     allowedPattern: '${ssm_parameter.pattern}'
+%{else~}
+%{if ssm_parameter.values != null~}
+    allowedValues:
+%{for value in ssm_parameter.values~}
+    - ${value}
+%{endfor~}
+%{endif~}
+%{endif~}
 %{endfor~}
 %{endif~}
 properties:
@@ -143,6 +174,16 @@ parameters:
     type: ${ssm_parameter.type}
     default: "${ssm_parameter.default}"
     description: "${ssm_parameter.description}"
+%{if ssm_parameter.pattern != null~}
+    allowedPattern: '${ssm_parameter.pattern}'
+%{else~}
+%{if ssm_parameter.values != null~}
+    allowedValues:
+%{for value in ssm_parameter.values~}
+    - ${value}
+%{endfor~}
+%{endif~}
+%{endif~}
 %{endfor~}
 properties:
 %{for k, v in { for param in each.value["parameters"] : param.name => param.default } ~}

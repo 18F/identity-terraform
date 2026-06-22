@@ -29,15 +29,18 @@ variable "ssm_cmd_doc_map" {
       values      = optional(list(string))
       default     = string
     }))
-    timeout = optional(number, 3600)
     command = list(string)
     logging = bool
+    timeout = optional(number, 3600)
   }))
   description = <<EOM
 Map of data for SSM Command Documents. Each must map the document name to a description, the list of command(s)
-to run, any parameter(s) used to configure said command(s), the execution timeout (in seconds) for said command(s),
-i.e. how long they can run before failure, and whether to create a CloudWatch Log Group for logging output(s)
-of said command(s) if `--cloud-watch-output-config` is passed into the `ssm send-command` operation.
+to run, any parameter(s) used to configure said command(s), and whether to create a CloudWatch Log Group for
+logging output(s) of said command(s) if `--cloud-watch-output-config` is passed into the `ssm send-command` operation.
+Any commands which do not specify an 'executionTimeout' parameter -- the timeout, in seconds, that said command(s)
+are allowed to run before being assumed to have failed, and thus halted by SSM -- will automatically get said
+parameter added during SSM document creation; it defaults to 3600 seconds, but can be adjusted per-command by
+specifying a timeout value (as shown in the 'type' above).
 EOM
   default = {
     #"uptime" = {
