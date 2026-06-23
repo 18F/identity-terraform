@@ -46,7 +46,7 @@ data "aws_iam_policy_document" "ssm_access_role_policy" {
           var.region,
           data.aws_caller_identity.current.account_id,
           "log-group",
-          "/aws/ssm/${var.env_name}/${logname}*"
+          "/aws/ssm/${var.env_name}*"
         ]
       )
     ]
