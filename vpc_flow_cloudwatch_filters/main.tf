@@ -77,7 +77,7 @@ variable "vpc_flow_rejections_unexpected_fields" {
   type = any
   default = {
     action  = "action=REJECT"
-    srcAddr = "srcAddr like /^172\.16\./"
+    srcAddr = "srcAddr like /^172\\.16\\./"
     dstAddr = "dstAddr!=192.88.99.255"
     srcPort = "srcPort!=26 && srcPort!=443 && srcPort!=3128 && srcPort!=5044"
   }
