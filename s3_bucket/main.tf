@@ -20,7 +20,7 @@ resource "aws_s3_bucket_public_access_block" "bucket" {
 resource "aws_s3_bucket_inventory" "bucket" {
   for_each = anytrue([
     var.inventory_bucket_arn == "",
-    var.inventory_config == {}
+    length(var.inventory_config) == 0
   ]) ? {} : var.inventory_config
 
   bucket = var.bucket_name
@@ -142,7 +142,7 @@ resource "aws_s3_bucket_acl" "bucket" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "bucket" {
-  count = var.lifecycle_rules == {} ? 0 : 1
+  count = length(var.lifecycle_rules) == 0 ? 0 : 1
 
   bucket = aws_s3_bucket.bucket.id
   region = var.region
