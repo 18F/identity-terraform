@@ -30,7 +30,7 @@ resource "aws_s3_bucket_inventory" "bucket" {
   included_object_versions = each.value.included_versions
 
   dynamic "filter" {
-    for_each = try([each.value.filter_prefix], [])
+    for_each = each.value.filter_prefix == null ? [] : [each.value.filter_prefix]
     iterator = filter_prefix
 
     content {
