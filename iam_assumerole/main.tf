@@ -68,3 +68,23 @@ resource "aws_iam_role_policy_attachments_exclusive" "managed" {
 output "role" {
   value = aws_iam_role.assumable
 }
+
+moved {
+  from = aws_iam_policy.iam_role_policy[0]
+  to   = aws_iam_policy.main[0]
+}
+
+moved {
+  from = aws_iam_role.iam_assumable_role[0]
+  to   = aws_iam_role.assumable
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.policy_attachment_custom
+  to   = aws_iam_role_policy_attachment.custom
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.policy_attachment_main[0]
+  to   = aws_iam_role_policy_attachment.main[0]
+}
