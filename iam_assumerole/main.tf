@@ -65,9 +65,15 @@ resource "aws_iam_role_policy_attachments_exclusive" "managed" {
   ]))
 }
 
-output "role" {
-  value = aws_iam_role.assumable
+output "role_name" {
+  value = aws_iam_role.assumable.name
 }
+
+output "role_unique_id" {
+  value = aws_iam_role.assumable.unique_id
+}
+
+# remove in a subsequent MR/release
 
 moved {
   from = aws_iam_policy.iam_role_policy[0]
