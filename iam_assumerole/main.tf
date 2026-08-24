@@ -91,6 +91,6 @@ moved {
 }
 
 moved {
-  from = aws_iam_role_policy_attachment.policy_attachment_main[0]
-  to   = aws_iam_role_policy_attachment.main[0]
+  from = aws_iam_role_policy_attachment.policy_attachment_main
+  to   = aws_iam_role_policy_attachment.main
 }
