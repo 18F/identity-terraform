@@ -76,8 +76,8 @@ output "role_unique_id" {
 # remove in a subsequent MR/release
 
 moved {
-  from = aws_iam_policy.iam_role_policy[0]
-  to   = aws_iam_policy.main[0]
+  from = aws_iam_policy.iam_role_policy
+  to   = aws_iam_policy.main
 }
 
 moved {
