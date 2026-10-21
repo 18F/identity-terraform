@@ -1,31 +1,3 @@
-# Locals
-
-locals {
-  gd_perm_conditions = [
-    {
-      "variable" = "aws:SourceAccount",
-      "values"   = [data.aws_caller_identity.current.account_id]
-    },
-    {
-      "variable" = "aws:SourceArn",
-      "values"   = [aws_guardduty_detector.main.arn]
-    }
-  ]
-
-  features_additional = {
-    "EKS_RUNTIME_MONITORING" = [
-      "EKS_ADDON_MANAGEMENT"
-    ],
-    "RUNTIME_MONITORING" = [
-      "EKS_ADDON_MANAGEMENT",
-      "ECS_FARGATE_AGENT_MANAGEMENT",
-      "EC2_AGENT_MANAGEMENT"
-    ]
-  }
-}
-
-# Variables
-
 variable "region" {
   type        = string
   description = "AWS Region for the module."
@@ -33,38 +5,35 @@ variable "region" {
 }
 
 variable "enabled_features" {
-  type        = list(string)
-  description = "List of GuardDuty Features to set to ENABLED for the aws_guardduty_detector.main resource."
-  default     = []
-
-  validation {
-    condition = anytrue([
-      length(var.enabled_features) == 0,
-      alltrue([for feature in var.enabled_features : contains([
-        "S3_DATA_EVENTS",
-        "EKS_AUDIT_LOGS",
-        "EBS_MALWARE_PROTECTION",
-        "RDS_LOGIN_EVENTS",
-        "EKS_RUNTIME_MONITORING",
-        "LAMBDA_NETWORK_LOGS",
-        "RUNTIME_MONITORING",
-        "EKS_ADDON_MANAGEMENT",
-        "ECS_FARGATE_AGENT_MANAGEMENT",
-        "EC2_AGENT_MANAGEMENT"
-      ], feature)])
-    ])
-    error_message = <<EOM
-Invalid Feature name(s) detected in list. Must be empty (no features enabled), or contain one or more of the following:
-
-"S3_DATA_EVENTS", "EKS_AUDIT_LOGS", "EBS_MALWARE_PROTECTION", "RDS_LOGIN_EVENTS",
-"EKS_RUNTIME_MONITORING", "LAMBDA_NETWORK_LOGS", "RUNTIME_MONITORING", "EKS_ADDON_MANAGEMENT",
-"ECS_FARGATE_AGENT_MANAGEMENT", and/or "EC2_AGENT_MANAGEMENT".
+  type        = map(list(string))
+  description = <<EOM
+Map of GuardDuty Features to set to ENABLED for the aws_guardduty_detector.main resource.
+Each item should include the feature name (i.e. RDS_LOGIN_EVENTS, EKS_AUDIT_LOGS),
+and (if any exist/are desired) any additional_configuration options for said feature.
+Please note that EKS_RUNTIME_MONITORING and RUNTIME_MONITORING cannot BOTH be enabled
+in the same detector, as (per AWS docs) attempting to do so will cause an error.
 EOM
+  default = {
+    #"EBS_MALWARE_PROTECTION" = [],
+    #"EKS_AUDIT_LOGS"         = [],
+    #"EKS_RUNTIME_MONITORING" = [
+    #  "EKS_ADDON_MANAGEMENT"
+    #],
+    #"LAMBDA_NETWORK_LOGS"    = [],
+    #"RDS_LOGIN_EVENTS" = [
+    #  "RDS_DATA_RISK"
+    #],
+    #"RUNTIME_MONITORING" = [
+    #  "EKS_ADDON_MANAGEMENT",
+    #  "ECS_FARGATE_AGENT_MANAGEMENT",
+    #  "EC2_AGENT_MANAGEMENT"
+    #],
+    #"S3_DATA_EVENTS"         = [],
   }
 
   validation {
     condition = length([
-      for feature in var.enabled_features : true if contains(
+      for feature in keys(var.enabled_features) : true if contains(
         ["RUNTIME_MONITORING", "EKS_RUNTIME_MONITORING"], feature
       )
     ]) < 2
