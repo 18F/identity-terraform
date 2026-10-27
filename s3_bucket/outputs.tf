@@ -15,3 +15,8 @@ output "kms" {
     key_id = aws_kms_key.bucket[0].key_id
   } : null
 }
+
+output "bucket_policy" {
+  description = "Full text of the S3 bucket policy."
+  value       = aws_s3_bucket_policy.bucket.policy
+}

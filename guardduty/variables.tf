@@ -41,21 +41,15 @@ EOM
   }
 }
 
-variable "bucket_name" {
-  type        = string
-  description = <<EOM
-Second substring in S3 bucket name of
-$bucket_name_prefix.$bucket_name.$account_id-$region.
-EOM
-  default     = "guardduty"
-}
-
 variable "bucket_name_prefix" {
   type        = string
-  description = <<EOM
-First substring in S3 bucket name of
-$bucket_name_prefix.$bucket_name.$account_id-$region.
-EOM
+  description = "First substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region."
+}
+
+variable "bucket_name" {
+  type        = string
+  description = "Second substring in S3 bucket name of $bucket_name_prefix.$bucket_name.$account_id-$region."
+  default     = "guardduty"
 }
 
 variable "bucket_name_override" {
@@ -99,12 +93,6 @@ variable "finding_freq" {
   default     = "SIX_HOURS"
 }
 
-variable "cloudwatch_name" {
-  type        = string
-  description = "Name for the GuardDuty Findings CloudWatch Target/Event/Rule."
-  default     = "GuardDutyFindings"
-}
-
 variable "log_group_id" {
   type        = string
   description = "ID of the CloudWatch Log Group to log GuardDuty findings."
@@ -121,4 +109,18 @@ variable "publishing_policy_name" {
   type        = string
   description = "Name of the CloudWatch Log Resource Policy used for log delivery."
   default     = "cw-rule-log-publishing-policy"
+}
+
+variable "cloudwatch_retention_days" {
+  description = "Number of days to retain Streams for all CloudWatch Log Groups defined in/created by this module."
+  type        = number
+  default     = 365
+}
+
+variable "prevent_tf_log_deletion" {
+  type        = bool
+  description = <<EOM
+Whether to ACTUALLY destroy CloudWatch Log Groups in this module vs. just removing them from state when using -destroy.
+EOM
+  default     = false
 }
