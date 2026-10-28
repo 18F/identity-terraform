@@ -4,12 +4,6 @@ variable "region" {
   default     = "us-west-2"
 }
 
-variable "enabled" {
-  type        = number
-  description = "Whether or not to create the Lambda alert monitor."
-  default     = 1
-}
-
 variable "function_name" {
   type        = string
   description = "Name of the lambda function to monitor"
@@ -127,11 +121,4 @@ variable "duration_alarm_description" {
   type        = string
   description = "Overrides the default alarm description for duration alarm"
   default     = ""
-}
-
-locals {
-  duration_settings_in_milliseconds      = var.duration_setting * 1000
-  default_error_rate_alarm_description   = "Lambda error rate has exceeded ${var.error_rate_threshold}%\n\n${var.runbook}"
-  default_memory_usage_alarm_description = "Lambda memory usage has exceeded ${var.memory_usage_threshold}%\n\n${var.runbook}"
-  default_duration_alarm_description     = "Lambda duration has exceeded ${var.duration_threshold}%\n\n${var.runbook}"
 }

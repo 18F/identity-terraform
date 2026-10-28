@@ -94,7 +94,7 @@ module "sample_function" {
 | <a name="input_handler"></a> [handler](#input\_handler) | Full Lambda handler string | `string` | `""` | no |
 | <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | Lambda handler function name | `string` | `"lambda_handler"` | no |
 | <a name="input_iam_role_description"></a> [iam\_role\_description](#input\_iam\_role\_description) | Description of the iam role associated with the lambda function | `string` | `""` | no |
-| <a name="input_insights_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | Whether the lambda has Lambda Insights enabled | `bool` | `true` | no |
+| <a name="input_insights_layer_enabled"></a> [insights\_enabled](#input\_insights\_enabled) | Whether the lambda has Lambda Insights enabled | `bool` | `true` | no |
 | <a name="input_lambda_iam_policy_document"></a> [lambda\_iam\_policy\_document](#input\_lambda\_iam\_policy\_document) | IAM permissions for the lambda function. Use a data.aws\_iam\_policy\_document to construct | `string` | `""` | no |
 | <a name="input_lambda_iam_role_name"></a> [lambda\_iam\_role\_name](#input\_lambda\_iam\_role\_name) | Role name override for resources that need underscores.<br/>If not specified, will set the role name to the default of '{var.function\_name}-lambda-role'<br/>If var.role\_name\_prefix is set, the module will use the name prefix instead of the role name | `string` | `null` | no |
 | <a name="input_layers"></a> [layers](#input\_layers) | List of layers for the lambda function | `list(any)` | `[]` | no |

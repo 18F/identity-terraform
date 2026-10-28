@@ -27,6 +27,9 @@ terraform {
     ephemeraltls = {
       source = "lonegunmanb/ephemeraltls"
     }
+    random = {
+      source = "hashicorp/random"
+    }
   }
   required_version = ">= 1.3.5"
 }

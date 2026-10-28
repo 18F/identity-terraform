@@ -47,14 +47,41 @@ variable "source_code_filename" {
 }
 
 variable "source_dir" {
-  description = "Directory containing the Lambda source code"
   type        = string
+  description = <<EOM
+Directory containing the Lambda source code, i.e. '$path.module/src/'. Ideally, should specifically point to
+the directory where the main function code file exists. Said directory should NOT contain any files/directories/etc.
+for Lambda layers, if any exist/should be created for the function. CANNOT be left blank.
+EOM
 
   validation {
     condition     = length(var.source_dir) > 0
     error_message = "source_dir must be a non-empty string."
   }
 }
+
+variable "output_dir" {
+  type        = string
+  description = <<EOM
+Directory where the archive_file data source should output a ZIP file containing code for the Lambda function.
+If Lambda Layers are being utilized (i.e. via resources in var.layer_dir), an archive_file for the dependencies
+will also be used to output a ZIP to this path. CANNOT be the same as either var.source_dir or var.layer_dir.
+EOM
+
+  validation {
+    condition     = length(var.source_dir) > 0
+    error_message = "source_dir must be a non-empty string."
+  }
+
+  validation {
+    condition = alltrue([
+      var.output_dir != var.source_dir,
+      var.output_dir != var.layer_dir
+    ])
+    error_message = "output_dir cannot be the same as either layer_dir or source_dir."
+  }
+}
+
 
 variable "memory_size" {
   description = "Memory allocated to the Lambda function"
@@ -108,18 +135,19 @@ variable "environment_variables" {
 }
 
 variable "reserved_concurrent_executions" {
+  type        = number
   description = "The max number concurrent invocations allowed for the Lambda"
   default     = -1
 }
+
 variable "role_name_prefix" {
-  default     = null
-  description = <<EOM
-Prefix string used to specify the name of the function's IAM role.
-Required if creating the same function in multiple regions.
-If not specified, will set the role name to the value of  
-var.lambda_iam_role_name or the default of '{var.function_name}-lambda-role'
-EOM
   type        = string
+  description = <<EOM
+Prefix string used to specify the name of the function's IAM role. Required if creating the same function in
+multiple regions. If not specified, will set the role name to the value of var.lambda_iam_role_name
+or the default of '{var.function_name}-lambda-role'.
+EOM
+  default     = null
 }
 
 variable "log_skip_destroy" {
@@ -136,12 +164,6 @@ variable "cloudwatch_retention_days" {
     condition     = contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.cloudwatch_retention_days)
     error_message = "cloudwatch_retention_days must be one of the following values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653."
   }
-}
-
-variable "layers" {
-  default     = []
-  type        = list(any)
-  description = "List of layers for the lambda function"
 }
 
 variable "lambda_iam_policy_document" {
@@ -186,11 +208,56 @@ variable "event_pattern" {
   type        = string
 }
 
-# All of the variables below are utilized by the lambda alerts module.
-variable "enabled" {
-  type        = number
-  description = "Whether or not to create the Lambda alert monitor."
-  default     = 1
+# Lambda Layers
+
+variable "insights_layer_enabled" {
+  type        = bool
+  description = <<EOM
+If set to 'true', will add the LambdaInsightsExtension from the Lambda Insights AWS account as a Layer for the function.
+If adding a custom layer via var.layer_name, it will be added /after/ the insights layer.
+EOM
+  default     = true
+}
+
+variable "layer_name" {
+  type        = string
+  description = "Identifier used to name the Lambda Layer, if using one."
+  default     = ""
+}
+
+variable "layer_dir" {
+  type        = string
+  description = <<EOM
+Directory containing any dependencies for the Lambda function to add as a Layer for said function, if using any.
+Ideally, said directory is in the same parent as var.source_dir for better organization within the filesystem.
+Should NOT contain any files/directories/etc. for the core function code, nor should it be the same as the source dir.
+EOM
+  default     = ""
+
+  validation {
+    condition     = var.layer_dir != var.source_dir
+    error_message = "layer_dir and source_dir must not be the same."
+  }
+}
+
+variable "layer_s3_bucket" {
+  type        = string
+  description = <<EOM
+Full name of an S3 bucket which is used to store the ZIP files for Lambda Layers, which are managed via the
+lambda_layer s3 object resource. Leave blank if not using Lambda Layers.
+EOM
+  default     = ""
+}
+
+# lambda_alerts module
+
+variable "lambda_alerts_enabled" {
+  type        = bool
+  description = <<EOM
+Whether or not to create the lambda_alerts module, which consists of CloudWatch Metric Alarms
+that track error rate, memory usage, and function execution duration.
+EOM
+  default     = true
 }
 
 variable "env_name" {
@@ -307,12 +374,6 @@ variable "treat_missing_data" {
 
     error_message = "treat_missing_data must be one of: breaching, notBreaching, ignore, or missing."
   }
-}
-
-variable "insights_enabled" {
-  description = "Whether the lambda has Lambda Insights enabled"
-  default     = true
-  type        = bool
 }
 
 variable "error_rate_alarm_name_override" {

@@ -1,48 +1,71 @@
-module "lambda_insights" {
-  count  = var.insights_enabled ? 1 : 0
-  source = "github.com/18F/identity-terraform//lambda_insights?ref=5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9"
-  #source = "../../../../identity-terraform/lambda_insights"
-
-  region = var.region
+locals {
+  lambda_dirs = merge(
+    {
+      source = {
+        dir = var.source_dir
+        zip = var.function_name
+      }
+    },
+    var.layer_dir == "" ? {} : {
+      layers = {
+        dir = var.layer_dir
+        zip = var.layer_name
+      }
+    }
+  )
 }
 
-resource "aws_cloudwatch_log_group" "lambda" {
-  name              = "/aws/lambda/${var.function_name}"
-  region            = var.region
-  retention_in_days = var.cloudwatch_retention_days
-  skip_destroy      = var.log_skip_destroy
+data "archive_file" "lambda" {
+  for_each = local.lambda_dirs
+
+  type             = "zip"
+  source_dir       = each.value.dir
+  output_path      = "${var.output_dir}/${each.value.zip}.zip"
+  output_file_mode = "0644"
 }
 
-module "lambda_code" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=185bba6064e480379fb4f4e58c9489c9085b3a65"
-  #source = "../../../../identity-terraform/null_archive"
+# The source_code_hash attribute is not a reliable source to track/trigger changes to Lambda functions, due to a
+# discrepancy between the file's actual hash and the value retured by AWS' API/resourceAwsLambdaFunctionRead(),
+# which Terraform to overwrite the value of source_code_hash in state. This is still an open issue, both with AWS
+# and with the Terraform provider plugin, as described in greater detail here:
+# https://github.com/hashicorp/terraform-provider-aws/issues/7385#issuecomment-728596589
+#
+# Since the actual files themselves are what we ACTUALLY want to track changes to -- not the paths or other
+# base46-centric metadata -- this resource is used to generate a random UUID based on each file's MD5 hash, which
+# will only update/change if the contents of the actual file get changed. This random_uuid resource is then used
+# as a replacement trigger for the function (if its underlying code changes), and (if using) the Lambda Layer
+# (i.e. if anything within var.layer_dir changes).
+resource "random_uuid" "lambda" {
+  for_each = local.lambda_dirs
 
-  source_code_filename = var.source_code_filename
-  source_dir           = var.source_dir
-  zip_filename         = "${replace(var.function_name, "-", "_")}_code.zip"
+  keepers = {
+    for filename in setunion(
+      toset([for setfile in fileset("${each.value.dir}/", "**") : setfile if !endswith(setfile, ".zip")]),
+    ) : filename => filemd5("${each.value.dir}/${filename}")
+  }
 }
 
 resource "aws_lambda_function" "lambda" {
-  region        = var.region
-  filename      = module.lambda_code.zip_output_path
+  region = var.region
+
   function_name = var.function_name
-  role          = aws_iam_role.lambda.arn
   description   = var.description
+  role          = aws_iam_role.lambda.arn
+  filename      = data.archive_file.lambda["source"].output_path
   handler = var.handler != "" ? (
     var.handler
     ) : (
     "${replace(var.source_code_filename, "/\\..*/", "")}.${var.handler_function_name}"
   )
 
-  source_code_hash               = module.lambda_code.zip_output_base64sha256
   memory_size                    = var.memory_size
   runtime                        = var.runtime
   timeout                        = var.timeout
   reserved_concurrent_executions = var.reserved_concurrent_executions
 
   layers = compact(flatten([
-    var.insights_enabled ? module.lambda_insights[0].layer_arn : "",
-    var.layers
+    var.insights_layer_enabled ? module.lambda_insights[0].layer_arn : "",
+    local.layer_enabled == 1 ? aws_lambda_layer_version.layer[0].arn : ""
   ]))
 
   environment {
@@ -54,36 +77,15 @@ resource "aws_lambda_function" "lambda" {
     log_group  = aws_cloudwatch_log_group.lambda.name
   }
 
-  depends_on = [
-    module.lambda_code.resource_check,
-  ]
-}
+  # replace the function ONLY if the main code (tracked in random_uuid.function_main) changes at all.
+  # do not track things like the ZIP file, since the file name/path/other metadata can change per-machine/per-OS.
+  lifecycle {
+    replace_triggered_by = [
+      random_uuid.lambda["source"]
+    ]
+    ignore_changes = [
+      filename
+    ]
+  }
 
-module "lambda_alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=812c086fa4f4a0a52c1b8b630a27af01f18cf357"
-  #source = "../../../../identity-terraform/lambda_alerts"
-
-  region                           = var.region
-  enabled                          = var.enabled
-  function_name                    = aws_lambda_function.lambda.function_name
-  env_name                         = var.env_name
-  alarm_actions                    = var.alarm_actions
-  ok_actions                       = var.ok_actions
-  runbook                          = var.runbook
-  error_rate_operator              = var.error_rate_operator
-  error_rate_threshold             = var.error_rate_threshold
-  memory_usage_threshold           = var.memory_usage_threshold
-  duration_setting                 = aws_lambda_function.lambda.timeout
-  duration_threshold               = var.duration_threshold
-  datapoints_to_alarm              = var.datapoints_to_alarm
-  evaluation_periods               = var.evaluation_periods
-  period                           = var.period
-  treat_missing_data               = var.treat_missing_data
-  insights_enabled                 = var.insights_enabled
-  error_rate_alarm_name_override   = var.error_rate_alarm_name_override
-  memory_usage_alarm_name_override = var.memory_usage_alarm_name_override
-  duration_alarm_name_override     = var.duration_alarm_name_override
-  error_rate_alarm_description     = var.error_rate_alarm_description
-  memory_usage_alarm_description   = var.memory_usage_alarm_description
-  duration_alarm_description       = var.duration_alarm_description
 }

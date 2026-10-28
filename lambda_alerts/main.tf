@@ -1,6 +1,4 @@
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
-  count = var.enabled
-
   region = var.region
   alarm_name = length(var.error_rate_alarm_name_override) > 0 ? var.error_rate_alarm_name_override : join("-", compact([
     var.env_name,
@@ -9,7 +7,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
     ])
   )
 
-  alarm_description = length(var.error_rate_alarm_description) > 0 ? var.error_rate_alarm_description : local.default_error_rate_alarm_description
+  alarm_description = length(var.error_rate_alarm_description) > 0 ? (
+  var.error_rate_alarm_description) : "Lambda error rate has exceeded ${var.error_rate_threshold}%\n\n${var.runbook}"
 
   comparison_operator       = var.error_rate_operator
   evaluation_periods        = var.evaluation_periods
@@ -57,7 +56,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
-  count = var.enabled == 1 && var.insights_enabled ? 1 : 0
+  count = var.insights_enabled ? 1 : 0
 
   region = var.region
   alarm_name = length(var.memory_usage_alarm_name_override) > 0 ? var.memory_usage_alarm_name_override : join("-", compact([
@@ -66,7 +65,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
     "LambdaMemoryUsage"
     ])
   )
-  alarm_description = length(var.memory_usage_alarm_description) > 0 ? var.memory_usage_alarm_description : local.default_memory_usage_alarm_description
+  alarm_description = length(var.memory_usage_alarm_description) > 0 ? (
+  var.memory_usage_alarm_description) : "Lambda memory usage has exceeded ${var.memory_usage_threshold}%\n\n${var.runbook}"
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
@@ -84,15 +84,9 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
   dimensions = {
     function_name = var.function_name
   }
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
-  count = var.enabled
-
   region = var.region
   alarm_name = length(var.duration_alarm_name_override) > 0 ? var.duration_alarm_name_override : join("-", compact([
     var.env_name,
@@ -100,11 +94,12 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
     "LambdaDuration"
     ])
   )
-  alarm_description = length(var.duration_alarm_description) > 0 ? var.duration_alarm_description : local.default_duration_alarm_description
+  alarm_description = length(var.duration_alarm_description) > 0 ? (
+  var.duration_alarm_description) : "Lambda duration has exceeded ${var.duration_threshold}%\n\n${var.runbook}"
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
-  threshold                 = local.duration_settings_in_milliseconds * (var.duration_threshold * 0.01)
+  threshold                 = (var.duration_setting * 1000) * (var.duration_threshold * 0.01)
   insufficient_data_actions = []
   datapoints_to_alarm       = var.datapoints_to_alarm
   treat_missing_data        = var.treat_missing_data
@@ -117,9 +112,5 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   statistic   = "Maximum"
   dimensions = {
     FunctionName = var.function_name
-  }
-
-  lifecycle {
-    create_before_destroy = true
   }
 }
