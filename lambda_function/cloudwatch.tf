@@ -42,7 +42,7 @@ resource "aws_lambda_permission" "lambda" {
 
 module "lambda_alerts" {
   count  = var.lambda_alerts_enabled ? 1 : 0
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=812c086fa4f4a0a52c1b8b630a27af01f18cf357"
+  source = "github.com/18F/identity-terraform//lambda_alerts?ref=61d2b3460f890e6110ca7b3b08a024b100e19aed"
   #source = "../../../../identity-terraform/lambda_alerts"
 
   region                           = var.region
