@@ -29,7 +29,7 @@ resource "aws_cloudwatch_event_target" "lambda" {
   arn    = aws_lambda_function.lambda.arn
 }
 
-resource "aws_lambda_permission" "lambda" {
+resource "aws_lambda_permission" "eventbridge" {
   count = local.enable_trigger ? 1 : 0
 
   region        = var.region
@@ -67,4 +67,9 @@ module "lambda_alerts" {
   error_rate_alarm_description     = var.error_rate_alarm_description
   memory_usage_alarm_description   = var.memory_usage_alarm_description
   duration_alarm_description       = var.duration_alarm_description
+}
+
+moved {
+  from = aws_lambda_permission.lambda[0]
+  to   = aws_lambda_permission.eventbridge[0]
 }

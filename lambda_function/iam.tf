@@ -1,29 +1,24 @@
+locals {
+  lambda_role_name = var.lambda_iam_role_name != null ? var.lambda_iam_role_name : var.function_name
+  role_name_prefix = substr(var.role_name_prefix, 0, 38)
+}
+
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
-    actions = ["sts:AssumeRole"]
+    actions = [
+      "sts:AssumeRole"
+    ]
 
     principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      type = "Service"
+      identifiers = [
+        "lambda.amazonaws.com"
+      ]
     }
   }
 }
 
-resource "aws_iam_role" "lambda" {
-  name = var.role_name_prefix == null ? (
-    var.lambda_iam_role_name != null ? var.lambda_iam_role_name : var.function_name
-  ) : null
-  name_prefix        = var.role_name_prefix != null ? substr(var.role_name_prefix, 0, 38) : null
-  path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  description        = var.iam_role_description
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-data "aws_iam_policy_document" "lambda" {
+data "aws_iam_policy_document" "lambda_cloudwatch" {
   source_policy_documents = length(var.lambda_iam_policy_document) > 0 ? [var.lambda_iam_policy_document] : []
 
   statement {
@@ -39,16 +34,25 @@ data "aws_iam_policy_document" "lambda" {
       "${aws_cloudwatch_log_group.lambda.arn}:*"
     ]
   }
-
 }
 
-resource "aws_iam_role_policy" "lambda" {
-  role   = aws_iam_role.lambda.name
-  policy = data.aws_iam_policy_document.lambda.json
+resource "aws_iam_policy" "lambda_cloudwatch" {
+  name = "lambda-cloudwatch-${(var.role_name_prefix == null ? local.lambda_role_name : local.role_name_prefix)}"
 
-  lifecycle {
-    create_before_destroy = true
-  }
+  policy = data.aws_iam_policy_document.lambda_cloudwatch.json
+}
+
+resource "aws_iam_role" "lambda" {
+  name               = var.role_name_prefix == null ? local.lambda_role_name : null
+  name_prefix        = var.role_name_prefix != null ? local.role_name_prefix : null
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  description        = var.iam_role_description
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_cloudwatch" {
+  role       = aws_iam_role.lambda.id
+  policy_arn = aws_iam_policy.lambda_cloudwatch.arn
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_insights" {
