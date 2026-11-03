@@ -27,3 +27,15 @@ output "layer_arn" {
   description = "ARN of the Lambda Layer, if using."
   value       = local.layer_enabled ? aws_lambda_layer_version.layer[0].arn : ""
 }
+
+output "random_uuid" {
+  description = "random_uuids generated for tracking changes to Lambda/Layers."
+  value = merge(
+    {
+      source = random_uuid.lambda["source"]
+    },
+    local.layer_enabled ? {
+      layer = random_uuid.lambda["layer"]
+    } : {}
+  )
+}

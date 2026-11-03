@@ -22,16 +22,16 @@ resource "aws_s3_object" "lambda_layer" {
   ])
   bucket             = var.layer_s3_bucket
   region             = var.region
-  source             = data.archive_file.lambda["layers"].output_path
+  source             = data.archive_file.lambda["layer"].output_path
   checksum_algorithm = "SHA256"
 
   depends_on = [
-    data.archive_file.lambda["layers"]
+    data.archive_file.lambda["layer"]
   ]
 
   lifecycle {
     replace_triggered_by = [
-      random_uuid.lambda["layers"]
+      random_uuid.lambda["layer"]
     ]
     ignore_changes = [
       source

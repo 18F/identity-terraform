@@ -6,12 +6,12 @@ locals {
         zip = var.function_name
       }
     },
-    var.layer_dir == "" ? {} : {
-      layers = {
+    local.layer_enabled ? {
+      layer = {
         dir = var.layer_dir
         zip = var.layer_name
       }
-    }
+    } : {}
   )
 }
 
