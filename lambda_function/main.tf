@@ -1,6 +1,6 @@
 module "lambda_insights" {
   count  = var.insights_enabled ? 1 : 0
-  source = "github.com/GSA-TTS/identity-terraform//lambda_insights?ref=5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9"
+  source = "github.com/GSA-TTS/identity-terraform//lambda_insights?ref=059e573ca2575d96fa2592012d7237289a7564d2"
   #source = "../../../../identity-terraform/lambda_insights"
 
   region = var.region
@@ -14,7 +14,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
 }
 
 module "lambda_code" {
-  source = "github.com/GSA-TTS/identity-terraform//null_archive?ref=185bba6064e480379fb4f4e58c9489c9085b3a65"
+  source = "github.com/GSA-TTS/identity-terraform//null_archive?ref=059e573ca2575d96fa2592012d7237289a7564d2"
   #source = "../../../../identity-terraform/null_archive"
 
   source_code_filename = var.source_code_filename
@@ -60,7 +60,7 @@ resource "aws_lambda_function" "lambda" {
 }
 
 module "lambda_alerts" {
-  source = "github.com/GSA-TTS/identity-terraform//lambda_alerts?ref=812c086fa4f4a0a52c1b8b630a27af01f18cf357"
+  source = "github.com/GSA-TTS/identity-terraform//lambda_alerts?ref=059e573ca2575d96fa2592012d7237289a7564d2"
   #source = "../../../../identity-terraform/lambda_alerts"
 
   region                           = var.region

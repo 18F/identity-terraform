@@ -85,7 +85,7 @@ resource "aws_s3_bucket_acl" "tf_state" {
 
 module "s3_config_tf_state" {
   count  = var.remote_state_enabled
-  source = "github.com/GSA-TTS/identity-terraform//s3_config?ref=7a090cdc3647c08eb511b49e328caf33deef4f24"
+  source = "github.com/GSA-TTS/identity-terraform//s3_config?ref=059e573ca2575d96fa2592012d7237289a7564d2"
   #source = "../s3_config"
 
   bucket_name          = data.aws_s3_bucket.tf_state[count.index].id

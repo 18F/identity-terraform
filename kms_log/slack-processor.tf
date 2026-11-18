@@ -69,7 +69,7 @@ POLICY
 }
 
 module "unmatched_queue_alerts" {
-  source = "github.com/GSA-TTS/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
+  source = "github.com/GSA-TTS/identity-terraform//sqs_alerts?ref=059e573ca2575d96fa2592012d7237289a7564d2"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.unmatched.name
@@ -232,7 +232,7 @@ resource "aws_lambda_function" "slack_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  source = "github.com/GSA-TTS/identity-terraform//lambda_alerts?ref=e0e39adea82243d66c3c1218c7a4316b81f64560"
+  source = "github.com/GSA-TTS/identity-terraform//lambda_alerts?ref=059e573ca2575d96fa2592012d7237289a7564d2"
   #source = "../lambda_alerts"
 
   enabled              = 1

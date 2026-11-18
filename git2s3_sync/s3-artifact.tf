@@ -72,7 +72,7 @@ resource "aws_s3_bucket_versioning" "artifact_bucket" {
 }
 
 module "s3_config_artifact" {
-  source = "github.com/GSA-TTS/identity-terraform//s3_config?ref=7a090cdc3647c08eb511b49e328caf33deef4f24"
+  source = "github.com/GSA-TTS/identity-terraform//s3_config?ref=059e573ca2575d96fa2592012d7237289a7564d2"
   #source = "../s3_config"
 
   bucket_name          = aws_s3_bucket.artifact_bucket.id
