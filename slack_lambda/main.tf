@@ -21,7 +21,7 @@ module "slack_lambda" {
   source = "github.com/GSA-TTS/identity-terraform//lambda_function?ref=720ecb051f472bd3a62c16422bb05b4db4514352"
   #source = "../lambda_function"
 
-  // region               = var.region
+  region               = data.aws_region.current.region
   function_name        = var.lambda_name
   description          = var.lambda_description
   source_code_filename = "slack_lambda.py"
