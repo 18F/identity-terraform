@@ -74,7 +74,7 @@ resource "aws_s3_bucket_versioning" "codebuild_output" {
 }
 
 module "s3_config_codebuild_output" {
-  source = "github.com/GSA-TTS/identity-terraform//s3_config?ref=059e573ca2575d96fa2592012d7237289a7564d2"
+  source = "github.com/GSA-TTS/identity-terraform//s3_config?ref=720ecb051f472bd3a62c16422bb05b4db4514352"
   #source = "../s3_config"
 
   bucket_name          = aws_s3_bucket.codebuild_output.id
