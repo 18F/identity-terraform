@@ -6,12 +6,12 @@
 - [Enabling DNSSEC Signing with a KSK](#enabling-dnssec-signing-with-a-ksk)
 - [KSK Key Rotation](#ksk-key-rotation)
 - [Resource Protection Using the `DNSSecDisablePrevent` Policy](#resource-protection-using-the-dnssecdisableprevent-policy)
-  - [Why Use Such A Restrictive Policy?](#why-use-such-a-restrictive-policy)
-  - [What About Lifecycle Rules?](#what-about-lifecycle-rules)
+  + [Why Use Such A Restrictive Policy?](#why-use-such-a-restrictive-policy)
+  + [What About Lifecycle Rules?](#what-about-lifecycle-rules)
 - [Example Implementation](#example-implementation)
 - [Variables](#variables)
-  - [CloudWatch Alarm Description Fill-Ins](#cloudwatch-alarm-description-fill-ins)
-  - [Other Variables](#other-variables)
+  + [CloudWatch Alarm Description Fill-Ins](#cloudwatch-alarm-description-fill-ins)
+  + [Other Variables](#other-variables)
 
 <!-- /MarkdownTOC -->
 
@@ -83,7 +83,7 @@ If the boolean variable `protect_resources` is set to **true** (also its default
 - disabling DNSSEC signing
 - deleting the Hosted Zone itself
 
-This IAM policy can then be attached to roles/users/groups as desired -- as an example, it could be one of the `custom_policy_arns` used when [creating roles via the `iam_assumerole` module (also in this repo!)](https://github.com/18F/identity-terraform/tree/main/iam_assumerole)
+This IAM policy can then be attached to roles/users/groups as desired -- as an example, it could be one of the `custom_policy_arns` used when [creating roles via the `iam_assumerole` module (also in this repo!)](https://github.com/GSA-TTS/identity-terraform/tree/main/iam_assumerole)
 
 ### Why Use Such A Restrictive Policy?
 
@@ -111,7 +111,7 @@ locals {
 }
 
 module "dnssec" {
-  source = "github.com/18F/identity-terraform//dnssec?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//dnssec?ref=main"
   #source = "../../../../identity-terraform/dnssec"
 
   dnssec_ksks_action_req_alarm_desc = "${local.dnssec_runbook_prefix}_ksks_action_req"

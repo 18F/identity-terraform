@@ -6,7 +6,7 @@ This module creates and manages S3 buckets for AWS S3 Inventory (storage/configr
 
 ```hcl
 module "tf-state" {
-  source = "github.com/18F/identity-terraform//state_bucket?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//state_bucket?ref=main"
 
   remote_state_enabled = 1
   region               = var.region
@@ -54,7 +54,7 @@ If desiring to *remove* these resources (e.g. when doing a complete infrastructu
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_s3_config"></a> [s3\_config](#module\_s3\_config) | github.com/18F/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
+| <a name="module_s3_config"></a> [s3\_config](#module\_s3\_config) | github.com/GSA-TTS/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
 
 ## Resources
 

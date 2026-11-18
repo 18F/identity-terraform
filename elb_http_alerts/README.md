@@ -6,7 +6,7 @@ This Terraform module uses AWS-provided metrics from Load Balancers, and creates
 
 ```hcl
 module "elb_http_alerts" {
-  source = "github.com/18F/identity-terraform//elb_http_alerts?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//elb_http_alerts?ref=main"
 
   env_name = var.env_name
   lb_name  = aws_alb.idp.name

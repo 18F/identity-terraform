@@ -5,7 +5,7 @@ This Terraform module creates the basic set of resources needed for working with
 - An ElastiCache replication group, running on a `redis` engine as specified by `var.engine_version`
 - An ElastiCache parameter group for said replication group, based on the parameter group family identifier specified by `var.family_name`
 - A CloudWatch Log Group used to capture events from said replication group
-- A set of CloudWatch Metric Alarms -- created via [the `redis_alarms` module from this same repo!](https://github.com/18F/identity-terraform/tree/main/redis_alarms/) -- which track/alert on any specified metrics within the `AWS/ElastiCache` namespace, along with an alarm created specifically to track the `NetworkBytesIn` + `NetworkBytesOut` throughput total against the percentage specified by `var.threshold_network` -- dynamically calculated based on the type/size of node used for each cache cluster in the replication group
+- A set of CloudWatch Metric Alarms -- created via [the `redis_alarms` module from this same repo!](https://github.com/GSA-TTS/identity-terraform/tree/main/redis_alarms/) -- which track/alert on any specified metrics within the `AWS/ElastiCache` namespace, along with an alarm created specifically to track the `NetworkBytesIn` + `NetworkBytesOut` throughput total against the percentage specified by `var.threshold_network` -- dynamically calculated based on the type/size of node used for each cache cluster in the replication group
 
 ***NOTE:*** The following resources, required by this module, must be created SEPARATELY/within an external/parent Terraform module:
 
@@ -16,7 +16,7 @@ This Terraform module creates the basic set of resources needed for working with
 
 ```hcl
 module "redis_elasticache_app" {
-  source = "github.com/18F/identity-terraform//redis_elasticache?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//redis_elasticache?ref=main"
 
   env_name                   = var.env_name
   app_name                   = "my-app"
@@ -59,7 +59,7 @@ module "redis_elasticache_app" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_alarms"></a> [alarms](#module\_alarms) | github.com/18F/identity-terraform//redis_alarms | 28994c76cf074bbc45b88e9f038ce96a4e492198 |
+| <a name="module_alarms"></a> [alarms](#module\_alarms) | github.com/GSA-TTS/identity-terraform//redis_alarms | 28994c76cf074bbc45b88e9f038ce96a4e492198 |
 
 ## Resources
 

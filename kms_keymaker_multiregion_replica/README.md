@@ -8,7 +8,7 @@ These resources were, previously, all included within `kms_log` in a more monoli
 
 ```hcl
   module "kms_keymaker_replica_ue1" {
-  source = "github.com/18F/identity-terraform//kms_keymaker_multiregion_replica?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//kms_keymaker_multiregion_replica?ref=main"
 
   providers = {
     aws = aws.use1

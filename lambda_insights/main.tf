@@ -2,7 +2,7 @@
  * ## Example: 
  * ```hcl
  * module "lambda_insights" {
- *   source = github.com/18F/identity-terraform//lambda_insights?ref=main
+ *   source = github.com/GSA-TTS/identity-terraform//lambda_insights?ref=main
  * }
  * ```
  */

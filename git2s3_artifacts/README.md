@@ -1,4 +1,4 @@
-## PLEASE NOTE: The original `git2s3` Quick Start templates/repos/etc. have been deprecated, so new deployments of this module may no longer work as of December 2024. We recommend migrating from this module to [the `git2s3_sync` module](https://github.com/18F/identity-terraform/tree/main/git2s3_sync), also found within this repo, which builds all resources within via Terraform (instead of CloudFormation) and no longer relies on the now-deprecated Quick Start code/sources.
+## PLEASE NOTE: The original `git2s3` Quick Start templates/repos/etc. have been deprecated, so new deployments of this module may no longer work as of December 2024. We recommend migrating from this module to [the `git2s3_sync` module](https://github.com/GSA-TTS/identity-terraform/tree/main/git2s3_sync), also found within this repo, which builds all resources within via Terraform (instead of CloudFormation) and no longer relies on the now-deprecated Quick Start code/sources.
 
 # `git2s3_artifacts`
 
@@ -43,7 +43,7 @@ The `regex()` string operation is used to trim down the list of IP addresses fro
 
 ```hcl
 module "git2s3_src" {
-  source = "github.com/18F/identity-terraform//git2s3_artifacts?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//git2s3_artifacts?ref=main"
 
   git2s3_stack_name    = "CodeSync-IdentityBase"
   external_account_ids = [

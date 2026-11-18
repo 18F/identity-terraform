@@ -11,7 +11,7 @@ This module creates and manages a GuardDuty Detector for an AWS account (in a si
 
 ```hcl
 module "guardduty_usw2" {
-  source = "github.com/18F/identity-terraform//guardduty?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//guardduty?ref=main"
 
   region              = "us-west-2"
   bucket_name_prefix  = local.bucket_name_prefix
@@ -43,7 +43,7 @@ module "guardduty_usw2" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_guardduty_bucket_config"></a> [guardduty\_bucket\_config](#module\_guardduty\_bucket\_config) | github.com/18F/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
+| <a name="module_guardduty_bucket_config"></a> [guardduty\_bucket\_config](#module\_guardduty\_bucket\_config) | github.com/GSA-TTS/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
 
 ## Resources
 

@@ -11,7 +11,7 @@ Both the Kinesis resource _and_ the Destination(s) must be in the same _account_
 
 # create Destination in us-west-2 that accepts Subscription Filters/Logs from two AWS accounts
 module "kinesis_stream_destination_uw2" {
-  source = "github.com/18F/identity-terraform//kinesis_destination?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//kinesis_destination?ref=main"
   providers = {
     aws = aws.usw2
   }
@@ -22,7 +22,7 @@ module "kinesis_stream_destination_uw2" {
 
 # create Destination in us-east-1 which points to Firehose in us-west-2, logging only one AWS account
 module "kinesis_firehose_destination_ue1" {
-  source = "github.com/18F/identity-terraform//kinesis_destination?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//kinesis_destination?ref=main"
   providers = {
     aws = aws.use1
   }

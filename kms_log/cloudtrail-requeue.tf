@@ -21,7 +21,7 @@ POLICY
 }
 
 module "reqeue_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
+  source = "github.com/GSA-TTS/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
   #source = "../sqs_alerts"
 
   queue_name                      = aws_sqs_queue.cloudtrail_requeue.name
@@ -160,7 +160,7 @@ resource "aws_lambda_function" "cloudtrail_requeue" {
 }
 
 module "ct-requeue-alerts" {
-  source = "github.com/18F/identity-terraform//lambda_alerts?ref=e0e39adea82243d66c3c1218c7a4316b81f64560"
+  source = "github.com/GSA-TTS/identity-terraform//lambda_alerts?ref=e0e39adea82243d66c3c1218c7a4316b81f64560"
   #source = "../lambda_alerts"
 
   enabled              = 1

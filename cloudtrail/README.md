@@ -15,7 +15,7 @@ Notably, the `aws_cloudtrail.main` resource uses a set of `dynamic` blocks to ta
 
 ```hcl
 module "cloudtrail_basic" {
-  source = "github.com/18F/identity-terraform//cloudtrail?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//cloudtrail?ref=main"
 
   trail_name = "login-gov-cloudtrail-basic"
   enable_log_file_validation    = true
@@ -47,7 +47,7 @@ module "cloudtrail_basic" {
 
 ```hcl
 module "cloudtrail_advanced" {
-  source = "github.com/18F/identity-terraform//cloudtrail?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//cloudtrail?ref=main"
 
   trail_name = "login-gov-cloudtrail-advanced"
   enable_log_file_validation    = true
@@ -98,7 +98,7 @@ module "cloudtrail_advanced" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cloudtrail_bucket_config"></a> [cloudtrail\_bucket\_config](#module\_cloudtrail\_bucket\_config) | github.com/18F/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
+| <a name="module_cloudtrail_bucket_config"></a> [cloudtrail\_bucket\_config](#module\_cloudtrail\_bucket\_config) | github.com/GSA-TTS/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
 
 ## Resources
 

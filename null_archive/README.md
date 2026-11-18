@@ -21,7 +21,7 @@ For maximum compatibility, a `depends_on` statement/list item should be used in 
 
 ```hcl
 module "smart_archive_file" {
-  source = "github.com/18F/identity-terraform//null_archive?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//null_archive?ref=main"
 
   source_code_filename  = "lambda_function.py"
   source_dir            = "${path.module}/src/"

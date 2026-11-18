@@ -2,7 +2,7 @@
 
 This Terraform module is used to create `Command` and/or `Session` SSM Documents -- the latter of which can be `Standard_Stream`, `InteractiveCommands`, and/or `Port` Session docs -- for connecting to and running commands on AWS EC2 instances. Along with the documents themselves, this module creates:
 
-1. An S3 bucket for storing output logs of SSM documents (see note below), configured using [the `s3_config` module](https://github.com/18F/identity-terraform/tree/main/s3_config) from this repo
+1. An S3 bucket for storing output logs of SSM documents (see note below), configured using [the `s3_config` module](https://github.com/GSA-TTS/identity-terraform/tree/main/s3_config) from this repo
 2. A set of CloudWatch Log Groups recording each _invocation_ of a particular SSM document, for all SSM documents passed in with the various map vars
 2. A second set of CloudWatch Log Groups recording the _output_ of any SSM documents, in any map var(s), where `logging = true`
 3. A KMS key + alias for encrypting the above resources (logs/bucket/objects), as well as the SSM sessions themselves
@@ -61,7 +61,7 @@ In particular, `logging` should almost always be set to `false` for any SSM docu
 
 ```hcl
 module "ssm" {
-  source = "github.com/18F/identity-terraform//ssm?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//ssm?ref=main"
 
   bucket_name_prefix = "login-gov"
   region             = var.region
@@ -99,7 +99,7 @@ module "ssm" {
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_ssm_logs_bucket_config"></a> [ssm\_logs\_bucket\_config](#module\_ssm\_logs\_bucket\_config) | github.com/18F/identity-terraform//s3_config | 7a090cdc3647c08eb511b49e328caf33deef4f24 |
+| <a name="module_ssm_logs_bucket_config"></a> [ssm\_logs\_bucket\_config](#module\_ssm\_logs\_bucket\_config) | github.com/GSA-TTS/identity-terraform//s3_config | 7a090cdc3647c08eb511b49e328caf33deef4f24 |
 
 ## Resources
 

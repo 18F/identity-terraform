@@ -39,7 +39,7 @@ resource "aws_sqs_queue" "kms_cloudwatch_events" {
 }
 
 module "kms_cloudwatch_events_queue_alerts" {
-  source = "github.com/18F/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
+  source = "github.com/GSA-TTS/identity-terraform//sqs_alerts?ref=660048415b30fab9662b1cb32d59672b168be91a"
   #source = "../sqs_alerts"
 
   queue_name       = aws_sqs_queue.kms_cloudwatch_events.name

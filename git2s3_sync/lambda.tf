@@ -17,7 +17,7 @@ data "aws_iam_policy_document" "lambda_access" {
 }
 
 module "lambda_git2s3" {
-  source = "github.com/18F/identity-terraform//lambda_function?ref=026f69d0a5e2b8af458888a5f21a72d557bbe1fe"
+  source = "github.com/GSA-TTS/identity-terraform//lambda_function?ref=026f69d0a5e2b8af458888a5f21a72d557bbe1fe"
   #source = "../lambda_function"
 
   region               = data.aws_region.current.region

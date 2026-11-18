@@ -2,7 +2,7 @@
 
 This module serves as a trimmed-down, Terraform-only version/replacement to the ["Git webhooks on the AWS Cloud" Quick Start Deployment](https://aws-quickstart.github.io/quickstart-git2s3/), a CloudFormation stack used to deploy a full set of infrastructure allowing syncing between a third-party repository and an S3 bucket.
 
-Unlike [`git2s3_artifacts` (also found within this repo)](https://github.com/18F/identity-terraform/tree/main/git2s3_artifacts), which primarily serves as a 'wrapper' around the original Quick Start template with some additional resources, this module creates all necessary resources within Terraform (instead of CloudFormation), albeit with some additional streamlining and removal of components not currently in use by Login.gov's infrastructure:
+Unlike [`git2s3_artifacts` (also found within this repo)](https://github.com/GSA-TTS/identity-terraform/tree/main/git2s3_artifacts), which primarily serves as a 'wrapper' around the original Quick Start template with some additional resources, this module creates all necessary resources within Terraform (instead of CloudFormation), albeit with some additional streamlining and removal of components not currently in use by Login.gov's infrastructure:
 
 1. Only 1 Lambda function from the original stack, `GitPullLambda` (here created by `module.lambda_git2s3`), is created in this module. It has been updated to support a `python3.12` runtime, and will (currently) _only_ work using a GitHub repo as its source, as the dozens of extra `try`/`except` blocks used to handle all possible repository key/value pairs have been removed. It will also _only_ validate a payload received from its API webhook source based on the `source-ip` of the event; support for using an API secret has been dropped, primarily as it was not used in the original `git2s3_artifacts` implementation.
 2. The `CopyZips` Lambda function has been removed entirely. Its singular purpose was to copy the source code of all other Lambda functions from the Quick Start S3 bucket to an S3 bucket within the target account, and as [the original S3 path AND its replacement have both been deprecated](https://github.com/aws-ia/cfn-ps-git2s3?tab=readme-ov-file#deprecation-notice), it no longer functions properly to begin with. Similarly, the S3 bucket where said functions were copied -- along with the `DeleteBucketContents` Lambda function, which deletes said Lambda zips from said bucket -- have both been removed, as neither served any additional purpose outside of stack creation/deletion.
@@ -10,7 +10,7 @@ Unlike [`git2s3_artifacts` (also found within this repo)](https://github.com/18F
 
 ```terraform
 module "git2s3_sync" {
-  source = "github.com/18F/identity-terraform//git2s3_sync?ref="
+  source = "github.com/GSA-TTS/identity-terraform//git2s3_sync?ref="
   #source = "../../../../identity-terraform/git2s3_sync"
 
   prevent_tf_log_deletion = false
@@ -54,9 +54,9 @@ module "git2s3_sync" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_lambda_git2s3"></a> [lambda\_git2s3](#module\_lambda\_git2s3) | github.com/18F/identity-terraform//lambda_function | 026f69d0a5e2b8af458888a5f21a72d557bbe1fe |
-| <a name="module_s3_config_artifact"></a> [s3\_config\_artifact](#module\_s3\_config\_artifact) | github.com/18F/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
-| <a name="module_s3_config_codebuild_output"></a> [s3\_config\_codebuild\_output](#module\_s3\_config\_codebuild\_output) | github.com/18F/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
+| <a name="module_lambda_git2s3"></a> [lambda\_git2s3](#module\_lambda\_git2s3) | github.com/GSA-TTS/identity-terraform//lambda_function | 026f69d0a5e2b8af458888a5f21a72d557bbe1fe |
+| <a name="module_s3_config_artifact"></a> [s3\_config\_artifact](#module\_s3\_config\_artifact) | github.com/GSA-TTS/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
+| <a name="module_s3_config_codebuild_output"></a> [s3\_config\_codebuild\_output](#module\_s3\_config\_codebuild\_output) | github.com/GSA-TTS/identity-terraform//s3_config | 7dd538aa8825f6b71dd32989ea3868581f4f332a |
 
 ## Resources
 

@@ -55,7 +55,7 @@ Using one of the schedules from `local.rotation_schedules` / `schedules.tf`:
 
 ```terraform
 module "idp_recycle" {
-  source = "github.com/18F/identity-terraform//asg_recycle?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//asg_recycle?ref=main"
 
   asg_name                = aws_autoscaling_group.idp.name
   normal_desired_capacity = aws_autoscaling_group.idp.desired_capacity
@@ -67,7 +67,7 @@ Using `var.custom_schedule` and overrides for the multiplier, timezone, and spin
 
 ```terraform
 module "migration_recycle" {
-  source = "github.com/18F/identity-terraform//asg_recycle?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//asg_recycle?ref=main"
 
   asg_name                   = aws_autoscaling_group.migration.name
   normal_desired_capacity    = 1

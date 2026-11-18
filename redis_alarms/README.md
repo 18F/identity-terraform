@@ -10,7 +10,7 @@ This Terraform module creates a set of AWS CloudWatch Metric Alarms, which follo
 
 ```hcl
 module "redis_alarm" {
-  source = "github.com/18F/identity-terraform//redis_alarms?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//redis_alarms?ref=main"
 
   cluster_id                 = var.redis_cluster_id
   alarms_map                 = var.alarms_map

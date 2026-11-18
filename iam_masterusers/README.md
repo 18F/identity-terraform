@@ -14,7 +14,7 @@ not have an MFA device configured.
 
 ```hcl
 module "our_cool_master_users" {
-  source = "github.com/18F/identity-terraform//iam_masterusers?ref=main"
+  source = "github.com/GSA-TTS/identity-terraform//iam_masterusers?ref=main"
   
   user_map = {
     'fred.flinstone' = ['development'],

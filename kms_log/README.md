@@ -15,14 +15,14 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_ct-processor-github-alerts"></a> [ct-processor-github-alerts](#module\_ct-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
-| <a name="module_ct-requeue-alerts"></a> [ct-requeue-alerts](#module\_ct-requeue-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
-| <a name="module_cw-processor-github-alerts"></a> [cw-processor-github-alerts](#module\_cw-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
-| <a name="module_kms_cloudwatch_events_queue_alerts"></a> [kms\_cloudwatch\_events\_queue\_alerts](#module\_kms\_cloudwatch\_events\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
-| <a name="module_kms_ct_queue_alerts"></a> [kms\_ct\_queue\_alerts](#module\_kms\_ct\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
-| <a name="module_reqeue_queue_alerts"></a> [reqeue\_queue\_alerts](#module\_reqeue\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
-| <a name="module_slack-processor-github-alerts"></a> [slack-processor-github-alerts](#module\_slack-processor-github-alerts) | github.com/18F/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
-| <a name="module_unmatched_queue_alerts"></a> [unmatched\_queue\_alerts](#module\_unmatched\_queue\_alerts) | github.com/18F/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
+| <a name="module_ct-processor-github-alerts"></a> [ct-processor-github-alerts](#module\_ct-processor-github-alerts) | github.com/GSA-TTS/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
+| <a name="module_ct-requeue-alerts"></a> [ct-requeue-alerts](#module\_ct-requeue-alerts) | github.com/GSA-TTS/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
+| <a name="module_cw-processor-github-alerts"></a> [cw-processor-github-alerts](#module\_cw-processor-github-alerts) | github.com/GSA-TTS/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
+| <a name="module_kms_cloudwatch_events_queue_alerts"></a> [kms\_cloudwatch\_events\_queue\_alerts](#module\_kms\_cloudwatch\_events\_queue\_alerts) | github.com/GSA-TTS/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
+| <a name="module_kms_ct_queue_alerts"></a> [kms\_ct\_queue\_alerts](#module\_kms\_ct\_queue\_alerts) | github.com/GSA-TTS/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
+| <a name="module_reqeue_queue_alerts"></a> [reqeue\_queue\_alerts](#module\_reqeue\_queue\_alerts) | github.com/GSA-TTS/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
+| <a name="module_slack-processor-github-alerts"></a> [slack-processor-github-alerts](#module\_slack-processor-github-alerts) | github.com/GSA-TTS/identity-terraform//lambda_alerts | e0e39adea82243d66c3c1218c7a4316b81f64560 |
+| <a name="module_unmatched_queue_alerts"></a> [unmatched\_queue\_alerts](#module\_unmatched\_queue\_alerts) | github.com/GSA-TTS/identity-terraform//sqs_alerts | 660048415b30fab9662b1cb32d59672b168be91a |
 
 ## Resources
 
