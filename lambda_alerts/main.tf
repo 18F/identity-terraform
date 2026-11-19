@@ -9,7 +9,10 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
     ])
   )
 
-  alarm_description = length(var.error_rate_alarm_description) > 0 ? var.error_rate_alarm_description : local.default_error_rate_alarm_description
+  alarm_description = length(var.error_rate_alarm_description) > 0 ? var.error_rate_alarm_description : join("\n\n", [
+    "Lambda error rate has exceeded ${var.error_rate_threshold}%",
+    "Runbook: ${var.runbook}"
+  ])
 
   comparison_operator       = var.error_rate_operator
   evaluation_periods        = var.evaluation_periods
@@ -66,7 +69,10 @@ resource "aws_cloudwatch_metric_alarm" "lambda_memory_usage" {
     "LambdaMemoryUsage"
     ])
   )
-  alarm_description = length(var.memory_usage_alarm_description) > 0 ? var.memory_usage_alarm_description : local.default_memory_usage_alarm_description
+  alarm_description = length(var.memory_usage_alarm_description) > 0 ? var.memory_usage_alarm_description : join("\n\n", [
+    "Lambda memory usage has exceeded ${var.memory_usage_threshold}%",
+    "Runbook: ${var.runbook}"
+  ])
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
@@ -100,11 +106,14 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
     "LambdaDuration"
     ])
   )
-  alarm_description = length(var.duration_alarm_description) > 0 ? var.duration_alarm_description : local.default_duration_alarm_description
+  alarm_description = length(var.duration_alarm_description) > 0 ? var.duration_alarm_description : join("\n\n", [
+    "Lambda duration has exceeded ${var.duration_threshold}%",
+    "Runbook: ${var.runbook}"
+  ])
 
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = var.evaluation_periods
-  threshold                 = local.duration_settings_in_milliseconds * (var.duration_threshold * 0.01)
+  threshold                 = (var.duration_setting * 1000) * (var.duration_threshold * 0.01)
   insufficient_data_actions = []
   datapoints_to_alarm       = var.datapoints_to_alarm
   treat_missing_data        = var.treat_missing_data
