@@ -51,7 +51,7 @@ module "sample_function" {
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_lambda_alerts"></a> [lambda\_alerts](#module\_lambda\_alerts) | github.com/GSA-TTS/identity-terraform//lambda_alerts | a4dfd80b0e40a96d2a0c7c09262f84d2ea3d9104 |
+| <a name="module_lambda_alerts"></a> [lambda\_alerts](#module\_lambda\_alerts) | github.com/GSA-TTS/identity-terraform//lambda_alerts | d96f5726798ac80ce028da825155d65a21c22dd2 |
 | <a name="module_lambda_code"></a> [lambda\_code](#module\_lambda\_code) | github.com/GSA-TTS/identity-terraform//null_archive | 185bba6064e480379fb4f4e58c9489c9085b3a65 |
 | <a name="module_lambda_insights"></a> [lambda\_insights](#module\_lambda\_insights) | github.com/GSA-TTS/identity-terraform//lambda_insights | 5c1a8fb0ca08aa5fa01a754a40ceab6c8075d4c9 |
 

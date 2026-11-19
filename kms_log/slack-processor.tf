@@ -232,7 +232,7 @@ resource "aws_lambda_function" "slack_processor" {
 }
 
 module "slack-processor-github-alerts" {
-  source = "github.com/GSA-TTS/identity-terraform//lambda_alerts?ref=720ecb051f472bd3a62c16422bb05b4db4514352"
+  source = "github.com/GSA-TTS/identity-terraform//lambda_alerts?ref=d96f5726798ac80ce028da825155d65a21c22dd2"
   #source = "../lambda_alerts"
 
   enabled              = 1
