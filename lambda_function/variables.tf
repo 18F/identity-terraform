@@ -225,12 +225,15 @@ variable "ok_actions" {
 
 variable "runbook" {
   type        = string
-  description = "A link to a runbook associated with any metric in this module"
+  description = <<EOM
+String containing a link to a runbook, which is passed in as var.runbook to the lambda_alerts child module
+and used to set the alarm_description for each metric alarm in said module. Must be a valid URL.
+EOM
   default     = ""
 
   validation {
     condition = (
-      var.runbook == "" || can(regex("^https?://[\\w.-]+(?:\\.[\\w.-]+)+(?:[/\\w._-]*)?$", var.runbook))
+      var.runbook == "" || can(regex("^?https?:\\/\\/[\\w.-]+(?:\\.[\\w.-]+)+(?:[\\/\\w\\:\\#._-]*)?$", var.runbook))
     )
     error_message = "Runbook must be a valid HTTP or HTTPS URL (e.g., ‘https://example.com/runbook’)."
   }
